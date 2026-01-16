@@ -9,6 +9,8 @@ public enum AttributeType
     CurrentHP,   // 当前生命值
     MaxMP,       // 最大法力值
     CurrentMP,   // 当前法力值
+    MaxPhysArmor, CurrentPhysArmor, // 物理护甲（可扣减，核心显示）
+    MaxMagicArmor, CurrentMagicArmor, // 魔法护甲（可扣减，核心显示）
     // ===== 行动核心属性（你的核心需求：探索无消耗，战斗消耗）=====
     MaxAP,       // 最大行动点（战斗移动/技能的核心消耗）
     CurrentAP,   // 当前行动点
