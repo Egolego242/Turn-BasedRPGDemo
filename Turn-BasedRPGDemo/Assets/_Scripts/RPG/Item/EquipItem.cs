@@ -1,13 +1,18 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// è£…å¤‡é…ç½®æ–‡ä»¶ - ç»§æ‰¿ItemBaseåŸºç±»ï¼ˆæ­¦å™¨ã€æŠ¤ç”²ã€å¤´ç›”ã€é¥°å“ç­‰ï¼‰
+/// ç©¿æˆ´åï¼šæ°¸ä¹…åŠ æˆè§’è‰²å±æ€§ | å¸ä¸‹åï¼šè‡ªåŠ¨è¿˜åŸå±æ€§
+/// âœ” å¼•ç”¨ä½ åŸæœ‰ ItemType æšä¸¾ + è§’è‰²çš„ AttributeType æšä¸¾ï¼Œæ— é‡å¤å®šä¹‰
+/// </summary>
 [CreateAssetMenu(fileName = "NewEquip", menuName = "RPG/EquipItem")]
 public class EquipItem : ItemBase
 {
-    [Header("×°±¸ÊôĞÔ¼Ó³É£¨ºËĞÄ£ºÄãµÄĞèÇó5£©")]
-    public List<AttrBonus> attrBonusList = new List<AttrBonus>(); // ÊôĞÔ¼Ó³ÉÁĞ±í
+    [Header("è£…å¤‡å±æ€§åŠ æˆï¼ˆæ ¸å¿ƒï¼šä½ çš„éœ€æ±‚5ï¼‰")]
+    public List<AttrBonus> attrBonusList = new List<AttrBonus>(); // å±æ€§åŠ æˆåˆ—è¡¨
 
-    // ×°±¸·½·¨£º¸ø½ÇÉ«Ìí¼ÓÊôĞÔ¼Ó³É
+    // è£…å¤‡æ–¹æ³•ï¼šç»™è§’è‰²æ·»åŠ å±æ€§åŠ æˆ
     public void Equip(GameObject target)
     {
         BaseCharacterAttr attr = target.GetComponent<BaseCharacterAttr>();
@@ -17,10 +22,10 @@ public class EquipItem : ItemBase
         {
             attr.AddAttrValue(bonus.attrType, bonus.bonusValue);
         }
-        Debug.Log("×°±¸ÁË£º" + itemName + "£¬ÊôĞÔ¼Ó³ÉÉúĞ§£¡");
+        Debug.Log("è£…å¤‡äº†ï¼š" + itemName + "ï¼Œå±æ€§åŠ æˆç”Ÿæ•ˆï¼");
     }
 
-    // Ğ¶ÏÂ·½·¨£º»¹Ô­½ÇÉ«ÊôĞÔ
+    // å¸ä¸‹æ–¹æ³•ï¼šè¿˜åŸè§’è‰²å±æ€§
     public void UnEquip(GameObject target)
     {
         BaseCharacterAttr attr = target.GetComponent<BaseCharacterAttr>();
@@ -30,17 +35,17 @@ public class EquipItem : ItemBase
         {
             attr.AddAttrValue(bonus.attrType, -bonus.bonusValue);
         }
-        Debug.Log("Ğ¶ÏÂÁË£º" + itemName + "£¬ÊôĞÔ¼Ó³É»¹Ô­£¡");
+        Debug.Log("å¸ä¸‹äº†ï¼š" + itemName + "ï¼Œå±æ€§åŠ æˆè¿˜åŸï¼");
     }
 }
 
 /// <summary>
-/// ÊôĞÔ¼Ó³É½á¹¹Ìå£ºÅäÖÃ×°±¸µÄ¡¸ÊôĞÔÀàĞÍ+¼Ó³ÉÊıÖµ¡¹
-/// ¿ÉÀ©Õ¹£ººóĞø¼Ó°Ù·Ö±È¼Ó³É£¬Ö»ĞèÒªĞÂÔö×Ö¶Î¼´¿É
+/// å±æ€§åŠ æˆç»“æ„ä½“ï¼šé…ç½®è£…å¤‡çš„ã€Œå±æ€§ç±»å‹+åŠ æˆæ•°å€¼ã€
+/// å¯æ‰©å±•ï¼šåç»­åŠ ç™¾åˆ†æ¯”åŠ æˆï¼Œåªéœ€è¦æ–°å¢å­—æ®µå³å¯
 /// </summary>
 [System.Serializable]
 public struct AttrBonus
 {
-    public AttributeType attrType; // ¼Ó³ÉµÄÊôĞÔÀàĞÍ
-    public float bonusValue;       // ¼Ó³ÉµÄÊıÖµ
+    public AttributeType attrType; // åŠ æˆçš„å±æ€§ç±»å‹
+    public float bonusValue;       // åŠ æˆçš„æ•°å€¼
 }

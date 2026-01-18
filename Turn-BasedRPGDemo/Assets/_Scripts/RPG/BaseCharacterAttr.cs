@@ -21,7 +21,7 @@ public class BaseCharacterAttr : MonoBehaviour
         attrDic.Clear();
         // 基础属性赋值（满状态）
         SetAttrValue(AttributeType.MaxHP, maxHP);
-        SetAttrValue(AttributeType.CurrentHP, maxHP);
+        SetAttrValue(AttributeType.CurrentHP, 20);
         SetAttrValue(AttributeType.MaxMP, maxMP);
         SetAttrValue(AttributeType.CurrentMP, maxMP);
         SetAttrValue(AttributeType.MaxAP, maxAP);
@@ -68,17 +68,17 @@ public class BaseCharacterAttr : MonoBehaviour
 
     private void ValueProtect(AttributeType type)
     {
-        if (attrDic == null) return;
+        if (attrDic == null || !attrDic.ContainsKey(type)) return;
         switch (type)
         {
             case AttributeType.CurrentHP:
-                SetAttrValue(type, Mathf.Clamp(GetAttrValue(type), 0, GetAttrValue(AttributeType.MaxHP)));
+                attrDic[type] = Mathf.Clamp(attrDic[type], 0, GetAttrValue(AttributeType.MaxHP));
                 break;
             case AttributeType.CurrentMP:
-                SetAttrValue(type, Mathf.Clamp(GetAttrValue(type), 0, GetAttrValue(AttributeType.MaxMP)));
+                attrDic[type] = Mathf.Clamp(attrDic[type], 0, GetAttrValue(AttributeType.MaxMP));
                 break;
             case AttributeType.CurrentAP:
-                SetAttrValue(type, Mathf.Clamp(GetAttrValue(type), 0, GetAttrValue(AttributeType.MaxAP)));
+                attrDic[type] = Mathf.Clamp(attrDic[type], 0, GetAttrValue(AttributeType.MaxAP));
                 break;
             default:
                 break;

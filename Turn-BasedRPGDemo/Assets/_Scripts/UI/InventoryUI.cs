@@ -1,19 +1,20 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // ¡ï¡ï¡ï TMPÃüÃû¿Õ¼ä ¡ï¡ï¡ï
+using TMPro; // â˜…â˜…â˜… TMPå‘½åç©ºé—´ â˜…â˜…â˜…
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 /// <summary>
-/// Éñ½çÔ­×ï2·ç¸ñ - ±³°üµÀ¾ßÃæ°å (TextMeshProĞÂ°æÊÊÅä)
-/// ¶¯Ì¬Éú³ÉµÀ¾ßÍ¼±ê+TMPÊıÁ¿ÎÄ±¾£¬µã»÷Ê¹ÓÃ/×°±¸µÀ¾ß
-/// ÍêÃÀ¶Ô½ÓInventory±³°üÏµÍ³£¬ÁãĞŞ¸Ä¾É´úÂë£¬±ÏÉèºËĞÄ°æ±¾
+/// ç¥ç•ŒåŸç½ª2é£æ ¼ - èƒŒåŒ…é“å…·é¢æ¿ (TextMeshProæ–°ç‰ˆé€‚é…)
+/// åŠ¨æ€ç”Ÿæˆé“å…·å›¾æ ‡+TMPæ•°é‡æ–‡æœ¬ï¼Œç‚¹å‡»ä½¿ç”¨/è£…å¤‡é“å…·
+/// å®Œç¾å¯¹æ¥InventoryèƒŒåŒ…ç³»ç»Ÿï¼Œé›¶ä¿®æ”¹æ—§ä»£ç ï¼Œæ¯•è®¾æ ¸å¿ƒç‰ˆæœ¬
 /// </summary>
-public class InventoryUI_TMP : MonoBehaviour
+public class InventoryUI : MonoBehaviour
 {
-    [Header("=== ±³°üÅäÖÃ ===")]
-    public GameObject itemSlotPrefab;  // µÀ¾ß²ÛÔ¤ÖÆÌå£¨Image+Button+TMPÎÄ±¾£©
-    public Transform itemGridParent;   // GridLayoutGroupµÄ¸¸ÎïÌå£¬ÓÃÓÚÅÅÁĞµÀ¾ß²Û
-    public Sprite emptyItemSprite;     // ¿ÕµÀ¾ßÍ¼±ê
+    [Header("=== èƒŒåŒ…é…ç½® ===")]
+    public GameObject itemSlotPrefab;  // é“å…·æ§½é¢„åˆ¶ä½“ï¼ˆImage+Button+TMPæ–‡æœ¬ï¼‰
+    public Transform itemGridParent;   // GridLayoutGroupçš„çˆ¶ç‰©ä½“ï¼Œç”¨äºæ’åˆ—é“å…·æ§½
+    public Sprite emptyItemSprite;     // ç©ºé“å…·å›¾æ ‡
 
     private Inventory playerInventory;
     private List<GameObject> spawnedSlots = new List<GameObject>();
@@ -21,18 +22,18 @@ public class InventoryUI_TMP : MonoBehaviour
 
     void Awake()
     {
-        // ³õÊ¼»¯±³°ü×é¼ş
+        // åˆå§‹åŒ–èƒŒåŒ…ç»„ä»¶
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
             playerInventory = player.GetComponent<Inventory>();
             isInit = true;
         }
-        // Ä¬ÈÏÒş²Ø±³°üÃæ°å
+        // é»˜è®¤éšè—èƒŒåŒ…é¢æ¿
         gameObject.SetActive(false);
     }
 
-    // ===== °ó¶¨µ½¡¾±³°ü°´Å¥¡¿µÄµã»÷ÊÂ¼ş =====
+    // ===== ç»‘å®šåˆ°ã€èƒŒåŒ…æŒ‰é’®ã€‘çš„ç‚¹å‡»äº‹ä»¶ =====
     public void OpenInventoryPanel()
     {
         if (!isInit) return;
@@ -40,52 +41,71 @@ public class InventoryUI_TMP : MonoBehaviour
         RefreshInventoryItems();
     }
 
-    // ===== °ó¶¨µ½¡¾¹Ø±Õ°´Å¥¡¿µÄµã»÷ÊÂ¼ş =====
+    // ===== ç»‘å®šåˆ°ã€å…³é—­æŒ‰é’®ã€‘çš„ç‚¹å‡»äº‹ä»¶ =====
     public void CloseInventoryPanel()
     {
         gameObject.SetActive(false);
     }
 
     /// <summary>
-    /// ºËĞÄ£ºË¢ĞÂ±³°üµÀ¾ß£¬¶¯Ì¬Éú³É/Ïú»ÙµÀ¾ß²Û£¬·ÀÖ¹ÖØ¸´Éú³É
+    /// æ ¸å¿ƒï¼šåˆ·æ–°èƒŒåŒ…é“å…·ï¼ŒåŠ¨æ€ç”Ÿæˆ/é”€æ¯é“å…·æ§½ï¼Œé˜²æ­¢é‡å¤ç”Ÿæˆ
     /// </summary>
     private void RefreshInventoryItems()
     {
         if (playerInventory == null || itemSlotPrefab == null) return;
 
-        // µÚÒ»²½£ºÇå¿ÕËùÓĞÒÑÉú³ÉµÄµÀ¾ß²Û£¬·ÀÖØµş
+        // ç¬¬ä¸€æ­¥ï¼šæ¸…ç©ºæ‰€æœ‰å·²ç”Ÿæˆçš„é“å…·æ§½ï¼Œé˜²é‡å 
         foreach (GameObject slot in spawnedSlots)
         {
             Destroy(slot);
         }
         spawnedSlots.Clear();
 
-        // µÚ¶ş²½£º±éÀú±³°üµÀ¾ß£¬Éú³É¶ÔÓ¦µÀ¾ß²Û
+        // ç¬¬äºŒæ­¥ï¼šéå†èƒŒåŒ…é“å…·ï¼Œç”Ÿæˆå¯¹åº”é“å…·æ§½
         foreach (var item in playerInventory.itemList)
         {
             if (item == null) continue;
 
-            // Éú³ÉµÀ¾ß²Û
+            // ç”Ÿæˆé“å…·æ§½
             GameObject newSlot = Instantiate(itemSlotPrefab, itemGridParent);
             newSlot.SetActive(true);
             spawnedSlots.Add(newSlot);
 
-            // »ñÈ¡µÀ¾ß²ÛµÄ×é¼ş
+            // è·å–é“å…·æ§½çš„ç»„ä»¶
             Image itemImage = newSlot.GetComponent<Image>();
             TextMeshProUGUI countText = newSlot.GetComponentInChildren<TextMeshProUGUI>();
             Button slotBtn = newSlot.GetComponent<Button>();
 
-            // ÉèÖÃµÀ¾ßÍ¼±ê
+            // è®¾ç½®é“å…·å›¾æ ‡
             itemImage.sprite = item.itemIcon == null ? emptyItemSprite : item.itemIcon;
-            // ÉèÖÃµÀ¾ßÊıÁ¿£¨TMPÎÄ±¾£©£¬²»¿É¶ÑµşµÄµÀ¾ß²»ÏÔÊ¾ÊıÁ¿
+            // è®¾ç½®é“å…·æ•°é‡ï¼ˆTMPæ–‡æœ¬ï¼‰ï¼Œä¸å¯å †å çš„é“å…·ä¸æ˜¾ç¤ºæ•°é‡
             countText.text = item.isStackable && item.itemCount > 1 ? item.itemCount.ToString() : "";
 
-            // °ó¶¨µã»÷ÊÂ¼ş£ºµã»÷µÀ¾ß ¡ú Ê¹ÓÃ/×°±¸
+            // ç»‘å®šç‚¹å‡»äº‹ä»¶ï¼šç‚¹å‡»é“å…· â†’ ä½¿ç”¨/è£…å¤‡
             slotBtn.onClick.AddListener(() =>
             {
                 playerInventory.UseItem(item);
-                RefreshInventoryItems(); // Ê¹ÓÃºóË¢ĞÂ±³°ü
+                RefreshInventoryItems(); // ä½¿ç”¨ååˆ·æ–°èƒŒåŒ…
+                // æ ¸å¿ƒä¿®æ”¹ï¼šè£…å¤‡/ä½¿ç”¨é“å…·ååˆ·æ–°è§’è‰²é¢æ¿
+                CharacterUI characterUI = FindObjectOfType<CharacterUI>();
+                if (characterUI != null) characterUI.UpdateCharacterAllInfo();
             });
+
+            // ====== ä¿®å¤ï¼šæ‚¬åœäº‹ä»¶è°ƒç”¨æ­£ç¡®çš„é‡è½½æ–¹æ³• ======
+            EventTrigger trigger = newSlot.GetComponent<EventTrigger>();
+            if (trigger == null) trigger = newSlot.AddComponent<EventTrigger>(); // å®¹é”™ï¼šå¦‚æœæ²¡æœ‰EventTriggerç»„ä»¶åˆ™æ·»åŠ 
+
+            // é¼ æ ‡ç§»å…¥ â†’ æ˜¾ç¤ºè¯¦æƒ…
+            EventTrigger.Entry enterEvent = new EventTrigger.Entry();
+            enterEvent.eventID = EventTriggerType.PointerEnter;
+            enterEvent.callback.AddListener((_) => { TooltipUI.ShowTooltip(item); });
+            trigger.triggers.Add(enterEvent);
+
+            // é¼ æ ‡ç§»å‡º â†’ éšè—è¯¦æƒ…
+            EventTrigger.Entry exitEvent = new EventTrigger.Entry();
+            exitEvent.eventID = EventTriggerType.PointerExit;
+            exitEvent.callback.AddListener((_) => { TooltipUI.HideTooltip(); });
+            trigger.triggers.Add(exitEvent);
         }
     }
 }

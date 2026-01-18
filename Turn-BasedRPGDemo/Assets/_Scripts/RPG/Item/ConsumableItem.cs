@@ -1,11 +1,15 @@
 using UnityEngine;
 
+/// <summary>
+/// 消耗品配置文件 - 继承ItemBase基类（血瓶、蓝瓶、护甲药剂等）
+/// 使用后：恢复对应数值 → 数量-1 → 数量为0自动移除
+/// </summary>
 [CreateAssetMenu(fileName = "NewConsumable", menuName = "RPG/ConsumableItem")]
 public class ConsumableItem : ItemBase
 {
     [Header("消耗品属性")]
     public AttributeType recoverType; // 恢复类型：HP/MP/AP
-    public float recoverValue; // 恢复数值
+    public float recoverValue = 20f; // 恢复数值
 
     // 重写使用方法：使用道具恢复属性
     public override bool UseItem(GameObject target)

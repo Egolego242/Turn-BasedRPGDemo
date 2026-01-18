@@ -64,6 +64,9 @@ public class Inventory : MonoBehaviour
                 {
                     RemoveItem(item);
                 }
+                // 核心修改：使用消耗品后刷新角色面板
+                CharacterUI characterUI = FindObjectOfType<CharacterUI>();
+                if (characterUI != null) characterUI.ForceRefresh();
             }
         }
         // 装备品：装备/卸下切换
@@ -76,8 +79,30 @@ public class Inventory : MonoBehaviour
             }
             else
             {
+                // 核心修改：同类型装备自动卸下（避免重复装备）
+                UnEquipSameType(equip.itemType);
                 EquipItem(equip);
             }
+            // 装备后刷新角色面板
+            CharacterUI characterUI = FindObjectOfType<CharacterUI>();
+            if (characterUI != null) characterUI.ForceRefresh();
+        }
+    }
+
+    // 新增：自动卸下同类型装备（比如穿新武器时自动卸旧武器）
+    private void UnEquipSameType(ItemType type)
+    {
+        List<EquipItem> toRemove = new List<EquipItem>();
+        foreach (var equip in equipedItemList)
+        {
+            if (equip.itemType == type)
+            {
+                toRemove.Add(equip);
+            }
+        }
+        foreach (var equip in toRemove)
+        {
+            UnEquipItem(equip);
         }
     }
 
@@ -86,6 +111,7 @@ public class Inventory : MonoBehaviour
     {
         equip.Equip(gameObject);
         equipedItemList.Add(equip);
+        Debug.Log("装备了：" + equip.itemName + "，属性加成生效！");
     }
 
     // 卸下道具：还原属性，移出已装备列表
@@ -93,6 +119,7 @@ public class Inventory : MonoBehaviour
     {
         equip.UnEquip(gameObject);
         equipedItemList.Remove(equip);
+        Debug.Log("卸下了：" + equip.itemName + "，属性加成还原！");
     }
     #endregion
 }

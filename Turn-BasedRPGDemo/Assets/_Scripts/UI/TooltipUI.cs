@@ -1,38 +1,42 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // ¡ï¡ï¡ï TMPÃüÃû¿Õ¼ä ¡ï¡ï¡ï
+using TMPro; // â˜…â˜…â˜… TMPå‘½åç©ºé—´ â˜…â˜…â˜…
 
 /// <summary>
-/// Í¨ÓÃÊó±êĞüÍ£ÌáÊ¾Ãæ°å (TextMeshProĞÂ°æÊÊÅä)
-/// ÊÊÅä£ºµÀ¾ß/×°±¸/¼¼ÄÜ£¬ĞüÍ£ÏÔÊ¾ÏêÇé£¬ÒÆ¿ªÒş²Ø
-/// ±ÏÉè¼Ó·ÖÏî£¬ºóĞøÎŞĞèÖØ¹¹£¬Ö±½Ó¸´ÓÃ
+/// é€šç”¨é¼ æ ‡æ‚¬åœæç¤ºé¢æ¿ (TextMeshProæ–°ç‰ˆé€‚é…)
+/// é€‚é…ï¼šé“å…·/è£…å¤‡/æŠ€èƒ½ï¼Œæ‚¬åœæ˜¾ç¤ºè¯¦æƒ…ï¼Œç§»å¼€éšè—
+/// æ¯•è®¾åŠ åˆ†é¡¹ï¼Œåç»­æ— éœ€é‡æ„ï¼Œç›´æ¥å¤ç”¨
 /// </summary>
-public class TooltipUI_TMP : MonoBehaviour
+public class TooltipUI : MonoBehaviour
 {
-    public TextMeshProUGUI tooltipTitle;  // µÀ¾ßÃû³Æ TMP
-    public TextMeshProUGUI tooltipContent;// µÀ¾ßÏêÇé TMP
-    public RectTransform tooltipRect;     // ÌáÊ¾¿òµÄRectTransform
+    public TextMeshProUGUI tooltipTitle;  // é“å…·åç§° TMP
+    public TextMeshProUGUI tooltipContent;// é“å…·è¯¦æƒ… TMP
+    public RectTransform tooltipRect;     // æç¤ºæ¡†çš„RectTransform
 
-    private static TooltipUI_TMP instance;
+    private static TooltipUI instance;
 
     void Awake()
     {
         instance = this;
-        gameObject.SetActive(false); // Ä¬ÈÏÒş²Ø
+        gameObject.SetActive(false); // é»˜è®¤éšè—
     }
 
     void Update()
     {
-        // ¸úËæÊó±êÒÆ¶¯£¬Éñ½çÔ­×ï2·ç¸ñ
+        // è·Ÿéšé¼ æ ‡ç§»åŠ¨ï¼Œç¥ç•ŒåŸç½ª2é£æ ¼
         if (gameObject.activeSelf)
         {
             Vector2 mousePos = Input.mousePosition;
-            tooltipRect.position = new Vector2(mousePos.x + 15, mousePos.y - 15);
+            // é™åˆ¶æç¤ºé¢æ¿åœ¨å±å¹•å†…ï¼Œé¿å…è¶…å‡ºå¯è§†åŒºåŸŸ
+            Vector2 pos = new Vector2(mousePos.x + 15, mousePos.y - 15);
+            pos.x = Mathf.Clamp(pos.x, 0, Screen.width - tooltipRect.rect.width);
+            pos.y = Mathf.Clamp(pos.y, tooltipRect.rect.height, Screen.height);
+            tooltipRect.position = pos;
         }
     }
 
     /// <summary>
-    /// ÏÔÊ¾ÌáÊ¾ĞÅÏ¢£¬Íâ²¿µ÷ÓÃÕâ¸ö·½·¨¼´¿É
+    /// æ˜¾ç¤ºæç¤ºä¿¡æ¯ï¼Œå¤–éƒ¨è°ƒç”¨è¿™ä¸ªæ–¹æ³•å³å¯
     /// </summary>
     public static void ShowTooltip(string title, string content)
     {
@@ -43,7 +47,37 @@ public class TooltipUI_TMP : MonoBehaviour
     }
 
     /// <summary>
-    /// Òş²ØÌáÊ¾ĞÅÏ¢
+    /// é‡è½½ï¼šæ˜¾ç¤ºé“å…·/è£…å¤‡çš„å®Œæ•´ä¿¡æ¯ï¼ˆæ ¸å¿ƒä¿®æ”¹ï¼‰
+    /// </summary>
+    public static void ShowTooltip(ItemBase item)
+    {
+        if (instance == null || item == null) return;
+
+        string title = item.itemName;
+        // å†…å®¹æ‹¼æ¥ï¼šæè¿° + ä¸“å±å±æ€§ï¼ˆæ¶ˆè€—å“/è£…å¤‡ï¼‰
+        string content = item.itemDesc + "\n\n";
+        if (item is ConsumableItem consumable)
+        {
+            content += $"âœ¨ æ¢å¤ç±»å‹ï¼š{consumable.recoverType}\n";
+            content += $"âœ¨ æ¢å¤æ•°å€¼ï¼š{consumable.recoverValue}";
+        }
+        else if (item is EquipItem equip)
+        {
+            content += "ğŸ“Œ å±æ€§åŠ æˆï¼š\n";
+            foreach (var bonus in equip.attrBonusList)
+            {
+                content += bonus.bonusValue > 0 ? $"+{bonus.bonusValue} {bonus.attrType}\n" : $"{bonus.bonusValue} {bonus.attrType}\n";
+            }
+        }
+        content += $"\nå †å ï¼š{(item.isStackable ? "æ˜¯" : "å¦")}";
+
+        instance.tooltipTitle.text = title;
+        instance.tooltipContent.text = content;
+        instance.gameObject.SetActive(true);
+    }
+
+    /// <summary>
+    /// éšè—æç¤ºä¿¡æ¯
     /// </summary>
     public static void HideTooltip()
     {

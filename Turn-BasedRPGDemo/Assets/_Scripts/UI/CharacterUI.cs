@@ -7,7 +7,7 @@ using TMPro;
 /// 显示所有角色基础属性+已装备道具，弹窗式，点击开关
 /// 无旧代码修改，无缝对接属性/背包系统
 /// </summary>
-public class CharacterUI_TMP : MonoBehaviour
+public class CharacterUI : MonoBehaviour
 {
     [Header("=== 角色核心属性 TMP文本 ===")]
     public TextMeshProUGUI txt_Level;
@@ -65,8 +65,9 @@ public class CharacterUI_TMP : MonoBehaviour
 
     /// <summary>
     /// 同步角色所有详细属性+装备到UI
+    /// 外部可调用，确保装备/使用道具后数值同步
     /// </summary>
-    private void UpdateCharacterAllInfo()
+    public void UpdateCharacterAllInfo()
     {
         if (playerAttr == null || inventory == null) return;
 
@@ -108,5 +109,11 @@ public class CharacterUI_TMP : MonoBehaviour
                 img_ArmorSlot.sprite = equip.itemIcon;
             }
         }
+    }
+
+    // 新增：外部调用刷新（比如装备后主动触发）
+    public void ForceRefresh()
+    {
+        UpdateCharacterAllInfo();
     }
 }
