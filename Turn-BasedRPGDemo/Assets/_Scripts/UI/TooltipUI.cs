@@ -1,87 +1,85 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // ★★★ TMP命名空间 ★★★
+using TMPro;
 
-/// <summary>
-/// 通用鼠标悬停提示面板 (TextMeshPro新版适配)
-/// 适配：道具/装备/技能，悬停显示详情，移开隐藏
-/// 毕设加分项，后续无需重构，直接复用
-/// </summary>
 public class TooltipUI : MonoBehaviour
 {
-    public TextMeshProUGUI tooltipTitle;  // 道具名称 TMP
-    public TextMeshProUGUI tooltipContent;// 道具详情 TMP
-    public RectTransform tooltipRect;     // 提示框的RectTransform
+    public int offsetX = 10;  // 向右偏移，精准贴合图标右下角
+    public int offsetY = -10; // 向上偏移，适配装备Panel子层级的坐标（这个值微调即可）
+    public TextMeshProUGUI titleText;
+    public TextMeshProUGUI contentText;
+    public RectTransform tooltipRect;
 
-    private static TooltipUI instance;
+    public static TooltipUI Instance;
+    private RectTransform _parentPanelRect; // 装备Panel的RectTransform（核心适配）
+    private Canvas _canvas;
 
     void Awake()
     {
-        instance = this;
-        gameObject.SetActive(false); // 默认隐藏
+        Instance = this;
+        _canvas = GetComponentInParent<Canvas>();
+        _parentPanelRect = transform.parent.GetComponent<RectTransform>();//获取父物体装备Panel的Rect
+        gameObject.SetActive(false);
+
+        // 防闪屏，必加
+        GetComponent<Image>().raycastTarget = false;
+        titleText.raycastTarget = false;
+        contentText.raycastTarget = false;
     }
 
-    void Update()
+    public void ShowTooltip(ItemBase item, RectTransform slotRect)
     {
-        // 跟随鼠标移动，神界原罪2风格
-        if (gameObject.activeSelf)
+        if (item == null || slotRect == null || _parentPanelRect == null) return;
+
+        // ===== 核心：适配装备Panel子层级，纯本地坐标计算，绝对精准无偏移 =====
+        Vector2 slotLocalPos = slotRect.anchoredPosition;
+        float slotW = slotRect.rect.width;
+        float slotH = slotRect.rect.height;
+        float tipW = tooltipRect.rect.width;
+        float tipH = tooltipRect.rect.height;
+
+        // ✅ 提示窗 左上角 精准贴合 道具槽 右下角（严丝合缝，你要的效果）
+        float targetX = slotLocalPos.x + slotW + offsetX;
+        float targetY = slotLocalPos.y - offsetY;
+
+        // ===== ✅ 彻底防溢出：适配装备Panel的可视区域，绝对不会超出面板/屏幕 =====
+        // 右边界溢出 → 向左显示
+        if (targetX + tipW > _parentPanelRect.rect.width)
         {
-            Vector2 mousePos = Input.mousePosition;
-            // 限制提示面板在屏幕内，避免超出可视区域
-            Vector2 pos = new Vector2(mousePos.x + 15, mousePos.y - 15);
-            pos.x = Mathf.Clamp(pos.x, 0, Screen.width - tooltipRect.rect.width);
-            pos.y = Mathf.Clamp(pos.y, tooltipRect.rect.height, Screen.height);
-            tooltipRect.position = pos;
+            targetX = slotLocalPos.x - tipW - offsetX;
         }
-    }
-
-    /// <summary>
-    /// 显示提示信息，外部调用这个方法即可
-    /// </summary>
-    public static void ShowTooltip(string title, string content)
-    {
-        if (instance == null) return;
-        instance.tooltipTitle.text = title;
-        instance.tooltipContent.text = content;
-        instance.gameObject.SetActive(true);
-    }
-
-    /// <summary>
-    /// 重载：显示道具/装备的完整信息（核心修改）
-    /// </summary>
-    public static void ShowTooltip(ItemBase item)
-    {
-        if (instance == null || item == null) return;
-
-        string title = item.itemName;
-        // 内容拼接：描述 + 专属属性（消耗品/装备）
-        string content = item.itemDesc + "\n\n";
-        if (item is ConsumableItem consumable)
+        // 下边界溢出 → 向上显示
+        if (targetY - tipH < 0)
         {
-            content += $"✨ 恢复类型：{consumable.recoverType}\n";
-            content += $"✨ 恢复数值：{consumable.recoverValue}";
+            targetY = slotLocalPos.y + slotH + offsetY;
         }
-        else if (item is EquipItem equip)
-        {
-            content += "📌 属性加成：\n";
-            foreach (var bonus in equip.attrBonusList)
-            {
-                content += bonus.bonusValue > 0 ? $"+{bonus.bonusValue} {bonus.attrType}\n" : $"{bonus.bonusValue} {bonus.attrType}\n";
-            }
-        }
-        content += $"\n堆叠：{(item.isStackable ? "是" : "否")}";
 
-        instance.tooltipTitle.text = title;
-        instance.tooltipContent.text = content;
-        instance.gameObject.SetActive(true);
+        // 赋值最终位置，精准无偏差
+        tooltipRect.anchoredPosition = new Vector2(targetX, targetY);
+
+        // 赋值物品文本
+        titleText.text = item.itemName;
+        contentText.text = item.itemDesc;
+        if (item is ConsumableItem c)
+            contentText.text += $"\n恢复{c.recoverValue}点{c.recoverType}";
+        if (item is EquipItem e)
+            foreach (var b in e.attrBonusList)
+                contentText.text += $"\n{b.attrType}+{b.bonusValue}";
+
+        gameObject.SetActive(true);
     }
 
-    /// <summary>
-    /// 隐藏提示信息
-    /// </summary>
-    public static void HideTooltip()
+    public void HideTooltip()
     {
-        if (instance == null) return;
-        instance.gameObject.SetActive(false);
+        gameObject.SetActive(false);
+    }
+
+    public static void Show(ItemBase item, RectTransform slotRect)
+    {
+        if (Instance != null) Instance.ShowTooltip(item, slotRect);
+    }
+    public static void Hide()
+    {
+        if (Instance != null) Instance.HideTooltip();
     }
 }
