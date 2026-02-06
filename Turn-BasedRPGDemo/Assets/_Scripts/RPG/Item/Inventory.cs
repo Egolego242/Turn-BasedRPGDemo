@@ -1,13 +1,20 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// 背包系统核心脚本 - 挂载在玩家身上
-/// 功能：道具添加、移除、使用、装备、卸下，支持所有道具类型，极致可扩展
-/// 无缝衔接属性系统：装备属性加成直接调用角色属性方法
-/// </summary>
+// 你的背包系统，只写在这里，无重复
 public class Inventory : MonoBehaviour
 {
+    [Header("金币")]
+    public int currentGold = 0;
+
+    // 唯一的AddGold方法（无二义性）
+    public void AddGold(int gold)
+    {
+        if (gold <= 0) return;
+        currentGold += gold;
+        Debug.Log($"金币+{gold}，当前：{currentGold}");
+    }
+
     [Header("背包配置")]
     public int bagCapacity = 20; // 背包容量
     public List<ItemBase> itemList = new List<ItemBase>(); // 背包道具列表

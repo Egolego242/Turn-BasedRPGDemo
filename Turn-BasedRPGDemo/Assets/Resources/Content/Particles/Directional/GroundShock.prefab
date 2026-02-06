@@ -23,9 +23,11 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6760841765996351095}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2847523946371977697}
   - {fileID: 8734185109758023649}
@@ -35,13 +37,13 @@ Transform:
   - {fileID: 7454055361659341346}
   - {fileID: 2458525534434963036}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &3053072655768034659
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 594719882608259903}
     m_Modifications:
     - target: {fileID: -3516798391789321488, guid: 0c046dd96c589d24593facfb7921bee1,
@@ -119,6 +121,16 @@ PrefabInstance:
       propertyPath: startDelay.scalar
       value: 0.6
       objectReference: {fileID: 0}
+    - target: {fileID: 3243355118580837910, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 4225443866606844396, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     - target: {fileID: 4641542945718833570, guid: 0c046dd96c589d24593facfb7921bee1,
         type: 3}
       propertyPath: startDelay.scalar
@@ -129,7 +141,25 @@ PrefabInstance:
       propertyPath: m_Name
       value: FireExplosionEffect (6)
       objectReference: {fileID: 0}
+    - target: {fileID: 8135380756043496767, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8871287436312120598, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8903603412851443358, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0c046dd96c589d24593facfb7921bee1, type: 3}
 --- !u!4 &2458525534434963036 stripped
 Transform:
@@ -142,6 +172,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 594719882608259903}
     m_Modifications:
     - target: {fileID: 594719882608259903, guid: 0c046dd96c589d24593facfb7921bee1,
@@ -199,12 +230,40 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3243355118580837910, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 4225443866606844396, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     - target: {fileID: 6760841765996351095, guid: 0c046dd96c589d24593facfb7921bee1,
         type: 3}
       propertyPath: m_Name
       value: FireExplosionEffect
       objectReference: {fileID: 0}
+    - target: {fileID: 8135380756043496767, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8871287436312120598, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8903603412851443358, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0c046dd96c589d24593facfb7921bee1, type: 3}
 --- !u!4 &2847523946371977697 stripped
 Transform:
@@ -217,6 +276,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 594719882608259903}
     m_Modifications:
     - target: {fileID: -3516798391789321488, guid: 0c046dd96c589d24593facfb7921bee1,
@@ -294,6 +354,16 @@ PrefabInstance:
       propertyPath: startDelay.scalar
       value: 0.4
       objectReference: {fileID: 0}
+    - target: {fileID: 3243355118580837910, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 4225443866606844396, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     - target: {fileID: 4641542945718833570, guid: 0c046dd96c589d24593facfb7921bee1,
         type: 3}
       propertyPath: startDelay.scalar
@@ -304,7 +374,25 @@ PrefabInstance:
       propertyPath: m_Name
       value: FireExplosionEffect (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 8135380756043496767, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8871287436312120598, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8903603412851443358, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0c046dd96c589d24593facfb7921bee1, type: 3}
 --- !u!4 &5321488798585583038 stripped
 Transform:
@@ -317,6 +405,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 594719882608259903}
     m_Modifications:
     - target: {fileID: -3516798391789321488, guid: 0c046dd96c589d24593facfb7921bee1,
@@ -394,6 +483,16 @@ PrefabInstance:
       propertyPath: startDelay.scalar
       value: 0.2
       objectReference: {fileID: 0}
+    - target: {fileID: 3243355118580837910, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 4225443866606844396, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     - target: {fileID: 4641542945718833570, guid: 0c046dd96c589d24593facfb7921bee1,
         type: 3}
       propertyPath: startDelay.scalar
@@ -404,7 +503,25 @@ PrefabInstance:
       propertyPath: m_Name
       value: FireExplosionEffect (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 8135380756043496767, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8871287436312120598, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8903603412851443358, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0c046dd96c589d24593facfb7921bee1, type: 3}
 --- !u!4 &7538245112994909632 stripped
 Transform:
@@ -417,6 +534,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 594719882608259903}
     m_Modifications:
     - target: {fileID: -3516798391789321488, guid: 0c046dd96c589d24593facfb7921bee1,
@@ -494,6 +612,16 @@ PrefabInstance:
       propertyPath: startDelay.scalar
       value: 0.3
       objectReference: {fileID: 0}
+    - target: {fileID: 3243355118580837910, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 4225443866606844396, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     - target: {fileID: 4641542945718833570, guid: 0c046dd96c589d24593facfb7921bee1,
         type: 3}
       propertyPath: startDelay.scalar
@@ -504,7 +632,25 @@ PrefabInstance:
       propertyPath: m_Name
       value: FireExplosionEffect (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 8135380756043496767, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8871287436312120598, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8903603412851443358, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0c046dd96c589d24593facfb7921bee1, type: 3}
 --- !u!4 &7900746932992740453 stripped
 Transform:
@@ -517,6 +663,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 594719882608259903}
     m_Modifications:
     - target: {fileID: -3516798391789321488, guid: 0c046dd96c589d24593facfb7921bee1,
@@ -594,6 +741,16 @@ PrefabInstance:
       propertyPath: startDelay.scalar
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 3243355118580837910, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 4225443866606844396, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     - target: {fileID: 4641542945718833570, guid: 0c046dd96c589d24593facfb7921bee1,
         type: 3}
       propertyPath: startDelay.scalar
@@ -604,7 +761,25 @@ PrefabInstance:
       propertyPath: m_Name
       value: FireExplosionEffect (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 8135380756043496767, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8871287436312120598, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8903603412851443358, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0c046dd96c589d24593facfb7921bee1, type: 3}
 --- !u!4 &7454055361659341346 stripped
 Transform:
@@ -617,6 +792,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
+    serializedVersion: 3
     m_TransformParent: {fileID: 594719882608259903}
     m_Modifications:
     - target: {fileID: -3516798391789321488, guid: 0c046dd96c589d24593facfb7921bee1,
@@ -694,6 +870,16 @@ PrefabInstance:
       propertyPath: startDelay.scalar
       value: 0.1
       objectReference: {fileID: 0}
+    - target: {fileID: 3243355118580837910, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 4225443866606844396, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     - target: {fileID: 4641542945718833570, guid: 0c046dd96c589d24593facfb7921bee1,
         type: 3}
       propertyPath: startDelay.scalar
@@ -704,7 +890,25 @@ PrefabInstance:
       propertyPath: m_Name
       value: FireExplosionEffect (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 8135380756043496767, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8871287436312120598, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
+    - target: {fileID: 8903603412851443358, guid: 0c046dd96c589d24593facfb7921bee1,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e823cd5b5d27c0f4b8256e7c12ee3e6d, type: 2}
     m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0c046dd96c589d24593facfb7921bee1, type: 3}
 --- !u!4 &8734185109758023649 stripped
 Transform:

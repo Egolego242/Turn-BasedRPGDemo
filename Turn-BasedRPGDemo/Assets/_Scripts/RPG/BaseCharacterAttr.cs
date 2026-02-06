@@ -1,55 +1,74 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+
 /// <summary>
-/// 通用角色属性基类 - 玩家/敌人全部继承此类
-/// ✅ 修复：字典初始化容错+空引用判空+数值保护增强
-/// ✅ 核心功能不变：属性管理、扣血、回血、行动点消耗/恢复、阵营判定
+/// 角色属性基类（所有角色共用，消除字段缺失错误）
 /// </summary>
 public class BaseCharacterAttr : MonoBehaviour
 {
-    // 核心：字典存储所有属性，初始化时直接创建空字典，防止空引用
+    // 通用战斗状态字段（解决isMyTurn/isInBattle/isDead报错）
+    [HideInInspector] public bool isInBattle;
+    [HideInInspector] public bool isMyTurn;
+    [HideInInspector] public bool isDead;
+
+    // 核心属性字典（合并管理）
     protected Dictionary<AttributeType, float> attrDic = new Dictionary<AttributeType, float>();
+    [Header("===== 阵营配置 =====")]
+    public CampType currentCamp;
 
-    [Header("===== 阵营属性 =====")]
-    public CampType currentCamp; // 阵营类型
-
-    #region 初始化属性（子类调用，给所有属性赋初始值）
+    // 初始化属性（所有角色通用）
     protected void InitAttribute(float maxHP, float maxMP, float maxAP, float strength, float intelligence, float armor)
     {
-        // 先清空字典，防止重复赋值
-        attrDic.Clear();
-        // 基础属性赋值（满状态）
+        // 初始化状态字段
+        isInBattle = false;
+        isMyTurn = false;
+        isDead = false;
+
+        // 清空并初始化字典
+        attrDic?.Clear();
+        attrDic ??= new Dictionary<AttributeType, float>();
+
+        // 基础属性
         SetAttrValue(AttributeType.MaxHP, maxHP);
-        SetAttrValue(AttributeType.CurrentHP, 20);
+        SetAttrValue(AttributeType.CurrentHP, maxHP);
         SetAttrValue(AttributeType.MaxMP, maxMP);
         SetAttrValue(AttributeType.CurrentMP, maxMP);
+        SetAttrValue(AttributeType.MaxPhysArmor, 0);
+        SetAttrValue(AttributeType.CurrentPhysArmor, 0);
+        SetAttrValue(AttributeType.MaxMagicArmor, 0);
+        SetAttrValue(AttributeType.CurrentMagicArmor, 0);
+
+        // 战斗属性
         SetAttrValue(AttributeType.MaxAP, maxAP);
         SetAttrValue(AttributeType.CurrentAP, maxAP);
-        // 战斗属性赋值
         SetAttrValue(AttributeType.Strength, strength);
         SetAttrValue(AttributeType.Intelligence, intelligence);
         SetAttrValue(AttributeType.Armor, armor);
         SetAttrValue(AttributeType.MagicResist, 0);
-        // 成长属性默认值
+
+        // 成长属性
         SetAttrValue(AttributeType.Level, 1);
         SetAttrValue(AttributeType.CurrentEXP, 0);
         SetAttrValue(AttributeType.EXPToLevelUp, 100);
     }
-    #endregion
 
-    #region 核心属性操作方法（✅ 修复：字典空键容错+判空，彻底解决KeyNotFoundException）
+    // 战力计算（解决GetCombatPower报错）
+    public float GetCombatPower()
+    {
+        float strength = GetAttrValue(AttributeType.Strength);
+        float intelligence = GetAttrValue(AttributeType.Intelligence);
+        float armor = GetAttrValue(AttributeType.Armor);
+        float magicResist = GetAttrValue(AttributeType.MagicResist);
+        return (strength * 2) + (intelligence * 2) + armor + magicResist;
+    }
+
+    // 属性操作核心方法（所有子类共用）
     public void SetAttrValue(AttributeType type, float value)
     {
-        if (attrDic == null) attrDic = new Dictionary<AttributeType, float>();
-        if (attrDic.ContainsKey(type))
-        {
-            attrDic[type] = value;
-        }
-        else
-        {
-            attrDic.Add(type, value);
-        }
+        attrDic ??= new Dictionary<AttributeType, float>();
+        if (attrDic.ContainsKey(type)) attrDic[type] = value;
+        else attrDic.Add(type, value);
         ValueProtect(type);
     }
 
@@ -62,13 +81,14 @@ public class BaseCharacterAttr : MonoBehaviour
     public void AddAttrValue(AttributeType type, float addValue)
     {
         if (attrDic == null) return;
-        float curValue = GetAttrValue(type);
-        SetAttrValue(type, curValue + addValue);
+        SetAttrValue(type, GetAttrValue(type) + addValue);
     }
 
+    // 属性值边界防护
     private void ValueProtect(AttributeType type)
     {
         if (attrDic == null || !attrDic.ContainsKey(type)) return;
+
         switch (type)
         {
             case AttributeType.CurrentHP:
@@ -80,42 +100,54 @@ public class BaseCharacterAttr : MonoBehaviour
             case AttributeType.CurrentAP:
                 attrDic[type] = Mathf.Clamp(attrDic[type], 0, GetAttrValue(AttributeType.MaxAP));
                 break;
+            case AttributeType.Level:
+            case AttributeType.CurrentEXP:
+                attrDic[type] = Mathf.Max(attrDic[type], 0);
+                break;
             default:
                 break;
         }
     }
-    #endregion
 
-    #region 通用行为方法（✅ 修复：全方法加判空，防止空引用）
+    // 通用行为方法
     public virtual void TakeDamage(float damage)
     {
-        if (attrDic == null) return;
+        if (attrDic == null || isDead) return;
         float finalDamage = Mathf.Max(damage - GetAttrValue(AttributeType.Armor), 1);
         AddAttrValue(AttributeType.CurrentHP, -finalDamage);
-        // 播放受击动画前先判空Animator
+
         Animator anim = GetComponent<Animator>();
         if (anim != null) anim.SetTrigger("Hurt");
-        if (GetAttrValue(AttributeType.CurrentHP) <= 0)
+
+        if (Mathf.Approximately(GetAttrValue(AttributeType.CurrentHP), 0))
         {
+            isDead = true;
             Die();
         }
     }
 
+    public virtual void Die()
+    {
+        isDead = true;
+        Animator anim = GetComponent<Animator>();
+        if (anim != null) anim.SetTrigger("Die");
+    }
+
     public void HealHP(float healValue)
     {
-        if (attrDic == null) return;
+        if (attrDic == null || healValue <= 0 || isDead) return;
         AddAttrValue(AttributeType.CurrentHP, healValue);
     }
 
     public void HealMP(float healValue)
     {
-        if (attrDic == null) return;
+        if (attrDic == null || healValue <= 0 || isDead) return;
         AddAttrValue(AttributeType.CurrentMP, healValue);
     }
 
     public bool ConsumeAP(float costValue)
     {
-        if (attrDic == null || costValue <= 0) return false;
+        if (attrDic == null || costValue <= 0 || isDead) return false;
         if (GetAttrValue(AttributeType.CurrentAP) >= costValue)
         {
             AddAttrValue(AttributeType.CurrentAP, -costValue);
@@ -126,42 +158,27 @@ public class BaseCharacterAttr : MonoBehaviour
 
     public void RecoverAP(float recoverValue)
     {
-        if (attrDic == null) return;
+        if (attrDic == null || recoverValue <= 0 || isDead) return;
         AddAttrValue(AttributeType.CurrentAP, recoverValue);
     }
 
     public void RecoverFullAP()
     {
-        if (attrDic == null) return;
+        if (attrDic == null || isDead) return;
         SetAttrValue(AttributeType.CurrentAP, GetAttrValue(AttributeType.MaxAP));
     }
 
-    public virtual void Die()
-    {
-        Animator anim = GetComponent<Animator>();
-        if (anim != null) anim.SetTrigger("Die");
-    }
-    #endregion
-
-    #region 阵营判定方法（✅ 修复：参数判空，防止传入null）
+    // 阵营判断
     public bool IsEnemy(BaseCharacterAttr targetAttr)
     {
         if (targetAttr == null) return false;
-        return (this.currentCamp == CampType.Player && targetAttr.currentCamp == CampType.Enemy) ||
-               (this.currentCamp == CampType.Enemy && targetAttr.currentCamp == CampType.Player);
+        return (currentCamp == CampType.Player && targetAttr.currentCamp == CampType.Enemy) ||
+               (currentCamp == CampType.Enemy && targetAttr.currentCamp == CampType.Player);
     }
 
     public bool IsAlly(BaseCharacterAttr targetAttr)
     {
         if (targetAttr == null) return false;
-        return this.currentCamp == targetAttr.currentCamp && this.currentCamp != CampType.Neutral;
+        return currentCamp == targetAttr.currentCamp && currentCamp != CampType.Neutral;
     }
-    #endregion
-}
-
-public enum CampType
-{
-    Player,
-    Enemy,
-    Neutral
 }
