@@ -18,8 +18,13 @@ public class PlayerAttr : BaseCharacterAttr
 
     private void Awake()
     {
-        // 初始化组件+属性
-        animator = GetComponent<Animator>();
+        // 组件容错：避免未挂载Animator报错
+        if (TryGetComponent<Animator>(out Animator anim))
+        {
+            animator = anim;
+        }
+
+        // 初始化属性（调用基类方法）
         InitAttribute(initMaxHP, initMaxMP, initMaxAP, initStrength, initIntelligence, initArmor);
         currentCamp = CampType.Player;
     }
@@ -27,7 +32,7 @@ public class PlayerAttr : BaseCharacterAttr
     // 经验+升级逻辑
     public void AddEXP(float expValue)
     {
-        if (expValue <= 0) return;
+        if (expValue <= 0 || isDead) return; // 死亡后无法升级
         AddAttrValue(AttributeType.CurrentEXP, expValue);
         CheckLevelUp();
     }
@@ -44,18 +49,30 @@ public class PlayerAttr : BaseCharacterAttr
             SetAttrValue(AttributeType.CurrentEXP, curEXP - needEXP);
             SetAttrValue(AttributeType.EXPToLevelUp, needEXP * 1.5f);
 
+            // 升级属性加成
             AddAttrValue(AttributeType.MaxHP, 20);
             AddAttrValue(AttributeType.MaxMP, 10);
             AddAttrValue(AttributeType.MaxAP, 2);
             AddAttrValue(AttributeType.Strength, 2);
             AddAttrValue(AttributeType.Armor, 1);
 
-            // 满血+满AP
+            // 满血+满AP（确保MaxHP更新后CurrentHP生效）
             HealHP(GetAttrValue(AttributeType.MaxHP));
             RecoverFullAP();
 
             // 调用基类战力方法（无报错）
-            Debug.Log($"玩家升级！战力：{GetCombatPower()}");
+            Debug.Log($"玩家升级！等级：{GetAttrValue(AttributeType.Level)}，战力：{GetCombatPower()}");
+        }
+    }
+
+    // 重写结束个人回合（补充玩家专属逻辑）
+    public override void EndPersonalTurn()
+    {
+        base.EndPersonalTurn(); // 调用基类核心逻辑
+        // 玩家专属：停止移动
+        if (TryGetComponent<NavMeshAgent>(out NavMeshAgent agent))
+        {
+            agent.isStopped = true;
         }
     }
 
@@ -65,8 +82,11 @@ public class PlayerAttr : BaseCharacterAttr
         base.Die();
         Debug.Log("玩家死亡！");
 
-        NavMeshAgent agent = GetComponent<NavMeshAgent>();
-        if (agent != null) agent.enabled = false;
+        // NavMeshAgent容错
+        if (TryGetComponent<NavMeshAgent>(out NavMeshAgent agent))
+        {
+            agent.enabled = false;
+        }
     }
 
     // 动画播放（容错）

@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-
 /// <summary>
 /// 角色属性基类（所有角色共用，消除字段缺失错误）
 /// </summary>
@@ -12,8 +11,13 @@ public class BaseCharacterAttr : MonoBehaviour
     [HideInInspector] public bool isMyTurn;
     [HideInInspector] public bool isDead;
 
+    // 回合制核心字段
+    [Header("===== 回合制核心 =====")]
+    public float initiative = 5f; // 先攻值（越高行动越靠前）
+    [HideInInspector] public bool hasActInRound = false; // 本回合是否已行动（防止重复行动）
+
     // 核心属性字典（合并管理）
-    protected Dictionary<AttributeType, float> attrDic = new Dictionary<AttributeType, float>();
+    protected Dictionary<AttributeType, float> attrDic;
     [Header("===== 阵营配置 =====")]
     public CampType currentCamp;
 
@@ -24,10 +28,11 @@ public class BaseCharacterAttr : MonoBehaviour
         isInBattle = false;
         isMyTurn = false;
         isDead = false;
+        hasActInRound = false;
 
-        // 清空并初始化字典
-        attrDic?.Clear();
-        attrDic ??= new Dictionary<AttributeType, float>();
+        // 安全初始化字典（避免空引用）
+        attrDic = attrDic ?? new Dictionary<AttributeType, float>();
+        attrDic.Clear();
 
         // 基础属性
         SetAttrValue(AttributeType.MaxHP, maxHP);
@@ -41,7 +46,7 @@ public class BaseCharacterAttr : MonoBehaviour
 
         // 战斗属性
         SetAttrValue(AttributeType.MaxAP, maxAP);
-        SetAttrValue(AttributeType.CurrentAP, maxAP);
+        SetAttrValue(AttributeType.CurrentAP, 0); // 初始行动点0，战斗开始时赋值4
         SetAttrValue(AttributeType.Strength, strength);
         SetAttrValue(AttributeType.Intelligence, intelligence);
         SetAttrValue(AttributeType.Armor, armor);
@@ -51,7 +56,14 @@ public class BaseCharacterAttr : MonoBehaviour
         SetAttrValue(AttributeType.Level, 1);
         SetAttrValue(AttributeType.CurrentEXP, 0);
         SetAttrValue(AttributeType.EXPToLevelUp, 100);
+
+        // 先攻值存入字典（可选）
+        SetAttrValue(AttributeType.Initiative, initiative);
     }
+
+    // 先攻值快捷访问
+    public float GetInitiative() => initiative;
+    public void SetInitiative(float value) => initiative = Mathf.Max(1, value); // 保底1
 
     // 战力计算（解决GetCombatPower报错）
     public float GetCombatPower()
@@ -66,28 +78,30 @@ public class BaseCharacterAttr : MonoBehaviour
     // 属性操作核心方法（所有子类共用）
     public void SetAttrValue(AttributeType type, float value)
     {
-        attrDic ??= new Dictionary<AttributeType, float>();
-        if (attrDic.ContainsKey(type)) attrDic[type] = value;
-        else attrDic.Add(type, value);
+        attrDic = attrDic ?? new Dictionary<AttributeType, float>(); // 懒加载字典
+        if (attrDic.ContainsKey(type))
+            attrDic[type] = value;
+        else
+            attrDic.Add(type, value);
+
         ValueProtect(type);
     }
 
     public float GetAttrValue(AttributeType type)
     {
-        if (attrDic == null || !attrDic.ContainsKey(type)) return 0;
-        return attrDic[type];
+        attrDic = attrDic ?? new Dictionary<AttributeType, float>(); // 兜底初始化
+        return attrDic.TryGetValue(type, out float val) ? val : 0; // 更安全的取值方式
     }
 
     public void AddAttrValue(AttributeType type, float addValue)
     {
-        if (attrDic == null) return;
         SetAttrValue(type, GetAttrValue(type) + addValue);
     }
 
     // 属性值边界防护
     private void ValueProtect(AttributeType type)
     {
-        if (attrDic == null || !attrDic.ContainsKey(type)) return;
+        if (!attrDic.ContainsKey(type)) return;
 
         switch (type)
         {
@@ -112,14 +126,18 @@ public class BaseCharacterAttr : MonoBehaviour
     // 通用行为方法
     public virtual void TakeDamage(float damage)
     {
-        if (attrDic == null || isDead) return;
+        if (isDead) return; // 提前判死，减少无效逻辑
         float finalDamage = Mathf.Max(damage - GetAttrValue(AttributeType.Armor), 1);
         AddAttrValue(AttributeType.CurrentHP, -finalDamage);
 
-        Animator anim = GetComponent<Animator>();
-        if (anim != null) anim.SetTrigger("Hurt");
+        // 动画容错：先判断组件是否存在
+        if (TryGetComponent<Animator>(out Animator anim))
+        {
+            anim.SetTrigger("Hurt");
+        }
 
-        if (Mathf.Approximately(GetAttrValue(AttributeType.CurrentHP), 0))
+        // 死亡判断：优化浮点精度问题（<=0 比Approximately更可靠）
+        if (GetAttrValue(AttributeType.CurrentHP) <= 0.01f)
         {
             isDead = true;
             Die();
@@ -129,26 +147,29 @@ public class BaseCharacterAttr : MonoBehaviour
     public virtual void Die()
     {
         isDead = true;
-        Animator anim = GetComponent<Animator>();
-        if (anim != null) anim.SetTrigger("Die");
+        if (TryGetComponent<Animator>(out Animator anim))
+        {
+            anim.SetTrigger("Die");
+        }
     }
 
     public void HealHP(float healValue)
     {
-        if (attrDic == null || healValue <= 0 || isDead) return;
+        if (healValue <= 0 || isDead) return;
         AddAttrValue(AttributeType.CurrentHP, healValue);
     }
 
     public void HealMP(float healValue)
     {
-        if (attrDic == null || healValue <= 0 || isDead) return;
+        if (healValue <= 0 || isDead) return;
         AddAttrValue(AttributeType.CurrentMP, healValue);
     }
 
     public bool ConsumeAP(float costValue)
     {
-        if (attrDic == null || costValue <= 0 || isDead) return false;
-        if (GetAttrValue(AttributeType.CurrentAP) >= costValue)
+        if (costValue <= 0 || isDead) return false;
+        float currentAP = GetAttrValue(AttributeType.CurrentAP);
+        if (currentAP >= costValue)
         {
             AddAttrValue(AttributeType.CurrentAP, -costValue);
             return true;
@@ -158,13 +179,13 @@ public class BaseCharacterAttr : MonoBehaviour
 
     public void RecoverAP(float recoverValue)
     {
-        if (attrDic == null || recoverValue <= 0 || isDead) return;
+        if (recoverValue <= 0 || isDead) return;
         AddAttrValue(AttributeType.CurrentAP, recoverValue);
     }
 
     public void RecoverFullAP()
     {
-        if (attrDic == null || isDead) return;
+        if (isDead) return;
         SetAttrValue(AttributeType.CurrentAP, GetAttrValue(AttributeType.MaxAP));
     }
 
@@ -180,5 +201,15 @@ public class BaseCharacterAttr : MonoBehaviour
     {
         if (targetAttr == null) return false;
         return currentCamp == targetAttr.currentCamp && currentCamp != CampType.Neutral;
+    }
+
+    // ===== 核心修复：基类新增EndPersonalTurn虚方法 =====
+    /// <summary>
+    /// 结束个人回合（基类虚方法，子类可重写）
+    /// </summary>
+    public virtual void EndPersonalTurn()
+    {
+        hasActInRound = true; // 标记本回合已行动，不再重复行动
+        isMyTurn = false;     // 取消当前回合标记
     }
 }
