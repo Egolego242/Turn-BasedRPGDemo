@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 
 /// <summary>
 /// 全局游戏状态管理器 - 单例模式
@@ -18,6 +19,8 @@ public class GameStateMgr : MonoBehaviour
     [Header("当前游戏状态")]
     public GamePlayState currentState = GamePlayState.ExploreState;
 
+    public static event Action<GamePlayState> OnGameStateChanged;//状态切换事件,ui订阅
+
     private void Awake()
     {
         // ✅ 修复：单例双重校验，彻底解决多实例冲突+空引用
@@ -35,6 +38,9 @@ public class GameStateMgr : MonoBehaviour
         currentState = targetState;
         Debug.Log("游戏状态切换为：" + targetState);
         RecoverAllCharacterAP();
+
+        // ========== 新增：触发状态切换事件 ==========
+        OnGameStateChanged?.Invoke(targetState);
     }
 
     private void RecoverAllCharacterAP()

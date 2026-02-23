@@ -2,312 +2,461 @@
 using UnityEngine.AI;
 using BehaviorDesigner.Runtime;
 using System.Collections;
+using System.Collections.Generic;
 
 /// <summary>
-/// 敌人属性类（完整版）
-/// 保留原有属性/掉落/死亡逻辑 + 补充和玩家一致的行动/战斗规则
+/// 敌人属性类 - 行为树专属适配版
+/// 所有AI逻辑完全交由Behavior Designer行为树控制
+/// 保留回合制战斗核心规则、属性系统、导航系统，提供行为树可调用的所有方法/条件判断
 /// </summary>
 public class EnemyAttr : BaseCharacterAttr
 {
-    #region 原有核心属性（完全保留）
-    [Header("===== 敌人初始属性 =====")]
-    public float initMaxHP = 80;
-    public float initMaxMP = 30;
-    public float initMaxAP = 8; // 最大行动点（和玩家一致）
-    public float initStrength = 6;
-    public float initIntelligence = 3;
-    public float initArmor = 2;
-
-    [Header("===== 掉落配置 =====")]
-    public DropTable dropTable;
-    public int dropEXP = 20;
-
+    #region 核心组件引用
+    [Header("===== 行为树核心配置 =====")]
+    public BehaviorTree behaviorTree; // 拖拽敌人身上的行为树组件
     [HideInInspector] public Animator animator;
     [HideInInspector] public NavMeshAgent navAgent;
     #endregion
 
-    #region 行动规则配置（和玩家一致）
+    #region 基础属性配置
+    [Header("===== 敌人初始属性 =====")]
+    public float initMaxHP = 80;
+    public float initMaxMP = 30;
+    public float initMaxAP = 8;
+    public float initStrength = 6;
+    public float initIntelligence = 3;
+    public float initArmor = 2;
+    #endregion
+
+    #region 掉落配置
+    [Header("===== 掉落配置 =====")]
+    public DropTable dropTable;
+    public int dropEXP = 20;
+    #endregion
+
+    #region 行动消耗规则（和行为树节点完全对应）
     [Header("===== 行动消耗规则 =====")]
     public float moveCostPerUnit = 1f; // 每移动1单位消耗的行动点
-    public float normalAttackCost = 2f; // 普攻消耗行动点
-    public float skillAttackCost = 3f; // 技能消耗行动点
-
+    public float normalAttackCost = 2f; // 普攻消耗行动点（行为树普攻判断用）
+    public float skillAttackCost = 3f; // 技能消耗行动点（行为树技能判断用）
     [Header("===== 战斗配置 =====")]
     public float attackRange = 2f; // 普攻射程
     public float skillRange = 5f; // 技能射程
-    public Transform attackTarget; // 攻击目标
+    public Transform attackTarget; // 攻击目标（行为树赋值玩家Transform）
     #endregion
 
-    #region 巡逻配置
+    #region 巡逻&警戒配置
     [Header("===== 巡逻配置 =====")]
     public float patrolRange = 5f; // 巡逻范围
-    public float patrolWaitTime = 2f; // 停留时间
-    private Vector3 originPos; // 初始位置
+    public float patrolWaitTime = 2f; // 巡逻停留时间
+    private Vector3 originPos; // 出生初始位置
     private Coroutine patrolCoroutine;
+
+    [Header("===== 警戒圈配置 =====")]
+    public float enemyDetectRange = 8f; // 战斗触发警戒范围
+    public bool showEnemyRangeGizmo = true; // Scene视图显示警戒圈
     #endregion
 
     #region 技能冷却
     [Header("===== 技能冷却 =====")]
     public float skillCoolDown = 2; // 技能冷却回合数
-    private float skillCoolDownLeft = 0; // 剩余冷却回合
-    #endregion
-
-    #region 行为树适配
-    private BehaviorTree _behaviorTree;
+    [HideInInspector] public float skillCoolDownLeft = 0; // 剩余冷却回合（行为树可读取）
     #endregion
 
     #region 初始化
-    private void Awake()
+    protected override void Awake()
     {
-        // 组件容错：避免未挂载时报错
+        base.Awake();
+        // 组件自动获取+容错
         animator = GetComponent<Animator>();
         navAgent = GetComponent<NavMeshAgent>();
+        if (behaviorTree == null)
+            behaviorTree = GetComponent<BehaviorTree>();
 
         // 初始化属性（调用基类方法）
         InitAttribute(initMaxHP, initMaxMP, initMaxAP, initStrength, initIntelligence, initArmor);
         currentCamp = CampType.Enemy;
-
-        // 行为树组件初始化（容错）
-        if (TryGetComponent<BehaviorTree>(out BehaviorTree bt))
-        {
-            _behaviorTree = bt;
-        }
-
-        // 初始化巡逻
         originPos = transform.position;
+
+        // 初始化行为树：非战斗状态默认启用日常分支，禁用战斗分支
+        InitBehaviorTreeState();
+    }
+
+    /// <summary>
+    /// 初始化行为树状态
+    /// </summary>
+    private void InitBehaviorTreeState()
+    {
+        if (behaviorTree == null) return;
+        // 非战斗状态启动行为树
         if (!isInBattle)
         {
-            patrolCoroutine = StartCoroutine(PatrolCoroutine());
+            behaviorTree.EnableBehavior();
+            StartPatrol();
+        }
+        else
+        {
+            behaviorTree.DisableBehavior();
         }
     }
     #endregion
 
-    #region 巡逻逻辑
-    // 巡逻协程
-    private IEnumerator PatrolCoroutine()
+    #region 行为树 - 日常分支核心方法（巡逻/警戒/触发战斗）
+    /// <summary>
+    /// 【行为树调用】启动巡逻协程
+    /// </summary>
+    public void StartPatrol()
     {
-        while (!isInBattle && !isDead)
-        {
-            // 随机目标点（范围内）
-            Vector3 randomPos = originPos + new Vector3(
-                Random.Range(-patrolRange, patrolRange),
-                0,
-                Random.Range(-patrolRange, patrolRange)
-            );
-            // 寻路到目标点
-            if (navAgent != null && navAgent.enabled)
-            {
-                navAgent.SetDestination(randomPos);
-                navAgent.isStopped = false;
-            }
-            // 等待到达/停留
-            yield return new WaitForSeconds(patrolWaitTime);
-        }
+        if (isInBattle || isDead) return;
+        if (patrolCoroutine != null)
+            StopCoroutine(patrolCoroutine);
+
+        patrolCoroutine = StartCoroutine(PatrolCoroutine());
     }
 
-    // 停止巡逻（战斗开始时调用）
+    /// <summary>
+    /// 【行为树调用】停止巡逻
+    /// </summary>
     public void StopPatrol()
     {
         if (patrolCoroutine != null)
         {
             StopCoroutine(patrolCoroutine);
+            patrolCoroutine = null;
         }
-        if (navAgent != null)
+        if (navAgent != null && navAgent.isActiveAndEnabled)
         {
+            navAgent.ResetPath();
             navAgent.isStopped = true;
         }
     }
-    #endregion
-
-    #region 回合重置
-    // 回合重置：恢复行动点（和玩家回合逻辑一致）
-    public void ResetTurn()
-    {
-        if (isDead) return;
-        RecoverFullAP(); // 改用基类方法恢复满AP
-        if (navAgent != null) navAgent.ResetPath(); // 清空寻路路径（空引用容错）
-    }
-    #endregion
-
-    #region 核心行动逻辑
-    /// <summary>
-    /// AI寻路移动（消耗行动点，和玩家移动规则一致）
-    /// </summary>
-    public bool MoveTo(Vector3 targetPos)
-    {
-        // 死亡/无行动点/无寻路组件 → 无法移动
-        if (isDead || navAgent == null || !navAgent.enabled)
-            return false;
-
-        float currentAP = GetAttrValue(AttributeType.CurrentAP);
-        if (currentAP <= 0) return false;
-
-        // 计算移动距离和消耗
-        float distance = Vector3.Distance(transform.position, targetPos);
-        float cost = distance * moveCostPerUnit;
-
-        // 行动点不足 → 无法移动
-        if (cost > currentAP)
-            return false;
-
-        // 执行寻路
-        navAgent.SetDestination(targetPos);
-        navAgent.isStopped = false;
-
-        // 消耗行动点（改用基类方法）
-        ConsumeAP(cost);
-
-        return true;
-    }
 
     /// <summary>
-    /// 执行普攻（行为树调用，消耗行动点）
+    /// 巡逻协程（行为树日常分支驱动）
     /// </summary>
-    public bool DoNormalAttack()
+    private IEnumerator PatrolCoroutine()
     {
-        // 校验：死亡/无目标/行动点不足/超出射程
-        if (isDead || attackTarget == null || !ConsumeAP(normalAttackCost) ||
-            Vector3.Distance(transform.position, attackTarget.position) > attackRange)
-            return false;
-
-        // 播放普攻动画（容错）
-        animator?.SetTrigger("Attack");
-
-        // 普攻伤害计算
-        if (attackTarget.TryGetComponent<BaseCharacterAttr>(out BaseCharacterAttr targetAttr))
+        while (!isInBattle && !isDead)
         {
-            float strength = GetAttrValue(AttributeType.Strength);
-            float armor = targetAttr.GetAttrValue(AttributeType.Armor);
-            float damage = CalculateDamage(strength, armor);
-            targetAttr.TakeDamage(damage);
-            Debug.Log($"{gameObject.name} 普攻 {attackTarget.name}，造成 {damage} 伤害");
+            // 生成随机巡逻点
+            Vector3 randomDir = Random.insideUnitSphere * patrolRange;
+            randomDir.y = 0;
+            Vector3 targetPos = originPos + randomDir;
+
+            // 验证目标点是否在NavMesh上
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(targetPos, out hit, patrolRange, NavMesh.AllAreas))
+            {
+                targetPos = hit.position;
+                if (navAgent != null && navAgent.isActiveAndEnabled)
+                {
+                    navAgent.isStopped = false;
+                    navAgent.SetDestination(targetPos);
+                }
+            }
+
+            // 等待到达+停留
+            yield return new WaitForSeconds(patrolWaitTime);
+        }
+    }
+
+    /// <summary>
+    /// 【行为树条件判断】玩家是否在警戒范围内
+    /// </summary>
+    public bool IsPlayerInDetectRange()
+    {
+        PlayerAttr player = FindObjectOfType<PlayerAttr>();
+        if (player == null || player.isDead) return false;
+
+        float distance = Vector3.Distance(transform.position, player.transform.position);
+        return distance <= enemyDetectRange;
+    }
+
+    /// <summary>
+    /// 【行为树条件判断】玩家是否存在且存活
+    /// </summary>
+    public bool IsPlayerExistAndAlive()
+    {
+        PlayerAttr player = FindObjectOfType<PlayerAttr>();
+        return player != null && !player.isDead;
+    }
+
+    /// <summary>
+    /// 【行为树调用】敌人主动触发战斗
+    /// </summary>
+    public void TriggerBattleByEnemy()
+    {
+        PlayerAttr player = FindObjectOfType<PlayerAttr>();
+        if (player == null || TurnBattleManager.Instance == null) return;
+
+        // 收集同范围内所有存活敌人
+        List<BaseCharacterAttr> battleEnemies = new List<BaseCharacterAttr>();
+        Collider[] colliders = Physics.OverlapSphere(transform.position, enemyDetectRange);
+        foreach (var col in colliders)
+        {
+            EnemyAttr enemy = col.GetComponent<EnemyAttr>();
+            if (enemy != null && !enemy.isDead)
+                battleEnemies.Add(enemy);
         }
 
-        return true;
+        // 没有敌人则加入自己
+        if (battleEnemies.Count == 0)
+            battleEnemies.Add(this);
+
+        // 切换全局游戏状态+触发回合制战斗
+        GameStateMgr.Instance?.SwitchGameState(GameStateMgr.GamePlayState.BattleState);
+        TurnBattleManager.Instance.TriggerBattle(player, battleEnemies);
+
+        // 给自身赋值攻击目标
+        attackTarget = player.transform;
+    }
+    #endregion
+
+    #region 行为树 - 战斗分支核心方法（技能/普攻/移动/回合控制）
+    /// <summary>
+    /// 【行为树条件判断】是否处于战斗状态
+    /// </summary>
+    public bool IsInBattle() => isInBattle;
+
+    /// <summary>
+    /// 【行为树条件判断】是否处于当前行动回合
+    /// </summary>
+    public bool IsMyTurn() => isMyTurn;
+
+    /// <summary>
+    /// 【行为树条件判断】技能冷却是否就绪
+    /// </summary>
+    public bool IsSkillCoolDownReady() => skillCoolDownLeft <= 0;
+
+    /// <summary>
+    /// 【行为树条件判断】行动点是否足够释放技能
+    /// </summary>
+    public bool HasEnoughAPForSkill()
+    {
+        return GetAttrValue(AttributeType.CurrentAP) >= skillAttackCost;
     }
 
     /// <summary>
-    /// 执行技能（行为树调用，消耗行动点+冷却）
+    /// 【行为树条件判断】行动点是否足够释放普攻
+    /// </summary>
+    public bool HasEnoughAPForAttack()
+    {
+        return GetAttrValue(AttributeType.CurrentAP) >= normalAttackCost;
+    }
+
+    /// <summary>
+    /// 【行为树条件判断】目标是否在普攻射程内
+    /// </summary>
+    public bool IsTargetInAttackRange()
+    {
+        if (attackTarget == null) return false;
+        float distance = Vector3.Distance(transform.position, attackTarget.position);
+        return distance <= attackRange;
+    }
+
+    /// <summary>
+    /// 【行为树条件判断】目标是否在技能射程内
+    /// </summary>
+    public bool IsTargetInSkillRange()
+    {
+        if (attackTarget == null) return false;
+        float distance = Vector3.Distance(transform.position, attackTarget.position);
+        return distance <= skillRange;
+    }
+
+    /// <summary>
+    /// 【行为树调用】释放技能（返回是否释放成功）
     /// </summary>
     public bool CastSkill()
     {
-        // 冷却校验
-        if (skillCoolDownLeft > 0)
+        // 全量校验
+        if (isDead || attackTarget == null || !IsSkillCoolDownReady()
+            || !HasEnoughAPForSkill() || !IsTargetInSkillRange())
         {
-            Debug.Log($"{gameObject.name} 技能冷却中，剩余{skillCoolDownLeft}回合");
+            Debug.Log($"{gameObject.name} 技能释放条件不满足");
             return false;
         }
 
-        // 基础校验
-        if (isDead || attackTarget == null || !ConsumeAP(skillAttackCost) ||
-            Vector3.Distance(transform.position, attackTarget.position) > skillRange)
-            return false;
+        // 消耗行动点
+        if (!ConsumeAP(skillAttackCost)) return false;
 
-        // 播放技能动画（容错）
+        // 播放技能动画
         animator?.SetTrigger("Skill");
+        PlaySkillAnim();
 
         // 技能伤害计算
         if (attackTarget.TryGetComponent<BaseCharacterAttr>(out BaseCharacterAttr targetAttr))
         {
             float intelligence = GetAttrValue(AttributeType.Intelligence);
             float armor = targetAttr.GetAttrValue(AttributeType.Armor);
-            float damage = CalculateDamage(intelligence * 1.5f, armor * 0.5f);
+            float damage = Mathf.Max(1, intelligence * 1.5f - armor * 0.5f);
             targetAttr.TakeDamage(damage);
             Debug.Log($"{gameObject.name} 释放技能攻击 {attackTarget.name}，造成 {damage} 伤害");
         }
 
         // 触发冷却
         skillCoolDownLeft = skillCoolDown;
+        // 攻击后检查战斗是否结束
+        TurnBattleManager.Instance?.CheckBattleEnd();
         return true;
     }
 
-    // 减少技能冷却（全局回合结束时调用）
+    /// <summary>
+    /// 【行为树调用】执行普攻（返回是否释放成功）
+    /// </summary>
+    public bool DoNormalAttack()
+    {
+        // 全量校验
+        if (isDead || attackTarget == null || !HasEnoughAPForAttack() || !IsTargetInAttackRange())
+        {
+            Debug.Log($"{gameObject.name} 普攻条件不满足");
+            return false;
+        }
+
+        // 消耗行动点
+        if (!ConsumeAP(normalAttackCost)) return false;
+
+        // 播放普攻动画
+        animator?.SetTrigger("Attack");
+        PlayAttackAnim();
+
+        // 普攻伤害计算
+        if (attackTarget.TryGetComponent<BaseCharacterAttr>(out BaseCharacterAttr targetAttr))
+        {
+            float strength = GetAttrValue(AttributeType.Strength);
+            float armor = targetAttr.GetAttrValue(AttributeType.Armor);
+            float damage = Mathf.Max(1, strength - armor);
+            targetAttr.TakeDamage(damage);
+            Debug.Log($"{gameObject.name} 普攻 {attackTarget.name}，造成 {damage} 伤害");
+        }
+
+        // 攻击后检查战斗是否结束
+        TurnBattleManager.Instance?.CheckBattleEnd();
+        return true;
+    }
+
+    /// <summary>
+    /// 【行为树调用】向目标移动（返回是否移动成功）
+    /// </summary>
+    public bool MoveToTarget()
+    {
+        if (isDead || attackTarget == null || navAgent == null || !navAgent.isActiveAndEnabled)
+            return false;
+
+        float currentAP = GetAttrValue(AttributeType.CurrentAP);
+        if (currentAP <= 0) return false;
+
+        // 计算移动距离和消耗
+        Vector3 targetPos = attackTarget.position;
+        float distance = Vector3.Distance(transform.position, targetPos);
+        float cost = distance * moveCostPerUnit;
+
+        // 行动点不足无法移动
+        if (cost > currentAP) return false;
+
+        // 执行寻路
+        navAgent.isStopped = false;
+        navAgent.SetDestination(targetPos);
+        // 消耗行动点
+        ConsumeAP(cost);
+        return true;
+    }
+
+    /// <summary>
+    /// 【行为树调用】减少技能冷却（全局回合结束时调用）
+    /// </summary>
     public void ReduceSkillCoolDown()
     {
         if (skillCoolDownLeft > 0)
-        {
             skillCoolDownLeft--;
+    }
+
+    /// <summary>
+    /// 【行为树调用】结束个人回合
+    /// </summary>
+    public override void EndPersonalTurn()
+    {
+        base.EndPersonalTurn(); // 基类核心逻辑：标记已行动、取消回合
+        // 停止移动
+        if (navAgent != null && navAgent.isActiveAndEnabled)
+        {
+            navAgent.ResetPath();
+            navAgent.isStopped = true;
+        }
+        // 通知回合管理器切换下一个角色
+        TurnBattleManager.Instance?.StartNextActorTurn();
+    }
+
+    /// <summary>
+    /// 【行为树调用】死亡判定与处理
+    /// </summary>
+    public void CheckDeathState()
+    {
+        if (isDead)
+        {
+            Die();
         }
     }
     #endregion
 
-    #region 重写基类方法
-    // 重写结束个人回合（补充NavMeshAgent逻辑）
-    public override void EndPersonalTurn()
-    {
-        base.EndPersonalTurn(); // 调用基类逻辑（标记已行动、取消回合）
-        if (navAgent != null)
-        {
-            navAgent.isStopped = true; // 停止移动
-        }
-    }
-
-    // 重写死亡方法（保留掉落/经验/销毁）
+    #region 重写基类方法（战斗状态联动行为树）
     public override void Die()
     {
         base.Die();
-        Debug.Log($"{gameObject.name}死亡");
+        Debug.Log($"{gameObject.name} 死亡");
 
-        // 禁用AI和行为树（容错）
+        // 禁用导航和行为树
         if (navAgent != null) navAgent.enabled = false;
-        _behaviorTree?.DisableBehavior();
+        behaviorTree?.DisableBehavior();
 
         // 停止巡逻
         StopPatrol();
 
-        // 给玩家加经验（容错：避免多个PlayerAttr）
+        // 给玩家加经验
         PlayerAttr[] players = FindObjectsOfType<PlayerAttr>();
         foreach (PlayerAttr player in players)
         {
             if (player != null) player.AddEXP(dropEXP);
         }
 
-        // 生成掉落物（容错：DropSystem实例为空）
+        // 生成掉落物
         if (DropSystem.Instance != null && dropTable != null)
         {
             DropSystem.Instance.SpawnDrop(transform.position, dropTable);
         }
 
+        // 检查战斗是否结束
+        TurnBattleManager.Instance?.CheckBattleEnd();
         // 延迟销毁
         Destroy(gameObject, 5f);
     }
-    #endregion
 
-    #region 辅助方法
-    // 伤害计算（复用/补充，和玩家一致）
-    private float CalculateDamage(float attack, float defense)
-    {
-        return Mathf.Max(1, attack - defense); // 保底1点伤害
-    }
-
-    // 动画播放（原有逻辑+容错）
+    // 动画播放方法
     public void PlayAttackAnim() => animator?.SetTrigger("Attack");
     public void PlaySkillAnim() => animator?.SetTrigger("Skill");
+    #endregion
 
-    // 行为树辅助判断
-    public bool CanNormalAttack()
+    #region Scene视图调试
+    private void OnDrawGizmos()
     {
-        if (isDead || attackTarget == null) return false;
+        if (!showEnemyRangeGizmo) return;
 
-        float currentAP = GetAttrValue(AttributeType.CurrentAP);
-        float distance = Vector3.Distance(transform.position, attackTarget.position);
+        // 绘制警戒圈
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, enemyDetectRange);
 
-        return currentAP >= normalAttackCost && distance <= attackRange;
-    }
+        // 绘制巡逻范围
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(originPos == Vector3.zero ? transform.position : originPos, patrolRange);
 
-    public bool CanCastSkill()
-    {
-        if (isDead || attackTarget == null || skillCoolDownLeft > 0) return false;
-
-        float currentAP = GetAttrValue(AttributeType.CurrentAP);
-        float distance = Vector3.Distance(transform.position, attackTarget.position);
-
-        return currentAP >= skillAttackCost && distance <= skillRange;
-    }
-
-    public void SetAttackTarget(Transform target)
-    {
-        attackTarget = target;
+        // 绘制攻击/技能射程
+        if (isInBattle)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, attackRange);
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireSphere(transform.position, skillRange);
+        }
     }
     #endregion
 }

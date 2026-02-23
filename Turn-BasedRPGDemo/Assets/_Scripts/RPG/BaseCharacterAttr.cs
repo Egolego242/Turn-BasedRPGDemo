@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 /// <summary>
 /// 角色属性基类（所有角色共用，消除字段缺失错误）
@@ -20,6 +21,12 @@ public class BaseCharacterAttr : MonoBehaviour
     protected Dictionary<AttributeType, float> attrDic;
     [Header("===== 阵营配置 =====")]
     public CampType currentCamp;
+
+
+    protected virtual void Awake()
+    {
+        // 父类原有初始化逻辑（比如属性初始化、组件获取等）
+    }
 
     // 初始化属性（所有角色通用）
     protected void InitAttribute(float maxHP, float maxMP, float maxAP, float strength, float intelligence, float armor)
@@ -75,7 +82,7 @@ public class BaseCharacterAttr : MonoBehaviour
         return (strength * 2) + (intelligence * 2) + armor + magicResist;
     }
 
-    // 属性操作核心方法（所有子类共用）
+    #region 属性操作核心方法（所有子类共用）
     public void SetAttrValue(AttributeType type, float value)
     {
         attrDic = attrDic ?? new Dictionary<AttributeType, float>(); // 懒加载字典
@@ -122,8 +129,10 @@ public class BaseCharacterAttr : MonoBehaviour
                 break;
         }
     }
+    #endregion
 
-    // 通用行为方法
+    #region 通用行为方法
+    // 受伤方法（所有角色通用）
     public virtual void TakeDamage(float damage)
     {
         if (isDead) return; // 提前判死，减少无效逻辑
@@ -144,6 +153,7 @@ public class BaseCharacterAttr : MonoBehaviour
         }
     }
 
+    // 死亡
     public virtual void Die()
     {
         isDead = true;
@@ -153,40 +163,48 @@ public class BaseCharacterAttr : MonoBehaviour
         }
     }
 
+    // 治疗方法（所有角色通用）
     public void HealHP(float healValue)
     {
         if (healValue <= 0 || isDead) return;
         AddAttrValue(AttributeType.CurrentHP, healValue);
     }
 
+    // 治疗法术方法（所有角色通用）
     public void HealMP(float healValue)
     {
         if (healValue <= 0 || isDead) return;
         AddAttrValue(AttributeType.CurrentMP, healValue);
     }
 
+    // 消耗行动点
     public bool ConsumeAP(float costValue)
     {
         if (costValue <= 0 || isDead) return false;
         float currentAP = GetAttrValue(AttributeType.CurrentAP);
-        if (currentAP >= costValue)
+        if (currentAP >= costValue)// 行动点不足时，不消耗
         {
             AddAttrValue(AttributeType.CurrentAP, -costValue);
+            TurnBattleManager.TriggerActionPointChanged();
             return true;
         }
         return false;
     }
 
+    // 恢复行动点
     public void RecoverAP(float recoverValue)
     {
         if (recoverValue <= 0 || isDead) return;
         AddAttrValue(AttributeType.CurrentAP, recoverValue);
+        TurnBattleManager.TriggerActionPointChanged();
     }
 
+    // 恢复满行动点
     public void RecoverFullAP()
     {
         if (isDead) return;
         SetAttrValue(AttributeType.CurrentAP, GetAttrValue(AttributeType.MaxAP));
+        TurnBattleManager.TriggerActionPointChanged();
     }
 
     // 阵营判断
@@ -212,4 +230,5 @@ public class BaseCharacterAttr : MonoBehaviour
         hasActInRound = true; // 标记本回合已行动，不再重复行动
         isMyTurn = false;     // 取消当前回合标记
     }
+    #endregion
 }

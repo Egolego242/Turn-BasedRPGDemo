@@ -1,27 +1,37 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
-/// <summary>
-/// 回合制战斗管理器（单例）
-/// 核心：先攻值排序、行动点回复、回合流程控制
-/// </summary>
 public class TurnBattleManager : MonoBehaviour
 {
     public static TurnBattleManager Instance { get; private set; }
-
     [Header("===== 战斗规则配置 =====")]
-    public float globalMaxAP = 6f; // 行动点上限
-    public float roundRecoverAP = 4f; // 每回合回复行动点
-    public float detectRange = 8f; // 敌人探测范围（触发战斗）
+    public float globalMaxAP = 6f;
+    public float roundRecoverAP = 4f;
+    // 注意：detectRange探测范围已废弃，改为敌人自身的enemyDetectRange警戒圈
+    // public float detectRange = 8f; 
 
     // 战斗参与方
     private List<BaseCharacterAttr> allCombatants = new List<BaseCharacterAttr>();
-    private List<BaseCharacterAttr> sortedCombatants = new List<BaseCharacterAttr>(); // 按先攻排序后的角色
-    private int currentActorIndex = 0; // 当前行动角色索引
-    private bool isBattleActive = false; // 是否在战斗中
+    private List<BaseCharacterAttr> sortedCombatants = new List<BaseCharacterAttr>();
+    private int currentActorIndex = 0;
+    private bool isBattleActive = false;
 
-    // 单例初始化
+    // ========== 新增：战斗流程事件，UI订阅 ==========
+    public static event Action<List<BaseCharacterAttr>> OnBattleStart; // 战斗开始，传入所有参战角色
+    public static event Action<BaseCharacterAttr> OnTurnChanged; // 回合切换，传入当前行动角色
+    public static event Action<bool> OnBattleEnd; // 战斗结束，传入是否玩家胜利
+    public static event Action OnActionPointChanged; // 行动点变化事件
+
+
+    // ========== 新增：专门用于触发行动点变化事件的公共静态方法 ==========
+    public static void TriggerActionPointChanged()
+    {
+        // 只有在定义事件的类内部，才能直接调用事件
+        OnActionPointChanged?.Invoke();
+    }
+
     private void Awake()
     {
         if (Instance != null && Instance != this) Destroy(gameObject);
@@ -29,97 +39,122 @@ public class TurnBattleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 触发战斗（玩家进入探测范围/主动攻击中立单位）
+    /// 触发战斗（玩家进入警戒范围/敌人主动攻击）
     /// </summary>
     public void TriggerBattle(BaseCharacterAttr player, List<BaseCharacterAttr> enemies)
     {
         if (isBattleActive) return;
         isBattleActive = true;
 
-        // 收集所有战斗角色
+        // 收集战斗角色
         allCombatants.Clear();
         allCombatants.Add(player);
         allCombatants.AddRange(enemies);
 
-        // 初始化战斗状态
+        // 初始化所有参战角色战斗状态
         foreach (var combatant in allCombatants)
         {
             combatant.isInBattle = true;
             combatant.isMyTurn = false;
             combatant.hasActInRound = false;
-            // 初始行动点4，上限6
+
+            // 初始化行动点
             combatant.SetAttrValue(AttributeType.MaxAP, globalMaxAP);
             combatant.SetAttrValue(AttributeType.CurrentAP, roundRecoverAP);
-            // 切换战斗动画（假设Animator有"BattleMode"布尔参数）
+
+            // 战斗动画切换
             Animator anim = combatant.GetComponent<Animator>();
             if (anim != null) anim.SetBool("BattleMode", true);
 
-            // 敌人停止巡逻
+            // 敌人处理：停止巡逻+启用行为树战斗分支+赋值攻击目标
             if (combatant is EnemyAttr enemy)
             {
                 enemy.StopPatrol();
+                enemy.attackTarget = player.transform;
+                enemy.behaviorTree?.EnableBehavior(); // 启用行为树
             }
         }
 
-        // 按先攻值降序排序（先攻高先行动）
+        // 先攻值排序
         sortedCombatants = allCombatants.OrderByDescending(c => c.GetInitiative()).ToList();
+        Debug.Log("战斗开始！先攻顺序：" + string.Join(" > ", sortedCombatants.Select(c => c.name)));
 
-        // 显示战斗UI提示（后续对接UI层）
-        Debug.Log("战斗开始！按先攻顺序行动：" + string.Join(" > ", sortedCombatants.Select(c => c.name)));
-        // 触发UI显示逻辑（比如：ShowBattleTip("战斗开始！")，2秒后隐藏）
+        // ========== 新增：战斗开始事件触发 ==========
+        OnBattleStart?.Invoke(sortedCombatants);
 
-        // 开始第一个角色的回合
+        // 启动第一个角色回合
         StartNextActorTurn();
     }
 
     /// <summary>
-    /// 切换到下一个角色的回合
+    /// 切换下一个角色回合
     /// </summary>
     public void StartNextActorTurn()
     {
-        // 1. 检查当前回合是否所有角色都已行动
+        // 检查本回合是否所有角色都已行动
         if (sortedCombatants.All(c => c.hasActInRound))
         {
-            EnterNewGlobalRound(); // 全角色行动完毕，进入新全局回合
+            EnterNewGlobalRound();
             return;
         }
 
-        // 2. 找到下一个未行动的角色
+        // 找到下一个未行动、未死亡的角色
         currentActorIndex = (currentActorIndex + 1) % sortedCombatants.Count;
         BaseCharacterAttr nextActor = sortedCombatants[currentActorIndex];
-
         while (nextActor.hasActInRound || nextActor.isDead)
         {
             currentActorIndex = (currentActorIndex + 1) % sortedCombatants.Count;
             nextActor = sortedCombatants[currentActorIndex];
         }
 
-        // 3. 激活该角色的回合
+        // 激活角色回合
         nextActor.isMyTurn = true;
         Debug.Log($"{nextActor.name} 的回合！剩余行动点：{nextActor.GetAttrValue(AttributeType.CurrentAP)}");
 
-        // 敌人AI自动行动（玩家回合等待输入）
+        // ========== 新增：回合切换事件触发 ==========
+        OnTurnChanged?.Invoke(nextActor);
+        OnActionPointChanged?.Invoke(); // 刷新行动点UI
+
+        // ========== 核心修改：敌人回合交由行为树执行 ==========
         if (nextActor is EnemyAttr enemy)
         {
-            Invoke("EnemyAutoAct", 1f); // 延迟1秒执行AI行动
+            // 延迟1秒执行，给行为树留执行时间，和原逻辑保持一致
+            Invoke(nameof(ExecuteEnemyBehaviorTree), 1f);
         }
     }
 
     /// <summary>
-    /// 全局回合结束（所有角色行动完毕）→ 回复行动点+重置状态
+    /// 执行敌人行为树（替代原硬编码EnemyAutoAct）
+    /// </summary>
+    private void ExecuteEnemyBehaviorTree()
+    {
+        BaseCharacterAttr currentEnemy = sortedCombatants[currentActorIndex];
+        // 安全校验：死亡/非当前回合，直接结束回合
+        if (currentEnemy.isDead || !currentEnemy.isMyTurn)
+        {
+            currentEnemy.EndPersonalTurn();
+            StartNextActorTurn();
+        }
+        // 行为树会自动执行战斗分支的技能/普攻/移动逻辑，最终调用EndPersonalTurn结束回合
+        // 行为树执行完毕后，会自动触发回合切换，无需额外硬编码
+    }
+
+    /// <summary>
+    /// 全局新回合：恢复行动点+重置冷却
     /// </summary>
     private void EnterNewGlobalRound()
     {
         foreach (var combatant in allCombatants)
         {
             if (combatant.isDead) continue;
-            // 回复4点行动点，不超上限6
+
+            // 恢复行动点
             float newAP = Mathf.Min(
                 combatant.GetAttrValue(AttributeType.CurrentAP) + roundRecoverAP,
                 globalMaxAP
             );
             combatant.SetAttrValue(AttributeType.CurrentAP, newAP);
-            combatant.hasActInRound = false; // 重置已行动标记
+            combatant.hasActInRound = false;
 
             // 敌人技能冷却减少
             if (combatant is EnemyAttr enemy)
@@ -127,41 +162,10 @@ public class TurnBattleManager : MonoBehaviour
                 enemy.ReduceSkillCoolDown();
             }
         }
-        Debug.Log("===== 新回合开始！所有存活角色回复4点行动点 =====");
-        StartNextActorTurn(); // 开始新回合的第一个角色行动
-    }
 
-    /// <summary>
-    /// 敌人AI自动行动（简化版，可扩展）
-    /// </summary>
-    private void EnemyAutoAct()
-    {
-        BaseCharacterAttr currentEnemy = sortedCombatants[currentActorIndex];
-        if (currentEnemy.isDead || !currentEnemy.isMyTurn) return;
-
-        EnemyAttr enemy = currentEnemy as EnemyAttr;
-        if (enemy == null) return;
-
-        // AI决策：优先普攻→技能→移动（根据行动点判断）
-        bool acted = false;
-        if (enemy.CanNormalAttack())
-        {
-            acted = enemy.DoNormalAttack();
-        }
-        else if (enemy.CanCastSkill())
-        {
-            acted = enemy.CastSkill();
-        }
-        // 修复：替换enemy.currentAP为GetAttrValue
-        else if (enemy.GetAttrValue(AttributeType.CurrentAP) >= enemy.moveCostPerUnit)
-        {
-            // 向玩家移动（简化：取第一个玩家为目标）
-            BaseCharacterAttr player = allCombatants.First(c => c is PlayerAttr);
-            acted = enemy.MoveTo(player.transform.position);
-        }
-
-        // 无论是否行动，结束个人回合（调用基类方法）
-        enemy.EndPersonalTurn();
+        // 刷新所有技能冷却
+        SkillManager.Instance?.RefreshAllSkillCoolDown();
+        Debug.Log("===== 新回合开始！所有存活角色恢复行动点 =====");
         StartNextActorTurn();
     }
 
@@ -170,10 +174,10 @@ public class TurnBattleManager : MonoBehaviour
     /// </summary>
     public void PlayerEndTurn()
     {
-        BaseCharacterAttr player = allCombatants.First(c => c is PlayerAttr);
-        if (!player.isMyTurn || player.isDead) return;
+        BaseCharacterAttr player = allCombatants.FirstOrDefault(c => c is PlayerAttr);
+        if (player == null || !player.isMyTurn || player.isDead) return;
 
-        player.EndPersonalTurn(); // 调用基类方法
+        player.EndPersonalTurn();
         StartNextActorTurn();
     }
 
@@ -182,69 +186,54 @@ public class TurnBattleManager : MonoBehaviour
     /// </summary>
     public void CheckBattleEnd()
     {
-        // 判定双方存活状态
         bool allPlayerDead = allCombatants.Where(c => c is PlayerAttr).All(c => c.isDead);
         bool allEnemyDead = allCombatants.Where(c => c is EnemyAttr).All(c => c.isDead);
 
         if (allPlayerDead)
         {
-            // 玩家失败→存档读取界面
-            Debug.Log("玩家方全灭！打开存档读取界面");
-            // UIManager.Instance.ShowSaveLoadPanel(); // 对接存档UI
+            Debug.Log("玩家方全灭！战斗失败");
             EndBattle(false);
         }
         else if (allEnemyDead)
         {
-            // 玩家胜利→回到探索模式
-            Debug.Log("敌方全灭！战斗胜利，回到自由探索");
+            Debug.Log("敌方全灭！战斗胜利");
             EndBattle(true);
         }
     }
 
     /// <summary>
-    /// 结束战斗
+    /// 结束战斗，恢复探索状态
     /// </summary>
     private void EndBattle(bool playerWin)
     {
         isBattleActive = false;
+        GameStateMgr.Instance?.SwitchGameState(GameStateMgr.GamePlayState.ExploreState);
+
         foreach (var combatant in allCombatants)
         {
             combatant.isInBattle = false;
             combatant.isMyTurn = false;
+
             // 退出战斗动画
             Animator anim = combatant.GetComponent<Animator>();
             if (anim != null) anim.SetBool("BattleMode", false);
 
-            // 敌人死亡处理（掉落物）
-            if (combatant is EnemyAttr enemy && enemy.isDead)
+            // 敌人处理：禁用行为树战斗分支，恢复巡逻
+            if (combatant is EnemyAttr enemy && !enemy.isDead)
             {
-                enemy.Die(); // 触发掉落逻辑（原Die方法已包含掉落）
+                enemy.StartPatrol();
             }
         }
 
+        // 清空战斗数据
         allCombatants.Clear();
         sortedCombatants.Clear();
         currentActorIndex = 0;
+
+        // ========== 新增：战斗结束事件触发 ==========
+        OnBattleEnd?.Invoke(playerWin);
     }
 
-    // 检测玩家进入敌人探测范围（挂载在敌人身上，或全局检测）
-    private void OnTriggerEnter(Collider other)
-    {
-        if (isBattleActive) return;
-        PlayerAttr player = other.GetComponent<PlayerAttr>();
-        if (player != null)
-        {
-            // 收集探测范围内的所有敌人
-            List<BaseCharacterAttr> enemies = Physics.OverlapSphere(transform.position, detectRange)
-                .Select(col => col.GetComponent<EnemyAttr>())
-                .Where(enemy => enemy != null && !enemy.isDead)
-                .Cast<BaseCharacterAttr>()
-                .ToList();
-
-            if (enemies.Count > 0)
-            {
-                TriggerBattle(player, enemies);
-            }
-        }
-    }
+    // ========== 废弃：原全局触发战斗逻辑，改为敌人自身警戒圈触发 ==========
+    // private void OnTriggerEnter(Collider other) { ... }
 }

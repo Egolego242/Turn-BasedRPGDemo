@@ -1,9 +1,10 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// ¼¼ÄÜ»ùÀà
+/// æŠ€èƒ½åŸºç±»
 /// </summary>
+ [CreateAssetMenu(fileName = "Skill", menuName = "æˆ˜æ–—ç³»ç»Ÿ/æŠ€èƒ½")]
 public class SkillBase : ScriptableObject
 {
     public string skillName;
@@ -18,34 +19,39 @@ public class SkillBase : ScriptableObject
     public GameObject skillEffectPrefab;
     public Transform effectSpawnPoint;
 
+    // ========== æ–°å¢ï¼šæŠ€èƒ½å°„ç¨‹å­—æ®µï¼ˆä¾›RangeVisualizerä½¿ç”¨ï¼‰ ==========
+    [Header("æŠ€èƒ½èŒƒå›´é…ç½®")]
+    [Tooltip("æŠ€èƒ½é‡Šæ”¾å°„ç¨‹ï¼ˆç±³ï¼‰")]
+    public float skillRange = 5f; // âœ… æ–°å¢ï¼šæŠ€èƒ½å°„ç¨‹
+
     [HideInInspector] public int currentCoolDown;
 
-    // ÊÍ·Å¼¼ÄÜ
+    // é‡Šæ”¾æŠ€èƒ½
     public virtual bool CastSkill(BaseCharacterAttr caster, BaseCharacterAttr target)
     {
-        // ÀäÈ´+×ÊÔ´Ğ£Ñé
+        // å†·å´+èµ„æºæ ¡éªŒ
         if (currentCoolDown > 0 || !caster.ConsumeAP(apCost) || caster.GetAttrValue(AttributeType.CurrentMP) < mpCost)
         {
-            if (!caster.ConsumeAP(apCost)) caster.ConsumeAP(-apCost); // ·µ»¹AP
+            if (!caster.ConsumeAP(apCost)) caster.ConsumeAP(-apCost); // è¿”è¿˜AP
             return false;
         }
 
-        // ÏûºÄMP
+        // æ¶ˆè€—MP
         caster.AddAttrValue(AttributeType.CurrentMP, -mpCost);
 
-        // Ö´ĞĞĞ§¹û
+        // æ‰§è¡Œæ•ˆæœ
         ExecuteEffect(caster, target);
 
-        // ¶¯»­+ÌØĞ§
+        // åŠ¨ç”»+ç‰¹æ•ˆ
         TriggerAnimAndEffect(caster);
 
-        // ÀäÈ´
+        // å†·å´
         currentCoolDown = coolDownRound;
 
         return true;
     }
 
-    // Ö´ĞĞ¼¼ÄÜĞ§¹û
+    // æ‰§è¡ŒæŠ€èƒ½æ•ˆæœ
     protected virtual void ExecuteEffect(BaseCharacterAttr caster, BaseCharacterAttr target)
     {
         if (target == null) return;
@@ -63,10 +69,10 @@ public class SkillBase : ScriptableObject
         }
     }
 
-    // ´¥·¢¶¯»­+ÌØĞ§
+    // è§¦å‘åŠ¨ç”»+ç‰¹æ•ˆ
     protected virtual void TriggerAnimAndEffect(BaseCharacterAttr caster)
     {
-        // ¶¯»­
+        // åŠ¨ç”»
         if (caster is PlayerAttr player)
         {
             player.PlaySkillAnim();
@@ -78,7 +84,7 @@ public class SkillBase : ScriptableObject
             if (!string.IsNullOrEmpty(animTriggerName)) enemy.animator.SetTrigger(animTriggerName);
         }
 
-        // ÌØĞ§
+        // ç‰¹æ•ˆ
         if (skillEffectPrefab != null && effectSpawnPoint != null)
         {
             GameObject effect = Instantiate(skillEffectPrefab, effectSpawnPoint.position, effectSpawnPoint.rotation);
@@ -86,17 +92,17 @@ public class SkillBase : ScriptableObject
         }
     }
 
-    // Ë¢ĞÂÀäÈ´
+    // åˆ·æ–°å†·å´
     public void RefreshCoolDown() => currentCoolDown = Mathf.Max(currentCoolDown - 1, 0);
 }
 
-// ¼¼ÄÜÀàĞÍ
+// æŠ€èƒ½ç±»å‹
 public enum SkillType { Attack, Heal, Buff }
-// Ä¿±êÀàĞÍ
+// ç›®æ ‡ç±»å‹
 public enum TargetType { Self, Enemy, Ally }
 
 /// <summary>
-/// ¼¼ÄÜ¹ÜÀíÆ÷
+/// æŠ€èƒ½ç®¡ç†å™¨
 /// </summary>
 public class SkillManager : MonoBehaviour
 {
@@ -105,7 +111,7 @@ public class SkillManager : MonoBehaviour
 
     private void Awake() => Instance = this;
 
-    // Ìí¼Ó¼¼ÄÜ
+    // æ·»åŠ æŠ€èƒ½
     public void AddSkillToCharacter(BaseCharacterAttr character, SkillBase skill)
     {
         if (!characterSkills.ContainsKey(character))
@@ -113,7 +119,7 @@ public class SkillManager : MonoBehaviour
         characterSkills[character].Add(skill);
     }
 
-    // ÊÍ·Å¼¼ÄÜ
+    // é‡Šæ”¾æŠ€èƒ½
     public bool CastCharacterSkill(BaseCharacterAttr caster, int skillID, BaseCharacterAttr target)
     {
         if (!characterSkills.ContainsKey(caster)) return false;
@@ -121,7 +127,7 @@ public class SkillManager : MonoBehaviour
         return skill?.CastSkill(caster, target) ?? false;
     }
 
-    // Ë¢ĞÂËùÓĞÀäÈ´
+    // åˆ·æ–°æ‰€æœ‰å†·å´
     public void RefreshAllSkillCoolDown()
     {
         foreach (var kvp in characterSkills)

@@ -14,6 +14,21 @@ public class PlayerAttr : BaseCharacterAttr
     public float initIntelligence = 5;
     public float initArmor = 3;
 
+    // ========== 新增：玩家战斗配置字段（和EnemyAttr保持一致） ==========
+    [Header("===== 行动消耗规则 =====")]
+    [Tooltip("每移动1单位消耗的行动点")]
+    public float moveCostPerUnit = 1f;
+
+    [Header("===== 战斗配置 =====")]
+    [Tooltip("普攻射程")]
+    public float attackRange = 2f; // ✅ 新增：普攻射程
+    [Tooltip("技能射程")]
+    public float skillRange = 5f; // ✅ 新增：技能射程
+    [Tooltip("普攻消耗行动点")]
+    public float normalAttackCost = 2f; // ✅ 新增：普攻消耗
+    [Tooltip("技能消耗行动点")]
+    public float skillAttackCost = 3f; // ✅ 新增：技能消耗
+
     [HideInInspector] public Animator animator;
 
     private void Awake()
