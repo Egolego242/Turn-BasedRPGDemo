@@ -16,8 +16,4 @@ MonoBehaviour:
   maxGold: 50
   dropItems:
   - item: {fileID: 11400000, guid: a48b104b8351753449f5dbd82f7d81e7, type: 2}
-    dropRate: 0.25
-  - item: {fileID: 11400000, guid: 36214712fc0c1fd4690d2364912a8638, type: 2}
-    dropRate: 0.15
-  - item: {fileID: 11400000, guid: 7ef93815e32c669409e66bc53dc64017, type: 2}
-    dropRate: 0.201
+    dropRate: 1

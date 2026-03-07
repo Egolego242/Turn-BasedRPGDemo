@@ -7,8 +7,8 @@ public class UIManager : MonoBehaviour
     public static UIManager Instance;
 
     [Header("UI组引用")]
-    public GameObject exploreUI;
-    public GameObject battleUI;
+    public GameObject baseExploreUI;
+    public GameObject overlayBattleUI;
 
     [Header("子模块引用")]
     public TurnOrderBar turnOrderBar;
@@ -47,15 +47,17 @@ public class UIManager : MonoBehaviour
     // 游戏状态切换：探索/战斗UI显隐
     private void OnGameStateChanged(GameStateMgr.GamePlayState state)
     {
-        exploreUI.SetActive(state == GameStateMgr.GamePlayState.ExploreState);
-        battleUI.SetActive(state == GameStateMgr.GamePlayState.BattleState);
+        // baseExploreUI.SetActive(true); // 如果初始是隐藏的，这里可以设为true，否则可以省略
+
+        // 只控制叠加战斗UI的显隐：探索时隐藏，战斗时显示
+        overlayBattleUI.SetActive(state == GameStateMgr.GamePlayState.BattleState);
     }
 
     // 战斗开始：初始化回合条、显示入场提示
     private void OnBattleStart(List<BaseCharacterAttr> combatants)
     {
         turnOrderBar.InitTurnOrder(combatants);
-        battleStartTip.ShowTip();
+        battleStartTip.ShowBattleStartTip();
     }
 
     // 回合切换：更新回合条高亮、刷新行动点

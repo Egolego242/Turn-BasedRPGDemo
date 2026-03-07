@@ -23,6 +23,7 @@ public class TurnBattleManager : MonoBehaviour
     public static event Action<BaseCharacterAttr> OnTurnChanged; // 回合切换，传入当前行动角色
     public static event Action<bool> OnBattleEnd; // 战斗结束，传入是否玩家胜利
     public static event Action OnActionPointChanged; // 行动点变化事件
+    public event Action OnTurnEnd;
 
 
     // ========== 新增：专门用于触发行动点变化事件的公共静态方法 ==========
@@ -124,16 +125,16 @@ public class TurnBattleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 执行敌人行为树（替代原硬编码EnemyAutoAct）
+    /// 执行敌人行为树（自动行动/自动结束回合）
     /// </summary>
     private void ExecuteEnemyBehaviorTree()
     {
         BaseCharacterAttr currentEnemy = sortedCombatants[currentActorIndex];
-        // 安全校验：死亡/非当前回合，直接结束回合
+        // 全量校验：死亡/非当前回合 → 直接结束回合
         if (currentEnemy.isDead || !currentEnemy.isMyTurn)
         {
-            currentEnemy.EndPersonalTurn();
-            StartNextActorTurn();
+            EndTurn(currentEnemy); // 改用通用方法
+            return;
         }
         // 行为树会自动执行战斗分支的技能/普攻/移动逻辑，最终调用EndPersonalTurn结束回合
         // 行为树执行完毕后，会自动触发回合切换，无需额外硬编码
@@ -169,16 +170,50 @@ public class TurnBattleManager : MonoBehaviour
         StartNextActorTurn();
     }
 
+
+    /// <summary>
+    /// 通用回合结束方法（处理玩家/敌人的回合结束逻辑）
+    /// </summary>
+    /// <param name="actor">要结束回合的角色</param>
+    public void EndTurn(BaseCharacterAttr actor)
+    {
+        // 容错：空值/非当前回合/已死亡角色直接返回
+        if (actor == null || !actor.isMyTurn || actor.isDead)
+        {
+            Debug.LogWarning($"[{actor?.name}] 无法结束回合：角色为空/非当前回合/已死亡");
+            return;
+        }
+
+        // 核心状态重置
+        actor.isMyTurn = false;
+        actor.hasActInRound = true; // 标记本全局回合已行动
+        Debug.Log($"{actor.name} 回合结束，剩余AP：{actor.GetAttrValue(AttributeType.CurrentAP)}");
+
+        // 触发AP变更事件（刷新UI）
+        OnActionPointChanged?.Invoke();
+
+        // 检查战斗是否结束（比如敌人攻击后玩家死亡）
+        CheckBattleEnd();
+
+        // 启动下一个角色的回合
+        StartNextActorTurn();
+
+    }
+
     /// <summary>
     /// 玩家手动结束回合
     /// </summary>
     public void PlayerEndTurn()
     {
         BaseCharacterAttr player = allCombatants.FirstOrDefault(c => c is PlayerAttr);
-        if (player == null || !player.isMyTurn || player.isDead) return;
+        if (player == null)
+        {
+            Debug.LogError("玩家角色不存在，无法结束回合");
+            return;
+        }
 
-        player.EndPersonalTurn();
-        StartNextActorTurn();
+        // 调用通用回合结束方法
+        EndTurn(player);
     }
 
     /// <summary>

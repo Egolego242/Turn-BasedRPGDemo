@@ -63,6 +63,12 @@ public class EnemyAttr : BaseCharacterAttr
     [HideInInspector] public float skillCoolDownLeft = 0; // 剩余冷却回合（行为树可读取）
     #endregion
 
+    [ContextMenu("手动触发战斗")]
+    public void TestTriggerBattle()
+    {
+        TriggerBattleByEnemy();
+    }
+
     #region 初始化
     protected override void Awake()
     {
@@ -70,16 +76,116 @@ public class EnemyAttr : BaseCharacterAttr
         // 组件自动获取+容错
         animator = GetComponent<Animator>();
         navAgent = GetComponent<NavMeshAgent>();
+        behaviorTree = GetComponent<BehaviorTree>();
+
+        // 根物体无组件时查找子物体
         if (behaviorTree == null)
-            behaviorTree = GetComponent<BehaviorTree>();
+        {
+            behaviorTree = GetComponentInChildren<BehaviorTree>();
+            if (behaviorTree == null)
+            {
+                Debug.LogError($"{gameObject.name} 未找到BehaviorTree组件！请检查挂载", this);
+            }
+            else
+            {
+                Debug.LogWarning($"{gameObject.name} 行为树挂载在子物体，建议移至根物体", this);
+            }
+        }
+
+        // 自动给行为树的selfObject赋值（核心！不用手动拖）
+        if (behaviorTree != null)
+        {
+            // 旧版插件通用写法：找到变量→赋值
+            var selfVar = behaviorTree.GetVariable("selfObject");
+            if (selfVar != null) selfVar.SetValue(gameObject);
+            // 初始化战斗状态为false
+            var combatVar = behaviorTree.GetVariable("isInCombat");
+            if (combatVar != null) combatVar.SetValue(false);
+        }
 
         // 初始化属性（调用基类方法）
         InitAttribute(initMaxHP, initMaxMP, initMaxAP, initStrength, initIntelligence, initArmor);
         currentCamp = CampType.Enemy;
         originPos = transform.position;
 
-        // 初始化行为树：非战斗状态默认启用日常分支，禁用战斗分支
+        // 绑定回合结束事件（自动减少技能冷却）
+        if (TurnBattleManager.Instance != null)
+        {
+            TurnBattleManager.Instance.OnTurnEnd += ReduceSkillCoolDown;
+        }
+        else
+        {
+            Debug.LogWarning($"{gameObject.name} 未找到回合管理器，技能冷却无法自动减少", this);
+        }
+
+        // 调试日志：打印初始化状态
+        Debug.Log($"{gameObject.name} 行为树初始化 - isInBattle:{isInBattle} | isDead:{isDead}", this);
         InitBehaviorTreeState();
+    }
+
+    private void Update()
+    {
+        // 1. 同步状态到行为树（核心！行为树的条件判断全靠这个）
+        SyncStateToBehaviorTree();
+
+        // 2. 敌人巡逻时的行走动画（顺便检查动画）
+        if (navAgent != null && animator != null && !isDead)
+        {
+            bool isMoving = navAgent.velocity.magnitude > 0.1f;
+            animator.SetBool("IsWalking", isMoving);
+            // 观察有没有输出正在移动
+            if (isMoving)
+            {
+                Debug.Log($"{gameObject.name} 正在移动，IsWalking设为True", this);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 核心：实时同步所有状态到行为树（抽离成独立方法，便于维护）
+    /// </summary>
+    private void SyncStateToBehaviorTree()
+    {
+        if (behaviorTree == null) return;
+
+        // 基础战斗状态
+        behaviorTree.SetVariableValue("isInCombat", isInBattle);
+        behaviorTree.SetVariableValue("isMyTurn", isMyTurn);
+        behaviorTree.SetVariableValue("isDead", isDead);
+
+        // 数值型状态
+        behaviorTree.SetVariableValue("currentAP", GetAttrValue(AttributeType.CurrentAP));
+        behaviorTree.SetVariableValue("skillCooldown", skillCoolDownLeft);
+
+        // 目标相关
+        if (attackTarget != null)
+        {
+            behaviorTree.SetVariableValue("targetPlayer", attackTarget.gameObject);
+        }
+
+        // 关键：实时同步isHostile（确保行为树能一直判断自身是否为敌对/玩家）
+        var hostileVar = behaviorTree.GetVariable("isHostile");
+        if (hostileVar != null)
+        {
+            // 敌人永远是hostile=true，玩家为false（可根据需求调整逻辑）
+            hostileVar.SetValue(true);
+        }
+
+        // 额外：同步当前血量（可选，便于行为树做血量相关决策）
+        var currentHPVar = behaviorTree.GetVariable("currentHP");
+        if (currentHPVar != null)
+        {
+            currentHPVar.SetValue(GetAttrValue(AttributeType.CurrentHP));
+        }
+    }
+
+    // 销毁时解绑事件，避免内存泄漏
+    private void OnDestroy()
+    {
+        if (TurnBattleManager.Instance != null)
+        {
+            TurnBattleManager.Instance.OnTurnEnd -= ReduceSkillCoolDown;
+        }
     }
 
     /// <summary>
@@ -87,16 +193,27 @@ public class EnemyAttr : BaseCharacterAttr
     /// </summary>
     private void InitBehaviorTreeState()
     {
-        if (behaviorTree == null) return;
+        if (behaviorTree == null)
+        {
+            Debug.LogWarning($"{gameObject.name} 行为树为空，跳过初始化", this);
+            return;
+        }
+
+        // 强制初始化战斗/死亡状态（避免基类默认值异常）
+        isInBattle = false;
+        isDead = false;
+
         // 非战斗状态启动行为树
         if (!isInBattle)
         {
             behaviorTree.EnableBehavior();
+            Debug.Log($"{gameObject.name} 启用行为树日常分支", this);
             StartPatrol();
         }
         else
         {
             behaviorTree.DisableBehavior();
+            Debug.Log($"{gameObject.name} 禁用行为树（战斗状态）", this);
         }
     }
     #endregion
@@ -145,19 +262,28 @@ public class EnemyAttr : BaseCharacterAttr
 
             // 验证目标点是否在NavMesh上
             NavMeshHit hit;
-            if (NavMesh.SamplePosition(targetPos, out hit, patrolRange, NavMesh.AllAreas))
+            bool isPosValid = NavMesh.SamplePosition(targetPos, out hit, patrolRange, NavMesh.AllAreas);
+            if (isPosValid && navAgent != null && navAgent.isActiveAndEnabled)
             {
                 targetPos = hit.position;
-                if (navAgent != null && navAgent.isActiveAndEnabled)
+                navAgent.isStopped = false;
+                navAgent.SetDestination(targetPos);
+
+                // 等待到达目标点（距离<0.5f 或 寻路失败）
+                while (navAgent.remainingDistance > 0.5f && navAgent.pathStatus == NavMeshPathStatus.PathComplete && !isInBattle && !isDead)
                 {
-                    navAgent.isStopped = false;
-                    navAgent.SetDestination(targetPos);
+                    yield return null; // 每一帧检查状态
                 }
             }
+            else
+            {
+                Debug.LogWarning($"{gameObject.name} 巡逻点无效，跳过本次巡逻", this);
+            }
 
-            // 等待到达+停留
+            // 停留指定时间
             yield return new WaitForSeconds(patrolWaitTime);
         }
+        patrolCoroutine = null; // 协程结束后重置引用
     }
 
     /// <summary>
@@ -165,11 +291,25 @@ public class EnemyAttr : BaseCharacterAttr
     /// </summary>
     public bool IsPlayerInDetectRange()
     {
+        // 1. 找玩家对象（兼容多玩家/玩家死亡）
         PlayerAttr player = FindObjectOfType<PlayerAttr>();
-        if (player == null || player.isDead) return false;
+        if (player == null || player.isDead)
+        {
+            Debug.Log($"{gameObject.name} 没找到存活的玩家", this);
+            return false;
+        }
 
-        float distance = Vector3.Distance(transform.position, player.transform.position);
-        return distance <= enemyDetectRange;
+        // 2. 计算距离（忽略Y轴，只算平面距离）
+        Vector3 enemyPos = new Vector3(transform.position.x, 0, transform.position.z);
+        Vector3 playerPos = new Vector3(player.transform.position.x, 0, player.transform.position.z);
+        float distance = Vector3.Distance(enemyPos, playerPos);
+
+        // 3. 打印调试日志（关键！看距离和警戒范围）
+        Debug.Log($"{gameObject.name} 玩家距离：{distance:F1} | 警戒范围：{enemyDetectRange}", this);
+
+        // 4. 判断是否在范围内
+        bool inRange = distance <= enemyDetectRange;
+        return inRange;
     }
 
     /// <summary>
@@ -182,12 +322,58 @@ public class EnemyAttr : BaseCharacterAttr
     }
 
     /// <summary>
+    /// 【行为树调用】判断目标是否为玩家（配合isHostile使用）
+    /// </summary>
+    public bool IsTargetPlayer(GameObject targetObj)
+    {
+        if (targetObj == null) return false;
+        return targetObj.GetComponent<PlayerAttr>() != null;
+    }
+
+
+    /// <summary>
     /// 【行为树调用】敌人主动触发战斗
     /// </summary>
     public void TriggerBattleByEnemy()
     {
         PlayerAttr player = FindObjectOfType<PlayerAttr>();
-        if (player == null || TurnBattleManager.Instance == null) return;
+        if (player == null || TurnBattleManager.Instance == null)
+        {
+            Debug.LogWarning($"{gameObject.name} 触发战斗失败：玩家/回合管理器为空", this);
+            return;
+        }
+
+        isInBattle = true;
+        Debug.Log($"{gameObject.name} 进入战斗状态，isInBattle设为True", this);
+
+        // ========== 核心新增2：给行为树的isInCombat变量赋值（旧版适配） ==========
+        if (behaviorTree != null)
+        {
+            // 旧版BehaviorTree设置变量的通用写法（兼容所有版本）
+            var combatVar = behaviorTree.GetVariable("isInCombat");
+            if (combatVar != null)
+            {
+                combatVar.SetValue(true); // 设为战斗状态
+                Debug.Log($"{gameObject.name} 行为树isInCombat设为True", this);
+            }
+            else
+            {
+                Debug.LogError($"{gameObject.name} 行为树里没有isInCombat变量！", this);
+            }
+
+            // 停止日常行为树（保留你的原有逻辑）
+            behaviorTree.DisableBehavior();
+            // 重新启用行为树，让变量变化立刻生效
+            behaviorTree.EnableBehavior();
+        }
+
+        // 停止巡逻+禁用行为树日常分支
+        StopPatrol();
+        //if (behaviorTree != null)
+        //{
+        //    behaviorTree.DisableBehavior();
+        //    Debug.Log($"{gameObject.name} 触发战斗，禁用日常行为树", this);
+        //}
 
         // 收集同范围内所有存活敌人
         List<BaseCharacterAttr> battleEnemies = new List<BaseCharacterAttr>();
@@ -319,6 +505,7 @@ public class EnemyAttr : BaseCharacterAttr
         // 播放普攻动画
         animator?.SetTrigger("Attack");
         PlayAttackAnim();
+        Debug.Log($"{gameObject.name} 播放普攻动画！", this);
 
         // 普攻伤害计算
         if (attackTarget.TryGetComponent<BaseCharacterAttr>(out BaseCharacterAttr targetAttr))
@@ -340,25 +527,57 @@ public class EnemyAttr : BaseCharacterAttr
     /// </summary>
     public bool MoveToTarget()
     {
-        if (isDead || attackTarget == null || navAgent == null || !navAgent.isActiveAndEnabled)
+        if (isDead)
+        {
+            Debug.LogWarning($"{gameObject.name} 移动失败：已死亡", this);
             return false;
+        }
+        if (attackTarget == null)
+        {
+            Debug.LogWarning($"{gameObject.name} 移动失败：攻击目标为空", this);
+            return false;
+        }
+        if (navAgent == null || !navAgent.isActiveAndEnabled)
+        {
+            Debug.LogWarning($"{gameObject.name} 移动失败：导航组件无效", this);
+            return false;
+        }
 
         float currentAP = GetAttrValue(AttributeType.CurrentAP);
-        if (currentAP <= 0) return false;
+        if (currentAP <= 0)
+        {
+            Debug.LogWarning($"{gameObject.name} 移动失败：行动点不足（当前{currentAP}）", this);
+            return false;
+        }
+
 
         // 计算移动距离和消耗
         Vector3 targetPos = attackTarget.position;
         float distance = Vector3.Distance(transform.position, targetPos);
         float cost = distance * moveCostPerUnit;
 
-        // 行动点不足无法移动
-        if (cost > currentAP) return false;
+        if (cost > currentAP)
+        {
+            Debug.LogWarning($"{gameObject.name} 移动失败：行动点不足（需要{cost}，当前{currentAP}）", this);
+            return false;
+        }
 
-        // 执行寻路
+        // 重置导航状态+执行寻路
+        navAgent.ResetPath();
         navAgent.isStopped = false;
         navAgent.SetDestination(targetPos);
-        // 消耗行动点
-        ConsumeAP(cost);
+
+        // 消耗行动点（增加容错）
+        bool consumeSuccess = ConsumeAP(cost);
+        if (!consumeSuccess)
+        {
+            Debug.LogError($"{gameObject.name} 移动失败：行动点消耗失败", this);
+            navAgent.ResetPath();
+            navAgent.isStopped = true;
+            return false;
+        }
+
+        Debug.Log($"{gameObject.name} 向{attackTarget.name}移动，距离{distance:F1}，消耗{cost:F1}行动点", this);
         return true;
     }
 
@@ -369,6 +588,12 @@ public class EnemyAttr : BaseCharacterAttr
     {
         if (skillCoolDownLeft > 0)
             skillCoolDownLeft--;
+
+        // 冷却变化后同步到行为树
+        if (behaviorTree != null)
+        {
+            behaviorTree.SetVariableValue("skillCooldown", skillCoolDownLeft);
+        }
     }
 
     /// <summary>
@@ -383,8 +608,24 @@ public class EnemyAttr : BaseCharacterAttr
             navAgent.ResetPath();
             navAgent.isStopped = true;
         }
-        // 通知回合管理器切换下一个角色
-        TurnBattleManager.Instance?.StartNextActorTurn();
+        // 回合结束同步状态到行为树
+        SyncStateToBehaviorTree();
+    }
+
+    /// <summary>
+    /// 【行为树调用】敌人无可用行动时自动结束回合
+    /// </summary>
+    public void AutoEndTurn()
+    {
+        if (TurnBattleManager.Instance == null)
+        {
+            Debug.LogError("回合管理器为空，无法结束敌人回合");
+            return;
+        }
+        TurnBattleManager.Instance.EndTurn(this);
+
+        // 自动结束回合后同步状态
+        SyncStateToBehaviorTree();
     }
 
     /// <summary>
@@ -405,9 +646,18 @@ public class EnemyAttr : BaseCharacterAttr
         base.Die();
         Debug.Log($"{gameObject.name} 死亡");
 
+        // 终止所有协程，避免残留逻辑
+        StopAllCoroutines();
+        patrolCoroutine = null;
+
         // 禁用导航和行为树
         if (navAgent != null) navAgent.enabled = false;
-        behaviorTree?.DisableBehavior();
+        if (behaviorTree != null)
+        {
+            behaviorTree.SetVariableValue("isDead", true); // 死亡状态同步到行为树
+            behaviorTree.SetVariableValue("isHostile", false); // 死亡后不再敌对
+            behaviorTree.DisableBehavior();
+        }
 
         // 停止巡逻
         StopPatrol();

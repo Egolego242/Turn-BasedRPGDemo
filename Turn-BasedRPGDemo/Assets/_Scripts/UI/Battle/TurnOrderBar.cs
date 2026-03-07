@@ -1,61 +1,62 @@
 using UnityEngine;
-using UnityEngine.UI;
 using System.Collections.Generic;
 
+/// <summary>
+/// 回合行动顺序条管理器
+/// 显示所有参战角色的头像，高亮当前行动角色，死亡角色灰化
+/// </summary>
 public class TurnOrderBar : MonoBehaviour
 {
     [Header("配置")]
-    public GameObject turnItemPrefab; // 回合头像预制体（包含Image、RawImage、灰化遮罩）
-    public Transform itemParent; // 头像父物体（Horizontal Layout Group）
+    [Tooltip("回合头像预制体")]
+    public GameObject turnItemPrefab;
+    [Tooltip("头像父物体（需挂Horizontal Layout Group）")]
+    public Transform itemParent;
 
     private List<TurnItem> turnItemList = new List<TurnItem>();
 
-    // 初始化回合顺序
+    /// <summary>
+    /// 初始化回合顺序
+    /// </summary>
     public void InitTurnOrder(List<BaseCharacterAttr> combatants)
     {
-        // 清空旧的
-        foreach (var item in turnItemList) Destroy(item.gameObject);
+        // 清空旧的头像
+        foreach (var item in turnItemList)
+        {
+            if (item != null && item.gameObject != null)
+            {
+                Destroy(item.gameObject);
+            }
+        }
         turnItemList.Clear();
 
         // 生成新的头像
         foreach (var combatant in combatants)
         {
+            if (combatant == null) continue;
+
             GameObject itemObj = Instantiate(turnItemPrefab, itemParent);
             TurnItem item = itemObj.GetComponent<TurnItem>();
-            item.Init(combatant);
-            turnItemList.Add(item);
+
+            if (item != null)
+            {
+                item.Init(combatant);
+                turnItemList.Add(item);
+            }
         }
     }
 
-    // 高亮当前行动的角色
+    /// <summary>
+    /// 高亮当前行动的角色
+    /// </summary>
     public void HighlightCurrentTurn(BaseCharacterAttr currentActor)
     {
         foreach (var item in turnItemList)
         {
-            item.SetHighlight(item.owner == currentActor);
+            if (item != null)
+            {
+                item.SetHighlight(item.owner == currentActor);
+            }
         }
-    }
-}
-
-// 单个回合头像类
-public class TurnItem : MonoBehaviour
-{
-    public Image headIcon; // 角色头像
-    public Image highlightFrame; // 高亮边框
-    public GameObject deadMask; // 死亡灰化遮罩
-    [HideInInspector] public BaseCharacterAttr owner;
-
-    public void Init(BaseCharacterAttr character)
-    {
-        owner = character;
-        // 可扩展：给headIcon赋值角色头像Sprite
-        deadMask.SetActive(character.isDead);
-        highlightFrame.gameObject.SetActive(false);
-    }
-
-    public void SetHighlight(bool isHighlight)
-    {
-        highlightFrame.gameObject.SetActive(isHighlight);
-        deadMask.SetActive(owner.isDead);
     }
 }

@@ -1,17 +1,17 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using UnityEngine.EventSystems;
 
 public class SkillTooltip : MonoBehaviour
 {
-    [Header("Ãæ°åÒıÓÃ")]
+    [Header("é¢æ¿å¼•ç”¨")]
     public GameObject panel;
-    public Text skillNameText;
-    public Text skillDescText;
-    public Text skillDamageText;
-    public Text skillCostText;
-    public Text skillRangeText;
-    public Text skillRequireText;
+    public TMP_Text skillNameText; // âœ… ä¿®æ”¹ï¼šText â†’ TMP_Text
+    public TMP_Text skillDescText; // âœ… ä¿®æ”¹
+    public TMP_Text skillDamageText; // âœ… ä¿®æ”¹
+    public TMP_Text skillCostText; // âœ… ä¿®æ”¹
+    public TMP_Text skillRangeText; // âœ… ä¿®æ”¹
 
     private static SkillTooltip Instance;
 
@@ -21,30 +21,30 @@ public class SkillTooltip : MonoBehaviour
         panel.SetActive(false);
     }
 
-    // ÏÔÊ¾¼¼ÄÜÌáÊ¾
+    // æ˜¾ç¤ºæŠ€èƒ½æç¤º
     public static void ShowTooltip(SkillBase skill)
     {
         if (Instance == null || skill == null) return;
 
         Instance.skillNameText.text = skill.skillName;
-        Instance.skillDescText.text = $"·¢ÉäÒ»Ã¶{skill.skillName}£¬Ôì³É{skill.effectValue}µãÉËº¦";
-        Instance.skillDamageText.text = $"{skill.effectValue - 1}-{skill.effectValue + 1}ÉËº¦";
-        Instance.skillCostText.text = $"ÏûºÄ {skill.apCost} ĞĞ¶¯µã / {skill.mpCost} Ä§·¨Öµ";
-        //Instance.skillRangeText.text = $"{skill.skillRange}m ·¶Î§";
-        //Instance.skillRequireText.text = $"ĞèÒª {skill.skillSchool} Ñ§ÅÉ {skill.requireLevel} ¼¶";
+        Instance.skillDescText.text = $"å‘å°„ä¸€æš{skill.skillName}ï¼Œé€ æˆ{skill.effectValue}ç‚¹ä¼¤å®³";
+        Instance.skillDamageText.text = $"{skill.effectValue - 1}-{skill.effectValue + 1}ä¼¤å®³";
+        Instance.skillCostText.text = $"æ¶ˆè€— {skill.apCost} è¡ŒåŠ¨ç‚¹ / {skill.mpCost} é­”æ³•å€¼";
+        Instance.skillRangeText.text = $"{skill.skillRange}m èŒƒå›´";
+        // Instance.skillRequireText.text = $"éœ€è¦ {skill.skillSchool} å­¦æ´¾ {skill.requireLevel} çº§"; // å¦‚æœæ²¡æœ‰è¿™äº›å­—æ®µå¯ä»¥æ³¨é‡Šæ‰
 
-        // ¸úËæÊó±êÎ»ÖÃ
+        // è·Ÿéšé¼ æ ‡ä½ç½®
         Instance.panel.SetActive(true);
         Instance.UpdateTooltipPosition();
     }
 
-    // Òş²Ø¼¼ÄÜÌáÊ¾
+    // éšè—æŠ€èƒ½æç¤º
     public static void HideTooltip()
     {
         if (Instance != null) Instance.panel.SetActive(false);
     }
 
-    // Ãæ°å¸úËæÊó±ê
+    // é¢æ¿è·Ÿéšé¼ æ ‡
     private void Update()
     {
         if (panel.activeSelf) UpdateTooltipPosition();
@@ -53,33 +53,11 @@ public class SkillTooltip : MonoBehaviour
     private void UpdateTooltipPosition()
     {
         Vector2 mousePos = Input.mousePosition;
-        // ·ÀÖ¹Ãæ°å³¬³öÆÁÄ»
+        // é˜²æ­¢é¢æ¿è¶…å‡ºå±å¹•
         float xOffset = mousePos.x + panel.GetComponent<RectTransform>().rect.width > Screen.width ? -300 : 20;
         float yOffset = mousePos.y - panel.GetComponent<RectTransform>().rect.height < 0 ? 50 : -50;
         panel.transform.position = new Vector2(mousePos.x + xOffset, mousePos.y + yOffset);
     }
 }
 
-// ¼¼ÄÜ°´Å¥½Å±¾£¬¹ÒÔØµ½¿ì½İÀ¸µÄ¼¼ÄÜ°´Å¥ÉÏ
-public class SkillButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
-{
-    public SkillBase skill; // °ó¶¨µÄ¼¼ÄÜ×Ê²ú
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        SkillTooltip.ShowTooltip(skill);
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        SkillTooltip.HideTooltip();
-    }
-
-    // µã»÷ÊÍ·Å¼¼ÄÜ
-    public void OnClick()
-    {
-        if (skill == null) return;
-        // Í¨Öª·¶Î§¿ÉÊÓ»¯×é¼ş£¬ÏÔÊ¾¼¼ÄÜ·¶Î§
-        UIManager.Instance.rangeVisualizer.ShowSkillRange(skill);
-    }
-}
+// âœ… è¿™é‡ŒåŸæ¥çš„ SkillButton ç±»å·²ç»åˆ é™¤äº†ï¼
