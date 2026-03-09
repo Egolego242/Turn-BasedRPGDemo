@@ -133,11 +133,6 @@ public class EnemyAttr : BaseCharacterAttr
         {
             bool isMoving = navAgent.velocity.magnitude > 0.1f;
             animator.SetBool("IsWalking", isMoving);
-            // 观察有没有输出正在移动
-            if (isMoving)
-            {
-                Debug.Log($"{gameObject.name} 正在移动，IsWalking设为True", this);
-            }
         }
     }
 
@@ -229,6 +224,7 @@ public class EnemyAttr : BaseCharacterAttr
             StopCoroutine(patrolCoroutine);
 
         patrolCoroutine = StartCoroutine(PatrolCoroutine());
+        //Debug.Log("开始巡逻");
     }
 
     /// <summary>
@@ -246,6 +242,7 @@ public class EnemyAttr : BaseCharacterAttr
             navAgent.ResetPath();
             navAgent.isStopped = true;
         }
+        Debug.Log("停止巡逻");
     }
 
     /// <summary>
@@ -305,7 +302,7 @@ public class EnemyAttr : BaseCharacterAttr
         float distance = Vector3.Distance(enemyPos, playerPos);
 
         // 3. 打印调试日志（关键！看距离和警戒范围）
-        Debug.Log($"{gameObject.name} 玩家距离：{distance:F1} | 警戒范围：{enemyDetectRange}", this);
+        //Debug.Log($"{gameObject.name} 玩家距离：{distance:F1} | 警戒范围：{enemyDetectRange}", this);
 
         // 4. 判断是否在范围内
         bool inRange = distance <= enemyDetectRange;
@@ -449,7 +446,71 @@ public class EnemyAttr : BaseCharacterAttr
         float distance = Vector3.Distance(transform.position, attackTarget.position);
         return distance <= skillRange;
     }
+    #region 整合判断
+    /// <summary>
+    /// 【行为树调用】合并判断技能所有就绪条件（冷却+AP+射程），结果存到行为树isSkillReady变量
+    /// </summary>
+    public void CheckSkillReady()
+    {
+        bool isReady = !isDead && attackTarget != null && IsSkillCoolDownReady() && HasEnoughAPForSkill() && IsTargetInSkillRange();
+        if (behaviorTree != null)
+        {
+            var skillReadyVar = behaviorTree.GetVariable("isSkillReady");
+            if (skillReadyVar != null)
+            {
+                skillReadyVar.SetValue(isReady);
+                // 调试日志，看条件是否满足
+                Debug.Log($"{gameObject.name} 技能就绪判断：{isReady}（冷却：{IsSkillCoolDownReady()} | AP足够：{HasEnoughAPForSkill()} | 射程够：{IsTargetInSkillRange()}）", this);
+            }
+            else
+            {
+                Debug.LogError($"{gameObject.name} 行为树未找到isSkillReady变量，请先创建！", this);
+            }
+        }
+    }
 
+    /// <summary>
+    /// 【行为树调用】合并判断普攻所有就绪条件（AP+射程），结果存到行为树isAttackReady变量
+    /// </summary>
+    public void CheckAttackReady()
+    {
+        bool isReady = !isDead && attackTarget != null && HasEnoughAPForAttack() && IsTargetInAttackRange();
+        if (behaviorTree != null)
+        {
+            var attackReadyVar = behaviorTree.GetVariable("isAttackReady");
+            if (attackReadyVar != null)
+            {
+                attackReadyVar.SetValue(isReady);
+                Debug.Log($"{gameObject.name} 普攻就绪判断：{isReady}（AP足够：{HasEnoughAPForAttack()} | 射程够：{IsTargetInAttackRange()}）", this);
+            }
+            else
+            {
+                Debug.LogError($"{gameObject.name} 行为树未找到isAttackReady变量，请先创建！", this);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 【行为树调用】合并判断移动所有就绪条件（AP+目标+导航），结果存到行为树isMoveReady变量
+    /// </summary>
+    public void CheckMoveReady()
+    {
+        bool isReady = !isDead && attackTarget != null && navAgent != null && navAgent.isActiveAndEnabled && GetAttrValue(AttributeType.CurrentAP) >= 1f;
+        if (behaviorTree != null)
+        {
+            var moveReadyVar = behaviorTree.GetVariable("isMoveReady");
+            if (moveReadyVar != null)
+            {
+                moveReadyVar.SetValue(isReady);
+                Debug.Log($"{gameObject.name} 移动就绪判断：{isReady}（有目标：{attackTarget != null} | 导航有效：{navAgent != null && navAgent.isActiveAndEnabled} | AP≥1：{GetAttrValue(AttributeType.CurrentAP) >= 1f}）", this);
+            }
+            else
+            {
+                Debug.LogError($"{gameObject.name} 行为树未找到isMoveReady变量，请先创建！", this);
+            }
+        }
+    }
+    #endregion
     /// <summary>
     /// 【行为树调用】释放技能（返回是否释放成功）
     /// </summary>
@@ -610,6 +671,7 @@ public class EnemyAttr : BaseCharacterAttr
         }
         // 回合结束同步状态到行为树
         SyncStateToBehaviorTree();
+        Debug.Log("敌人结束回合");
     }
 
     /// <summary>
@@ -626,6 +688,7 @@ public class EnemyAttr : BaseCharacterAttr
 
         // 自动结束回合后同步状态
         SyncStateToBehaviorTree();
+        Debug.Log("敌人结束回合");
     }
 
     /// <summary>
