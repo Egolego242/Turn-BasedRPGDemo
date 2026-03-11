@@ -29,7 +29,7 @@ public class BaseCharacterAttr : MonoBehaviour
     }
 
     // 初始化属性（所有角色通用）
-    protected void InitAttribute(float maxHP, float maxMP, float maxAP, float strength, float intelligence, float armor)
+    protected void InitAttribute(float maxHP, float maxMP, int maxAP, float strength, float intelligence, float armor)
     {
         // 初始化状态字段
         isInBattle = false;
@@ -94,6 +94,14 @@ public class BaseCharacterAttr : MonoBehaviour
         ValueProtect(type);
     }
 
+    // 新增：获取int类型的属性值（专用于AP）
+    public int GetAttrIntValue(AttributeType type)
+    {
+        attrDic = attrDic ?? new Dictionary<AttributeType, float>();
+        return attrDic.TryGetValue(type, out float val) ? Mathf.RoundToInt(val) : 0;
+    }
+
+
     public float GetAttrValue(AttributeType type)
     {
         attrDic = attrDic ?? new Dictionary<AttributeType, float>(); // 兜底初始化
@@ -103,6 +111,12 @@ public class BaseCharacterAttr : MonoBehaviour
     public void AddAttrValue(AttributeType type, float addValue)
     {
         SetAttrValue(type, GetAttrValue(type) + addValue);
+    }
+
+    // 新增：int类型属性增加值（专用于AP）
+    public void AddAttrIntValue(AttributeType type, int addValue)
+    {
+        SetAttrValue(type, GetAttrIntValue(type) + addValue);
     }
 
     // 属性值边界防护
@@ -119,7 +133,10 @@ public class BaseCharacterAttr : MonoBehaviour
                 attrDic[type] = Mathf.Clamp(attrDic[type], 0, GetAttrValue(AttributeType.MaxMP));
                 break;
             case AttributeType.CurrentAP:
-                attrDic[type] = Mathf.Clamp(attrDic[type], 0, GetAttrValue(AttributeType.MaxAP));
+                // AP强制转为int后再限制边界
+                int intVal = Mathf.RoundToInt(attrDic[type]);
+                intVal = Mathf.Clamp(intVal, 0, GetAttrIntValue(AttributeType.MaxAP));
+                attrDic[type] = intVal;
                 break;
             case AttributeType.Level:
             case AttributeType.CurrentEXP:
@@ -178,24 +195,26 @@ public class BaseCharacterAttr : MonoBehaviour
     }
 
     // 消耗行动点
-    public bool ConsumeAP(float costValue)
+    public bool ConsumeAP(int costValue)
     {
         if (costValue <= 0 || isDead) return false;
-        float currentAP = GetAttrValue(AttributeType.CurrentAP);
+        int currentAP = GetAttrIntValue(AttributeType.CurrentAP);
         if (currentAP >= costValue)// 行动点不足时，不消耗
         {
-            AddAttrValue(AttributeType.CurrentAP, -costValue);
+            AddAttrIntValue(AttributeType.CurrentAP, -costValue);
             TurnBattleManager.TriggerActionPointChanged();
+            Debug.Log($"{gameObject.name} 扣减AP：{currentAP} → {currentAP - costValue}", this);
             return true;
         }
+        Debug.LogWarning($"{gameObject.name} AP不足：当前{currentAP}，需要{costValue}", this);
         return false;
     }
 
     // 恢复行动点
-    public void RecoverAP(float recoverValue)
+    public void RecoverAP(int recoverValue)
     {
         if (recoverValue <= 0 || isDead) return;
-        AddAttrValue(AttributeType.CurrentAP, recoverValue);
+        AddAttrIntValue(AttributeType.CurrentAP, recoverValue);
         TurnBattleManager.TriggerActionPointChanged();
     }
 
@@ -203,7 +222,7 @@ public class BaseCharacterAttr : MonoBehaviour
     public void RecoverFullAP()
     {
         if (isDead) return;
-        SetAttrValue(AttributeType.CurrentAP, GetAttrValue(AttributeType.MaxAP));
+        SetAttrValue(AttributeType.CurrentAP, GetAttrIntValue(AttributeType.MaxAP));
         TurnBattleManager.TriggerActionPointChanged();
     }
 

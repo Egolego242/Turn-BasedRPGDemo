@@ -101,7 +101,7 @@ public class PlayerMovement : MonoBehaviour
             // 战斗状态：移动消耗行动点AP，无AP则停止移动
             if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState() && playerAttr != null)
             {
-                bool canMove = playerAttr.ConsumeAP(0.1f);
+                bool canMove = playerAttr.ConsumeAP(1);
                 if (!canMove)
                 {
                     StopPlayerMove();

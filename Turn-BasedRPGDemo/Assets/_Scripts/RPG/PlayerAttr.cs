@@ -9,7 +9,7 @@ public class PlayerAttr : BaseCharacterAttr
     [Header("===== 玩家初始属性 =====")]
     public float initMaxHP = 100;
     public float initMaxMP = 50;
-    public float initMaxAP = 10;
+    public int initMaxAP = 10;
     public float initStrength = 8;
     public float initIntelligence = 5;
     public float initArmor = 3;
@@ -17,7 +17,7 @@ public class PlayerAttr : BaseCharacterAttr
     // ========== 新增：玩家战斗配置字段（和EnemyAttr保持一致） ==========
     [Header("===== 行动消耗规则 =====")]
     [Tooltip("每移动1单位消耗的行动点")]
-    public float moveCostPerUnit = 1f;
+    public int moveCostPerUnit = 1;
 
     [Header("===== 战斗配置 =====")]
     [Tooltip("普攻射程")]
@@ -25,9 +25,9 @@ public class PlayerAttr : BaseCharacterAttr
     [Tooltip("技能射程")]
     public float skillRange = 5f; // ✅ 新增：技能射程
     [Tooltip("普攻消耗行动点")]
-    public float normalAttackCost = 2f; // ✅ 新增：普攻消耗
+    public int normalAttackCost = 2; // ✅ 新增：普攻消耗
     [Tooltip("技能消耗行动点")]
-    public float skillAttackCost = 3f; // ✅ 新增：技能消耗
+    public int skillAttackCost = 3; // ✅ 新增：技能消耗
 
     [HideInInspector] public Animator animator;
 
@@ -67,7 +67,7 @@ public class PlayerAttr : BaseCharacterAttr
             // 升级属性加成
             AddAttrValue(AttributeType.MaxHP, 20);
             AddAttrValue(AttributeType.MaxMP, 10);
-            AddAttrValue(AttributeType.MaxAP, 2);
+            AddAttrIntValue(AttributeType.MaxAP, 2);
             AddAttrValue(AttributeType.Strength, 2);
             AddAttrValue(AttributeType.Armor, 1);
 

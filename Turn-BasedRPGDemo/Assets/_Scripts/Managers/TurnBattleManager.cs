@@ -7,15 +7,15 @@ public class TurnBattleManager : MonoBehaviour
 {
     public static TurnBattleManager Instance { get; private set; }
     [Header("===== 战斗规则配置 =====")]
-    public float globalMaxAP = 6f;
-    public float roundRecoverAP = 4f;
+    public int globalMaxAP = 6;
+    public int roundRecoverAP = 4;
     // 注意：detectRange探测范围已废弃，改为敌人自身的enemyDetectRange警戒圈
     // public float detectRange = 8f; 
 
     // 战斗参与方
     private List<BaseCharacterAttr> allCombatants = new List<BaseCharacterAttr>();
     private List<BaseCharacterAttr> sortedCombatants = new List<BaseCharacterAttr>();
-    private int currentActorIndex = 0;
+    private int currentActorIndex = -1;
     private bool isBattleActive = false;
 
     // ========== 新增：战斗流程事件，UI订阅 ==========
@@ -78,7 +78,14 @@ public class TurnBattleManager : MonoBehaviour
 
         // 先攻值排序
         sortedCombatants = allCombatants.OrderByDescending(c => c.GetInitiative()).ToList();
-        Debug.Log("战斗开始！先攻顺序：" + string.Join(" > ", sortedCombatants.Select(c => c.name)));
+        // 打印排序日志（关键：验证先攻值）
+        Debug.Log("战斗开始！先攻顺序：" + string.Join(" > ",
+            sortedCombatants.Select(c => $"{c.name} (先攻值：{c.GetInitiative()})")));
+        for (int i = 0; i < sortedCombatants.Count; i++)
+        {
+            var c = sortedCombatants[i];
+            Debug.Log($"{i + 1}. {c.name} | 先攻值：{c.GetInitiative()} | 等级：{c.GetAttrValue(AttributeType.Level)} | 智力：{c.GetAttrValue(AttributeType.Intelligence)}");
+        }
 
         // ========== 新增：战斗开始事件触发 ==========
         OnBattleStart?.Invoke(sortedCombatants);
@@ -100,7 +107,9 @@ public class TurnBattleManager : MonoBehaviour
         }
 
         // 找到下一个未行动、未死亡的角色
-        currentActorIndex = (currentActorIndex + 1) % sortedCombatants.Count;
+        if (currentActorIndex == -1) currentActorIndex = 0;
+        else currentActorIndex = (currentActorIndex + 1) % sortedCombatants.Count;
+
         BaseCharacterAttr nextActor = sortedCombatants[currentActorIndex];
         while (nextActor.hasActInRound || nextActor.isDead)
         {
@@ -150,8 +159,8 @@ public class TurnBattleManager : MonoBehaviour
             if (combatant.isDead) continue;
 
             // 恢复行动点
-            float newAP = Mathf.Min(
-                combatant.GetAttrValue(AttributeType.CurrentAP) + roundRecoverAP,
+            int newAP = Mathf.Min(
+                combatant.GetAttrIntValue(AttributeType.CurrentAP) + roundRecoverAP,
                 globalMaxAP
             );
             combatant.SetAttrValue(AttributeType.CurrentAP, newAP);

@@ -22,7 +22,7 @@ public class EnemyAttr : BaseCharacterAttr
     [Header("===== 敌人初始属性 =====")]
     public float initMaxHP = 80;
     public float initMaxMP = 30;
-    public float initMaxAP = 8;
+    public int initMaxAP = 8;
     public float initStrength = 6;
     public float initIntelligence = 3;
     public float initArmor = 2;
@@ -36,9 +36,9 @@ public class EnemyAttr : BaseCharacterAttr
 
     #region 行动消耗规则（和行为树节点完全对应）
     [Header("===== 行动消耗规则 =====")]
-    public float moveCostPerUnit = 1f; // 每移动1单位消耗的行动点
-    public float normalAttackCost = 2f; // 普攻消耗行动点（行为树普攻判断用）
-    public float skillAttackCost = 3f; // 技能消耗行动点（行为树技能判断用）
+    public int moveCostPerUnit = 1; // 每移动1单位消耗的行动点
+    public int normalAttackCost = 2; // 普攻消耗行动点（行为树普攻判断用）
+    public int skillAttackCost = 3; // 技能消耗行动点（行为树技能判断用）
     [Header("===== 战斗配置 =====")]
     public float attackRange = 2f; // 普攻射程
     public float skillRange = 5f; // 技能射程
@@ -149,7 +149,7 @@ public class EnemyAttr : BaseCharacterAttr
         behaviorTree.SetVariableValue("isDead", isDead);
 
         // 数值型状态
-        behaviorTree.SetVariableValue("currentAP", GetAttrValue(AttributeType.CurrentAP));
+        behaviorTree.SetVariableValue("currentAP", GetAttrIntValue(AttributeType.CurrentAP));
         behaviorTree.SetVariableValue("skillCooldown", skillCoolDownLeft);
 
         // 目标相关
@@ -416,7 +416,7 @@ public class EnemyAttr : BaseCharacterAttr
     /// </summary>
     public bool HasEnoughAPForSkill()
     {
-        return GetAttrValue(AttributeType.CurrentAP) >= skillAttackCost;
+        return GetAttrIntValue(AttributeType.CurrentAP) >= skillAttackCost;
     }
 
     /// <summary>
@@ -424,7 +424,7 @@ public class EnemyAttr : BaseCharacterAttr
     /// </summary>
     public bool HasEnoughAPForAttack()
     {
-        return GetAttrValue(AttributeType.CurrentAP) >= normalAttackCost;
+        return GetAttrIntValue(AttributeType.CurrentAP) >= normalAttackCost;
     }
 
     /// <summary>
@@ -510,7 +510,20 @@ public class EnemyAttr : BaseCharacterAttr
             }
         }
     }
+
+    /// <summary>
+    /// 【仅新增】计算移动指定距离需要消耗的AP（0-4米=1点，4-8米=2点...）
+    /// </summary>
+    /// <param name="moveDistance">要移动的距离（米）</param>
+    /// <returns>消耗的AP点数</returns>
+    private int CalculateMoveAPCost(float moveDistance)
+    {
+        if (moveDistance <= 0) return 0;
+        // 核心规则：向上取整，和玩家侧逻辑完全一致
+        return Mathf.CeilToInt(moveDistance / 4f);
+    }
     #endregion
+
     /// <summary>
     /// 【行为树调用】释放技能（返回是否释放成功）
     /// </summary>
@@ -588,6 +601,8 @@ public class EnemyAttr : BaseCharacterAttr
     /// </summary>
     public bool MoveToTarget()
     {
+        // 【强制日志】只要进方法就打印，排除没执行的可能
+        Debug.Log($"===== {gameObject.name} 进入MoveToTarget方法 =====", this);
         if (isDead)
         {
             Debug.LogWarning($"{gameObject.name} 移动失败：已死亡", this);
@@ -603,8 +618,10 @@ public class EnemyAttr : BaseCharacterAttr
             Debug.LogWarning($"{gameObject.name} 移动失败：导航组件无效", this);
             return false;
         }
+        Debug.Log($"【2】{gameObject.name} 判空检查通过", this);
 
-        float currentAP = GetAttrValue(AttributeType.CurrentAP);
+        int currentAP = GetAttrIntValue(AttributeType.CurrentAP);
+        Debug.Log($"【3-4】{gameObject.name} 获取当前AP：{currentAP}", this);
         if (currentAP <= 0)
         {
             Debug.LogWarning($"{gameObject.name} 移动失败：行动点不足（当前{currentAP}）", this);
@@ -614,22 +631,33 @@ public class EnemyAttr : BaseCharacterAttr
 
         // 计算移动距离和消耗
         Vector3 targetPos = attackTarget.position;
+        Debug.Log($"【3-1】{gameObject.name} 获取目标位置：{targetPos}", this);
+
         float distance = Vector3.Distance(transform.position, targetPos);
-        float cost = distance * moveCostPerUnit;
+        Debug.Log($"【3-2】{gameObject.name} 计算距离：{distance:F1}", this);
+
+        int cost = CalculateMoveAPCost(distance);
+        Debug.Log($"【3-3】{gameObject.name} 计算移动消耗：{cost}", this);
 
         if (cost > currentAP)
         {
             Debug.LogWarning($"{gameObject.name} 移动失败：行动点不足（需要{cost}，当前{currentAP}）", this);
             return false;
         }
+        Debug.Log($"【4】{gameObject.name} AP校验通过", this);
+
 
         // 重置导航状态+执行寻路
         navAgent.ResetPath();
+        Debug.Log($"【5-1】{gameObject.name} 重置导航路径", this);
         navAgent.isStopped = false;
+        Debug.Log($"【5-2】{gameObject.name} 启用导航", this);
         navAgent.SetDestination(targetPos);
+        Debug.Log($"【5-3】{gameObject.name} 设置导航目标：{targetPos}", this);
 
         // 消耗行动点（增加容错）
         bool consumeSuccess = ConsumeAP(cost);
+        Debug.Log($"【6-1】{gameObject.name} 调用ConsumeAP，消耗{cost:F1}AP", this);
         if (!consumeSuccess)
         {
             Debug.LogError($"{gameObject.name} 移动失败：行动点消耗失败", this);
@@ -637,6 +665,7 @@ public class EnemyAttr : BaseCharacterAttr
             navAgent.isStopped = true;
             return false;
         }
+        Debug.Log($"【6-2】{gameObject.name} AP消耗成功", this);
 
         Debug.Log($"{gameObject.name} 向{attackTarget.name}移动，距离{distance:F1}，消耗{cost:F1}行动点", this);
         return true;

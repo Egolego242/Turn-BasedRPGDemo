@@ -9,7 +9,7 @@ public class SkillBase : ScriptableObject
 {
     public string skillName;
     public int skillID;
-    public float apCost;
+    public int apCost;
     public float mpCost;
     public int coolDownRound;
     public float effectValue;
