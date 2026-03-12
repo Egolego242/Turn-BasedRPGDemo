@@ -226,6 +226,18 @@ public class BaseCharacterAttr : MonoBehaviour
         TurnBattleManager.TriggerActionPointChanged();
     }
 
+    /// <summary>
+    /// 【仅新增】计算移动指定距离需要消耗的AP（0-4米=1点，4-8米=2点...）
+    /// </summary>
+    /// <param name="moveDistance">要移动的距离（米）</param>
+    /// <returns>消耗的AP点数</returns>
+    public virtual int CalculateMoveAPCost(float moveDistance)
+    {
+        if (moveDistance <= 0) return 0;
+        // 核心规则：向上取整，和玩家侧逻辑完全一致
+        return Mathf.CeilToInt(moveDistance / 4f);
+    }
+
     // 阵营判断
     public bool IsEnemy(BaseCharacterAttr targetAttr)
     {
@@ -238,6 +250,20 @@ public class BaseCharacterAttr : MonoBehaviour
     {
         if (targetAttr == null) return false;
         return currentCamp == targetAttr.currentCamp && currentCamp != CampType.Neutral;
+    }
+
+    /// <summary>
+    /// 核心校验：是否是当前角色的回合（非本回合直接禁止行动）
+    /// </summary>
+    /// <returns>true=是本回合，false=非本回合</returns>
+    public bool IsCurrentTurn()
+    {
+        bool isMyTurnNow = isMyTurn && !isDead;
+        if (!isMyTurnNow)
+        {
+            Debug.LogWarning($"{gameObject.name} 非当前回合，禁止行动！", this);
+        }
+        return isMyTurnNow;
     }
 
     // ===== 核心修复：基类新增EndPersonalTurn虚方法 =====

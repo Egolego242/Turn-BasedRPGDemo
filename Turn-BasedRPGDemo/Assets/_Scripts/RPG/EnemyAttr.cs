@@ -511,17 +511,7 @@ public class EnemyAttr : BaseCharacterAttr
         }
     }
 
-    /// <summary>
-    /// 【仅新增】计算移动指定距离需要消耗的AP（0-4米=1点，4-8米=2点...）
-    /// </summary>
-    /// <param name="moveDistance">要移动的距离（米）</param>
-    /// <returns>消耗的AP点数</returns>
-    private int CalculateMoveAPCost(float moveDistance)
-    {
-        if (moveDistance <= 0) return 0;
-        // 核心规则：向上取整，和玩家侧逻辑完全一致
-        return Mathf.CeilToInt(moveDistance / 4f);
-    }
+    
     #endregion
 
     /// <summary>

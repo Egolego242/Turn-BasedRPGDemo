@@ -3,28 +3,47 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 
+/// <summary>
+/// 回合战斗核心管理器（原TurnBattleManager重构版）
+/// 负责回合流程、行动点管理、全局回合轮换、战斗胜负判定
+/// </summary>
 public class TurnBattleManager : MonoBehaviour
 {
     public static TurnBattleManager Instance { get; private set; }
-    [Header("===== 战斗规则配置 =====")]
+
+    #region 战斗配置
+    [Header("Battle Settings")]
+    [Tooltip("全局最大行动点上限")]
     public int globalMaxAP = 6;
+    [Tooltip("每轮恢复的行动点数量")]
     public int roundRecoverAP = 4;
-    // 注意：detectRange探测范围已废弃，改为敌人自身的enemyDetectRange警戒圈
-    // public float detectRange = 8f; 
+    #endregion
 
-    // 战斗参与方
+    #region 战斗状态
+    // 所有参战角色（玩家+敌人）
     private List<BaseCharacterAttr> allCombatants = new List<BaseCharacterAttr>();
+    // 按先手值排序后的参战角色
     private List<BaseCharacterAttr> sortedCombatants = new List<BaseCharacterAttr>();
+    // 当前行动角色索引
     private int currentActorIndex = -1;
+    // 战斗是否激活
     private bool isBattleActive = false;
+    #endregion
 
-    // ========== 新增：战斗流程事件，UI订阅 ==========
-    public static event Action<List<BaseCharacterAttr>> OnBattleStart; // 战斗开始，传入所有参战角色
-    public static event Action<BaseCharacterAttr> OnTurnChanged; // 回合切换，传入当前行动角色
-    public static event Action<bool> OnBattleEnd; // 战斗结束，传入是否玩家胜利
-    public static event Action OnActionPointChanged; // 行动点变化事件
+    #region 战斗事件
+    /// <summary>战斗开始（参数：排序后的参战角色列表）</summary>
+    public static event Action<List<BaseCharacterAttr>> OnBattleStart;
+    /// <summary>回合切换（参数：当前行动角色）</summary>
+    public static event Action<BaseCharacterAttr> OnTurnChanged;
+    /// <summary>战斗结束（参数：玩家是否胜利）</summary>
+    public static event Action<bool> OnBattleEnd;
+    /// <summary>行动点变更（刷新UI用）</summary>
+    public static event Action OnActionPointChanged;
+    /// <summary>单个角色回合结束</summary>
     public event Action OnTurnEnd;
+    #endregion
 
+    private BaseCharacterAttr currentActor; // 当前正在行动的角色
 
     // ========== 新增：专门用于触发行动点变化事件的公共静态方法 ==========
     public static void TriggerActionPointChanged()
@@ -207,6 +226,28 @@ public class TurnBattleManager : MonoBehaviour
         // 启动下一个角色的回合
         StartNextActorTurn();
 
+    }
+
+    /// <summary>
+    /// 判断当前是否是玩家的回合（玩家所有战斗行为的核心校验）
+    /// </summary>
+    /// <returns>true=玩家回合，false=非玩家回合</returns>
+    public bool IsPlayerTurn()
+    {
+        // 1. 非战斗状态（探索模式）：玩家可自由行动（返回true）
+        if (!isBattleActive) return true;
+
+        // 2. 战斗状态：找到当前行动角色，判断是否是玩家类型
+        BaseCharacterAttr currentActor = GetCurrentActor(); // 需实现「获取当前行动角色」的方法
+        return currentActor != null && currentActor is PlayerAttr;
+    }
+
+    // 配套：获取当前行动角色（TurnBattleManager 中新增）
+    private BaseCharacterAttr GetCurrentActor()
+    {
+        if (currentActorIndex < 0 || currentActorIndex >= sortedCombatants.Count)
+            return null;
+        return sortedCombatants[currentActorIndex];
     }
 
     /// <summary>

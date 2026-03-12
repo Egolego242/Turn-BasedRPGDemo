@@ -5,7 +5,6 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 
 /// <summary>
-/// 神界原罪2风格 玩家点击移动核心脚本 - 终极无穿透完整版
 /// ✅ 彻底解决：鼠标点击UI按钮穿透触发角色移动（100%根治，无任何例外）
 /// ✅ 保留所有功能：点击地形移动、顺滑转向、水域不可走、战斗状态消耗AP、探索无消耗
 /// ✅ 动画适配：行走/站立动画切换
@@ -35,6 +34,11 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 targetMovePos;
     private bool isPlayerMoving = false;
     private readonly int isWalkingHash = Animator.StringToHash("IsWalking");
+    private int currentMoveAPCost = 0;
+    // 新增：标记是否已扣除本次移动的AP
+    private bool isAPDeducted = false;
+    // 新增：记录移动起点（用于计算实际移动距离，返还未消耗AP）
+    private Vector3 moveStartPos;
 
     void Awake()
     {
@@ -68,6 +72,17 @@ public class PlayerMovement : MonoBehaviour
                 return;
             }
 
+            // ========== 新增：战斗状态下先判断是否是玩家回合 ==========
+            if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState())
+            {
+                // 假设你有回合管理器（TurnManager），提供「是否是玩家回合」的判断方法
+                if (!TurnBattleManager.Instance.IsPlayerTurn())
+                {
+                    Debug.Log("非玩家回合，无法移动！");
+                    return; // 非玩家回合直接拦截移动
+                }
+            }
+
             // 停止当前所有移动行为
             StopPlayerMove();
 
@@ -79,6 +94,26 @@ public class PlayerMovement : MonoBehaviour
                 // 判断目标点是否在寻路网格上（可到达）
                 if (IsTargetPosReachable(targetMovePos))
                 {
+                    // ========== 核心修改：计算移动消耗并校验AP ==========
+                    currentMoveAPCost = CalculateMoveAPCost(targetMovePos);
+                    // 战斗状态下校验AP是否足够
+                    bool canMove = true;
+                    if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState() && playerAttr != null)
+                    {
+                        canMove = playerAttr.ConsumeAP(currentMoveAPCost);
+                        if (!canMove)
+                        {
+                            Debug.LogWarning($"移动需要{currentMoveAPCost}点AP，当前仅{playerAttr.GetAttrIntValue(AttributeType.CurrentAP)}点，无法移动！");
+                            return;
+                        }
+                        // 标记：已扣除AP，避免重复扣
+                        isAPDeducted = true;
+                    }
+
+                    // 记录移动起点（用于后续计算实际移动距离）
+                    moveStartPos = transform.position;
+                    moveStartPos.y = 0;
+
                     ShowMoveMarker(targetMovePos);
                     navAgent.SetDestination(targetMovePos);
                     isPlayerMoving = true;
@@ -91,6 +126,18 @@ public class PlayerMovement : MonoBehaviour
         // 角色移动中逻辑：转向+移动状态检测+战斗耗AP
         if (isPlayerMoving && navAgent != null)
         {
+            // ========== 新增：移动过程中再次校验回合（防止回合切换后仍移动） ==========
+            if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState())
+            {
+                if (!TurnBattleManager.Instance.IsPlayerTurn())
+                {
+                    // 优化：中途打断移动，返还未消耗的AP
+                    RefundUnusedAP();
+                    StopPlayerMove();
+                    return;
+                }
+            }
+
             // 到达目标点，停止移动
             if (!navAgent.pathPending && navAgent.remainingDistance <= arriveDistance)
             {
@@ -98,16 +145,16 @@ public class PlayerMovement : MonoBehaviour
                 return;
             }
 
-            // 战斗状态：移动消耗行动点AP，无AP则停止移动
-            if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState() && playerAttr != null)
-            {
-                bool canMove = playerAttr.ConsumeAP(1);
-                if (!canMove)
-                {
-                    StopPlayerMove();
-                    return;
-                }
-            }
+            //// 战斗状态：移动消耗行动点AP，无AP则停止移动
+            //if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState() && playerAttr != null)
+            //{
+            //    bool canMove = playerAttr.ConsumeAP(1);
+            //    if (!canMove)
+            //    {
+            //        StopPlayerMove();
+            //        return;
+            //    }
+            //}
 
             // 角色顺滑转向移动方向（你的原有核心逻辑）
             Vector3 moveDir = navAgent.desiredVelocity;
@@ -194,8 +241,64 @@ public class PlayerMovement : MonoBehaviour
             navAgent.velocity = Vector3.zero;
         }
         isPlayerMoving = false;
+        // 重置AP相关标记
+        isAPDeducted = false;
+        currentMoveAPCost = 0; // 重置本次移动消耗
         if (animator != null) animator.SetBool(isWalkingHash, false);
         HideMoveMarker();
+    }
+
+    /// <summary>
+    /// 核心：计算移动消耗的AP（和敌人端规则一致）
+    /// 每4米消耗1点，不足4米也消耗1点
+    /// </summary>
+    /// <param name="targetPos">目标位置</param>
+    /// <returns>需要消耗的AP点数</returns>
+    private int CalculateMoveAPCost(Vector3 targetPos)
+    {
+        if (navAgent == null) return 1; // 兜底：默认消耗1点
+
+        // 计算当前位置到目标点的平面距离（忽略Y轴）
+        Vector3 currentPos = transform.position;
+        currentPos.y = 0;
+        targetPos.y = 0;
+        float distance = Vector3.Distance(currentPos, targetPos);
+
+        // 核心规则：向上取整，每4米1点（和EnemyAttr中逻辑完全一致）
+        int cost = Mathf.CeilToInt(distance / 4f);
+        // 保底消耗1点（即使距离为0，也消耗1点，和敌人规则一致）
+        return Mathf.Max(cost, 1);
+    }
+
+    /// <summary>
+    /// 新增：返还未消耗的AP（移动中途打断时触发）
+    /// </summary>
+    private void RefundUnusedAP()
+    {
+        if (!isAPDeducted || playerAttr == null || currentMoveAPCost <= 0)
+        {
+            return;
+        }
+
+        // 计算实际移动的距离
+        Vector3 currentPos = transform.position;
+        currentPos.y = 0;
+        float actualMoveDistance = Vector3.Distance(moveStartPos, currentPos);
+
+        // 计算实际消耗的AP
+        int actualCost = Mathf.CeilToInt(actualMoveDistance / 4f);
+        actualCost = Mathf.Max(actualCost, 1); // 保底1点
+
+        // 计算应返还的AP（总扣除 - 实际消耗）
+        int refundAP = currentMoveAPCost - actualCost;
+        if (refundAP > 0)
+        {
+            playerAttr.RecoverAP(refundAP); // 需在PlayerAttr中实现AddAP方法
+            Debug.Log($"移动中途打断，返还{refundAP}点AP（总扣除{currentMoveAPCost}，实际消耗{actualCost}）");
+        }
+
+        // 重置标记
+        isAPDeducted = false;
     }
     #endregion
 }
