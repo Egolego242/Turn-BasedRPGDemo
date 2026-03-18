@@ -3,7 +3,7 @@ using UnityEngine.AI;
 using BehaviorDesigner.Runtime;
 using System.Collections;
 using System.Collections.Generic;
-
+//编译
 /// <summary>
 /// 敌人属性类 - 行为树专属适配版
 /// 所有AI逻辑完全交由Behavior Designer行为树控制
@@ -26,6 +26,8 @@ public class EnemyAttr : BaseCharacterAttr
     public float initStrength = 6;
     public float initIntelligence = 3;
     public float initArmor = 2;
+    // 先加一个移动锁（和isDead同级的类字段）
+    private bool isMoving = false;
     #endregion
 
     #region 掉落配置
@@ -36,7 +38,7 @@ public class EnemyAttr : BaseCharacterAttr
 
     #region 行动消耗规则（和行为树节点完全对应）
     [Header("===== 行动消耗规则 =====")]
-    public int moveCostPerUnit = 1; // 每移动1单位消耗的行动点
+    public float moveCostPerUnit = 1f; // 每移动1单位消耗的行动点
     public int normalAttackCost = 2; // 普攻消耗行动点（行为树普攻判断用）
     public int skillAttackCost = 3; // 技能消耗行动点（行为树技能判断用）
     [Header("===== 战斗配置 =====")]
@@ -434,6 +436,7 @@ public class EnemyAttr : BaseCharacterAttr
     {
         if (attackTarget == null) return false;
         float distance = Vector3.Distance(transform.position, attackTarget.position);
+        Debug.Log($"{gameObject.name}距离玩家{distance}m");
         return distance <= attackRange;
     }
 
@@ -444,6 +447,7 @@ public class EnemyAttr : BaseCharacterAttr
     {
         if (attackTarget == null) return false;
         float distance = Vector3.Distance(transform.position, attackTarget.position);
+        Debug.Log($"{gameObject.name}距离玩家{distance}m");
         return distance <= skillRange;
     }
     #region 整合判断
@@ -548,6 +552,7 @@ public class EnemyAttr : BaseCharacterAttr
         skillCoolDownLeft = skillCoolDown;
         // 攻击后检查战斗是否结束
         TurnBattleManager.Instance?.CheckBattleEnd();
+        HasAvailableAction();
         return true;
     }
 
@@ -583,82 +588,173 @@ public class EnemyAttr : BaseCharacterAttr
 
         // 攻击后检查战斗是否结束
         TurnBattleManager.Instance?.CheckBattleEnd();
+        HasAvailableAction();
         return true;
     }
 
     /// <summary>
-    /// 【行为树调用】向目标移动（返回是否移动成功）
+    /// 计算移动消耗的行动点（每单位距离消耗1AP，向上取整）
+    /// </summary>
+    public override int CalculateMoveAPCost(float distance)
+    {
+        if (distance <= 0) return 0; // 无距离不消耗
+        int cost = Mathf.CeilToInt(distance * moveCostPerUnit);
+        return Mathf.Max(1, cost); // 保底：至少消耗1AP（避免短距离0消耗）
+    }
+
+    /// <summary>
+    /// 向目标移动（根治版：目标点必在NavMesh上，基于路径长度判定完成）
     /// </summary>
     public bool MoveToTarget()
     {
-        // 【强制日志】只要进方法就打印，排除没执行的可能
-        Debug.Log($"===== {gameObject.name} 进入MoveToTarget方法 =====", this);
-        if (isDead)
+        // 1. 移动锁：避免重复调用
+        if (isMoving)
         {
-            Debug.LogWarning($"{gameObject.name} 移动失败：已死亡", this);
+            Debug.Log($"{gameObject.name} 正在移动，跳过重复调用", this);
             return false;
         }
-        if (attackTarget == null)
-        {
-            Debug.LogWarning($"{gameObject.name} 移动失败：攻击目标为空", this);
-            return false;
-        }
-        if (navAgent == null || !navAgent.isActiveAndEnabled)
-        {
-            Debug.LogWarning($"{gameObject.name} 移动失败：导航组件无效", this);
-            return false;
-        }
-        Debug.Log($"【2】{gameObject.name} 判空检查通过", this);
 
+        // 2. 基础校验
+        if (isDead || attackTarget == null || navAgent == null || !navAgent.isActiveAndEnabled || !navAgent.isOnNavMesh)
+        {
+            behaviorTree.SetVariableValue("isMoveReady", false);
+            Debug.Log($"{gameObject.name} 移动校验失败：死亡/无目标/导航失效", this);
+            return false;
+        }
+
+        // 3. 已在攻击范围 → 不移动
+        if (IsTargetInAttackRange())
+        {
+            behaviorTree.SetVariableValue("isMoveReady", false);
+            return false;
+        }
+
+        // 4. AP校验
         int currentAP = GetAttrIntValue(AttributeType.CurrentAP);
-        Debug.Log($"【3-4】{gameObject.name} 获取当前AP：{currentAP}", this);
         if (currentAP <= 0)
         {
-            Debug.LogWarning($"{gameObject.name} 移动失败：行动点不足（当前{currentAP}）", this);
+            behaviorTree.SetVariableValue("isMoveReady", false);
+            Debug.Log($"{gameObject.name} 移动失败：AP耗尽（{currentAP}）", this);
             return false;
         }
 
-
-        // 计算移动距离和消耗
+        // ===================== 核心修复1：目标点强制落在NavMesh上 =====================
+        Vector3 enemyPos = transform.position;
         Vector3 targetPos = attackTarget.position;
-        Debug.Log($"【3-1】{gameObject.name} 获取目标位置：{targetPos}", this);
+        Vector3 dir = (targetPos - enemyPos).normalized;
 
-        float distance = Vector3.Distance(transform.position, targetPos);
-        Debug.Log($"【3-2】{gameObject.name} 计算距离：{distance:F1}", this);
+        // 理想目标点（攻击范围边缘，留0.1容错）
+        Vector3 idealTargetPos = targetPos - dir * (attackRange - 0.1f);
+        Vector3 finalTargetPos = idealTargetPos;
 
-        int cost = CalculateMoveAPCost(distance);
-        Debug.Log($"【3-3】{gameObject.name} 计算移动消耗：{cost}", this);
-
-        if (cost > currentAP)
+        // 强制采样NavMesh，修正目标点
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(idealTargetPos, out hit, 2f, NavMesh.AllAreas))
         {
-            Debug.LogWarning($"{gameObject.name} 移动失败：行动点不足（需要{cost}，当前{currentAP}）", this);
+            finalTargetPos = hit.position; // 修正为NavMesh上的有效点
+        }
+        else
+        {
+            // 极端情况：采样失败，退到玩家正前方1m处（再次采样）
+            finalTargetPos = enemyPos + dir * (Vector3.Distance(enemyPos, targetPos) - 1f);
+            NavMesh.SamplePosition(finalTargetPos, out hit, 1f, NavMesh.AllAreas);
+            finalTargetPos = hit.position;
+        }
+        Debug.Log($"{gameObject.name} 目标点修正：理想={idealTargetPos} → 实际={finalTargetPos}", this);
+
+        // ===================== 核心修复2：计算真实NavMesh路径长度 =====================
+        NavMeshPath path = new NavMeshPath();
+        navAgent.CalculatePath(finalTargetPos, path);
+
+        // 路径无效 → 直接返回
+        if (path.status != NavMeshPathStatus.PathComplete)
+        {
+            behaviorTree.SetVariableValue("isMoveReady", false);
+            Debug.LogError($"{gameObject.name} 路径无效（状态：{path.status}），放弃移动", this);
             return false;
         }
-        Debug.Log($"【4】{gameObject.name} AP校验通过", this);
 
+        // 计算路径总长度（不是直线距离！）
+        float totalPathLength = 0f;
+        for (int i = 0; i < path.corners.Length - 1; i++)
+        {
+            totalPathLength += Vector3.Distance(path.corners[i], path.corners[i + 1]);
+        }
+        Debug.Log($"{gameObject.name} 路径总长度：{totalPathLength:F1}m（直线距离：{Vector3.Distance(enemyPos, finalTargetPos):F1}m）", this);
 
-        // 重置导航状态+执行寻路
+        // ===================== 计算移动消耗 + 扣AP =====================
+        int moveCost = CalculateMoveAPCost(totalPathLength);
+        if (moveCost > currentAP)
+        {
+            behaviorTree.SetVariableValue("isMoveReady", false);
+            Debug.LogWarning($"{gameObject.name} 移动失败：AP不足（需要{moveCost}，当前{currentAP}）", this);
+            return false;
+        }
+
+        // 扣AP失败 → 终止
+        if (!ConsumeAP(moveCost))
+        {
+            behaviorTree.SetVariableValue("isMoveReady", false);
+            Debug.LogError($"{gameObject.name} 移动失败：AP消耗失败", this);
+            return false;
+        }
+
+        // ===================== 启动移动 + 解锁协程 =====================
+        isMoving = true;
         navAgent.ResetPath();
-        Debug.Log($"【5-1】{gameObject.name} 重置导航路径", this);
         navAgent.isStopped = false;
-        Debug.Log($"【5-2】{gameObject.name} 启用导航", this);
-        navAgent.SetDestination(targetPos);
-        Debug.Log($"【5-3】{gameObject.name} 设置导航目标：{targetPos}", this);
+        navAgent.SetDestination(finalTargetPos);
 
-        // 消耗行动点（增加容错）
-        bool consumeSuccess = ConsumeAP(cost);
-        Debug.Log($"【6-1】{gameObject.name} 调用ConsumeAP，消耗{cost:F1}AP", this);
-        if (!consumeSuccess)
-        {
-            Debug.LogError($"{gameObject.name} 移动失败：行动点消耗失败", this);
-            navAgent.ResetPath();
-            navAgent.isStopped = true;
-            return false;
-        }
-        Debug.Log($"【6-2】{gameObject.name} AP消耗成功", this);
+        // 启动精准判定的协程（传入目标点+路径长度）
+        StartCoroutine(WaitForMoveComplete(finalTargetPos, totalPathLength));
 
-        Debug.Log($"{gameObject.name} 向{attackTarget.name}移动，距离{distance:F1}，消耗{cost:F1}行动点", this);
+        Debug.Log($"{gameObject.name} 启动移动：目标={finalTargetPos}，消耗{moveCost}AP", this);
         return true;
+    }
+
+    /// <summary>
+    /// 移动完成判定协程（基于路径长度，无超时，精准到位）
+    /// </summary>
+    /// <param name="targetPos">最终目标点</param>
+    /// <param name="totalPathLength">NavMesh路径总长度</param>
+    private IEnumerator WaitForMoveComplete(Vector3 targetPos, float totalPathLength)
+    {
+        float movedDistance = 0f;
+        Vector3 lastPos = transform.position;
+
+        // 核心判定：已移动距离 ≥ 路径总长度的95% → 判定完成（留5%容错）
+        while (movedDistance < totalPathLength * 0.95f)
+        {
+            // 每帧累加实际移动距离
+            movedDistance += Vector3.Distance(transform.position, lastPos);
+            lastPos = transform.position;
+
+            // 异常中断：路径失效/死亡/退出战斗 → 直接结束
+            if (navAgent.pathStatus != NavMeshPathStatus.PathComplete || isDead || !isInBattle)
+            {
+                Debug.LogWarning($"{gameObject.name} 移动中断：路径失效/死亡/退出战斗", this);
+                break;
+            }
+
+            yield return null;
+        }
+
+        // 最后补位：强制走到目标点（避免差最后一点）
+        navAgent.isStopped = false;
+        navAgent.SetDestination(targetPos);
+        yield return new WaitForSeconds(0.2f); // 给0.2秒补位时间
+
+        // ===================== 核心：解锁isMoving + 刷新状态 =====================
+        isMoving = false;
+        navAgent.isStopped = true; // 停止移动，避免滑步
+
+        // 刷新行为树状态（强制判定是否在攻击范围）
+        bool inAttackRange = IsTargetInAttackRange();
+        behaviorTree.SetVariableValue("isMoveReady", false); // 移动一次就关闭
+        behaviorTree.SetVariableValue("isAttackReady", inAttackRange);
+
+        Debug.Log($"{gameObject.name} 移动完成：已走{movedDistance:F1}m / 总长度{totalPathLength:F1}m | 是否在攻击范围：{inAttackRange}", this);
+        HasAvailableAction();
     }
 
     /// <summary>
@@ -708,6 +804,69 @@ public class EnemyAttr : BaseCharacterAttr
         // 自动结束回合后同步状态
         SyncStateToBehaviorTree();
         Debug.Log("敌人结束回合");
+    }
+
+    /// <summary>
+    /// 判断是否有可用行动（返回bool + 同步到行为树变量）
+    /// 行为树可直接调用，也可通过变量判断
+    /// </summary>
+    /// <returns>true=有可用行动，false=无可用行动</returns>
+    public bool HasAvailableAction()
+    {
+        // 1. 基础校验：死亡/非战斗 → 无行动
+        if (isDead || !isInBattle)
+        {
+            behaviorTree.SetVariableValue("hasAvailableAction", false);
+            Debug.Log($"{name} 无可用行动：死亡/非战斗", this);
+            return false;
+        }
+
+        // 2. 获取当前AP
+        int currentAP = GetAttrIntValue(AttributeType.CurrentAP);
+        if (currentAP <= 0)
+        {
+            behaviorTree.SetVariableValue("hasAvailableAction", false);
+            Debug.Log($"{name} 无可用行动：AP耗尽（{currentAP}）", this);
+            return false;
+        }
+
+        // 3. 判断能否普攻/移动（完全删除IsSkillReady/技能相关判断，只保留你实际有的逻辑）
+        bool canAttack = IsTargetInAttackRange() && currentAP >= normalAttackCost;
+        bool canMove = !IsTargetInAttackRange() && currentAP >= 1;
+
+        // 4. 核心判断：有任意可执行行动 → true（仅普攻/移动）
+        bool hasAction = canAttack || canMove;
+        // 同步到行为树的Shared Bool变量
+        behaviorTree.SetVariableValue("hasAvailableAction", hasAction);
+
+        Debug.Log($"{name} 可用行动判断：\nAP={currentAP} | 普攻={canAttack} | 移动={canMove} → {hasAction}", this);
+        // 无行动时强制设为false
+        if (!canAttack && !canMove)
+        {
+            behaviorTree.SetVariableValue("hasAvailableAction", false);
+        }
+        return hasAction;
+    }
+
+    // 辅助方法（不变）
+    public bool IsInAttackRange()
+    {
+        if (attackTarget == null) return false;
+        Vector3 enemyPos = transform.position;
+        enemyPos.y = 0;
+        Vector3 targetPos = attackTarget.position;
+        targetPos.y = 0;
+        return Vector3.Distance(enemyPos, targetPos) <= attackRange;
+    }
+
+    public bool IsInSkillRange()
+    {
+        if (attackTarget == null) return false;
+        Vector3 enemyPos = transform.position;
+        enemyPos.y = 0;
+        Vector3 targetPos = attackTarget.position;
+        targetPos.y = 0;
+        return Vector3.Distance(enemyPos, targetPos) <= skillRange;
     }
 
     /// <summary>
