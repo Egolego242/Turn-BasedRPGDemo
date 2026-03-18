@@ -3,6 +3,7 @@ using UnityEngine.AI;
 using BehaviorDesigner.Runtime;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 //编译
 /// <summary>
 /// 敌人属性类 - 行为树专属适配版
@@ -28,6 +29,8 @@ public class EnemyAttr : BaseCharacterAttr
     public float initArmor = 2;
     // 先加一个移动锁（和isDead同级的类字段）
     private bool isMoving = false;
+    // 本回合是否已经执行过移动
+    private bool hasMovedThisTurn = false;
     #endregion
 
     #region 掉落配置
@@ -49,8 +52,10 @@ public class EnemyAttr : BaseCharacterAttr
 
     #region 巡逻&警戒配置
     [Header("===== 巡逻配置 =====")]
+    private bool isPatrolling = false;
     public float patrolRange = 5f; // 巡逻范围
     public float patrolWaitTime = 2f; // 巡逻停留时间
+    public float moveArriveDistance = 0.5f; // 判定到达目标的距离阈值
     private Vector3 originPos; // 出生初始位置
     private Coroutine patrolCoroutine;
 
@@ -108,7 +113,17 @@ public class EnemyAttr : BaseCharacterAttr
         // 初始化属性（调用基类方法）
         InitAttribute(initMaxHP, initMaxMP, initMaxAP, initStrength, initIntelligence, initArmor);
         currentCamp = CampType.Enemy;
-        originPos = transform.position;
+        //originPos = transform.position;
+        NavMeshHit originHit;
+        if (NavMesh.SamplePosition(transform.position, out originHit, 1f, NavMesh.AllAreas))
+        {
+            originPos = originHit.position; // 强制校准到NavMesh上
+        }
+        else
+        {
+            originPos = transform.position;
+            Debug.LogWarning($"{gameObject.name} 出生点不在NavMesh上，巡逻可能异常！", this);
+        }
 
         // 绑定回合结束事件（自动减少技能冷却）
         if (TurnBattleManager.Instance != null)
@@ -222,10 +237,16 @@ public class EnemyAttr : BaseCharacterAttr
     public void StartPatrol()
     {
         if (isInBattle || isDead) return;
+        // 核心：如果已经在巡逻，直接返回，不重复启动
+        if (isPatrolling)
+        {
+            return;
+        }
         if (patrolCoroutine != null)
             StopCoroutine(patrolCoroutine);
 
         patrolCoroutine = StartCoroutine(PatrolCoroutine());
+        isPatrolling = true; // 标记为正在巡逻
         //Debug.Log("开始巡逻");
     }
 
@@ -239,6 +260,7 @@ public class EnemyAttr : BaseCharacterAttr
             StopCoroutine(patrolCoroutine);
             patrolCoroutine = null;
         }
+        isPatrolling = false;
         if (navAgent != null && navAgent.isActiveAndEnabled)
         {
             navAgent.ResetPath();
@@ -250,39 +272,121 @@ public class EnemyAttr : BaseCharacterAttr
     /// <summary>
     /// 巡逻协程（行为树日常分支驱动）
     /// </summary>
+    //private IEnumerator PatrolCoroutine()
+    //{
+    //    while (!isInBattle && !isDead)
+    //    {
+    //        // 生成随机巡逻点
+    //        Vector3 randomDir = Random.insideUnitSphere * patrolRange;
+    //        randomDir.y = 0;
+    //        Vector3 targetPos = originPos + randomDir;
+
+    //        // 验证目标点是否在NavMesh上
+    //        NavMeshHit hit;
+    //        bool isPosValid = NavMesh.SamplePosition(targetPos, out hit, patrolRange, NavMesh.AllAreas);
+    //        if (isPosValid && navAgent != null && navAgent.isActiveAndEnabled)
+    //        {
+    //            targetPos = hit.position;
+    //            navAgent.isStopped = false;
+    //            navAgent.SetDestination(targetPos);
+
+    //            // 等待到达目标点（距离<0.5f 或 寻路失败）
+    //            while (navAgent.remainingDistance > 0.5f && navAgent.pathStatus == NavMeshPathStatus.PathComplete && !isInBattle && !isDead)
+    //            {
+    //                yield return null; // 每一帧检查状态
+    //            }
+    //        }
+    //        else
+    //        {
+    //            Debug.LogWarning($"{gameObject.name} 巡逻点无效，跳过本次巡逻", this);
+    //        }
+
+    //        // 停留指定时间
+    //        yield return new WaitForSeconds(patrolWaitTime);
+    //    }
+    //    patrolCoroutine = null; // 协程结束后重置引用
+    //}
+
+    /// <summary>
+    /// 生成有效巡逻点（仅生成一次，确保在NavMesh上且符合范围）
+    /// </summary>
+    private Vector3 GenerateValidPatrolPoint()
+    {
+        // 生成平面随机方向（Y轴归零）
+        Vector3 randomDir = Random.insideUnitSphere * patrolRange;
+        randomDir.y = 0;
+        Vector3 candidatePos = originPos + randomDir;
+
+        // 确保最小距离
+        float distance = Vector3.Distance(originPos, candidatePos);
+        if (distance < patrolRange * 0.2f)
+        {
+            randomDir = Random.insideUnitSphere * patrolRange;
+            randomDir.y = 0;
+            candidatePos = originPos + randomDir;
+        }
+
+        // NavMesh采样
+        NavMeshHit hit;
+        if (NavMesh.SamplePosition(candidatePos, out hit, 3f, NavMesh.AllAreas))
+        {
+            return hit.position;
+        }
+        Debug.LogWarning("巡逻点采样失败");
+        return Vector3.zero;
+    }
+
+    /// <summary>
+    /// 核心巡逻循环：生成目标→移动到位→停留→循环
+    /// 全程不中途更换目标，必须走到才会生成下一个
+    /// </summary>
     private IEnumerator PatrolCoroutine()
     {
         while (!isInBattle && !isDead)
         {
-            // 生成随机巡逻点
-            Vector3 randomDir = Random.insideUnitSphere * patrolRange;
-            randomDir.y = 0;
-            Vector3 targetPos = originPos + randomDir;
-
-            // 验证目标点是否在NavMesh上
-            NavMeshHit hit;
-            bool isPosValid = NavMesh.SamplePosition(targetPos, out hit, patrolRange, NavMesh.AllAreas);
-            if (isPosValid && navAgent != null && navAgent.isActiveAndEnabled)
+            // 1. 生成唯一有效巡逻点（仅生成一次）
+            Vector3 targetPos = GenerateValidPatrolPoint();
+            if (targetPos == Vector3.zero)
             {
-                targetPos = hit.position;
-                navAgent.isStopped = false;
-                navAgent.SetDestination(targetPos);
+                yield return new WaitForSeconds(1f);
+                continue;
+            }
 
-                // 等待到达目标点（距离<0.5f 或 寻路失败）
-                while (navAgent.remainingDistance > 0.5f && navAgent.pathStatus == NavMeshPathStatus.PathComplete && !isInBattle && !isDead)
+            // 2. 移动到目标点（全程不换目标）
+            navAgent.isStopped = false;
+            navAgent.SetDestination(targetPos);
+
+            bool isArrived = false;
+            float timeout = 10f;
+            float timer = 0f;
+
+            while (timer < timeout && !isInBattle && !isDead)
+            {
+                timer += Time.deltaTime;
+                if (navAgent.remainingDistance < moveArriveDistance || !navAgent.hasPath)
                 {
-                    yield return null; // 每一帧检查状态
+                    isArrived = true;
+                    break;
                 }
+                yield return null;
+            }
+
+            // 3. 到达后停留（核心：单独的停留逻辑）
+            if (isArrived && !isInBattle && !isDead)
+            {
+                navAgent.isStopped = true;
+                yield return new WaitForSeconds(patrolWaitTime); // 停指定秒数
             }
             else
             {
-                Debug.LogWarning($"{gameObject.name} 巡逻点无效，跳过本次巡逻", this);
+                navAgent.ResetPath();
+                navAgent.isStopped = true;
+                yield return new WaitForSeconds(1f);
             }
-
-            // 停留指定时间
-            yield return new WaitForSeconds(patrolWaitTime);
         }
-        patrolCoroutine = null; // 协程结束后重置引用
+        isPatrolling = false; 
+        patrolCoroutine = null;
+        navAgent.isStopped = true;
     }
 
     /// <summary>
@@ -499,7 +603,7 @@ public class EnemyAttr : BaseCharacterAttr
     /// </summary>
     public void CheckMoveReady()
     {
-        bool isReady = !isDead && attackTarget != null && navAgent != null && navAgent.isActiveAndEnabled && GetAttrValue(AttributeType.CurrentAP) >= 1f;
+        bool isReady = !isDead && attackTarget != null && navAgent != null && navAgent.isActiveAndEnabled && GetAttrValue(AttributeType.CurrentAP) >= 1f && !hasMovedThisTurn && !IsTargetInAttackRange();
         if (behaviorTree != null)
         {
             var moveReadyVar = behaviorTree.GetVariable("isMoveReady");
@@ -709,6 +813,9 @@ public class EnemyAttr : BaseCharacterAttr
         StartCoroutine(WaitForMoveComplete(finalTargetPos, totalPathLength));
 
         Debug.Log($"{gameObject.name} 启动移动：目标={finalTargetPos}，消耗{moveCost}AP", this);
+        // 移动成功后，标记本回合已移动
+        hasMovedThisTurn = true;
+        Debug.Log($"{gameObject.name} 本回合已移动过，后续移动将被禁止", this);
         return true;
     }
 
@@ -778,6 +885,8 @@ public class EnemyAttr : BaseCharacterAttr
     public override void EndPersonalTurn()
     {
         base.EndPersonalTurn(); // 基类核心逻辑：标记已行动、取消回合
+        // 回合结束，重置本回合移动标记
+        hasMovedThisTurn = false;
         // 停止移动
         if (navAgent != null && navAgent.isActiveAndEnabled)
         {
@@ -794,6 +903,8 @@ public class EnemyAttr : BaseCharacterAttr
     /// </summary>
     public void AutoEndTurn()
     {
+        // 回合结束，重置本回合移动标记
+        hasMovedThisTurn = false;
         if (TurnBattleManager.Instance == null)
         {
             Debug.LogError("回合管理器为空，无法结束敌人回合");
@@ -831,13 +942,17 @@ public class EnemyAttr : BaseCharacterAttr
         }
 
         // 3. 判断能否普攻/移动（完全删除IsSkillReady/技能相关判断，只保留你实际有的逻辑）
+        bool canSkill = IsTargetInSkillRange() && currentAP >= skillAttackCost;
         bool canAttack = IsTargetInAttackRange() && currentAP >= normalAttackCost;
-        bool canMove = !IsTargetInAttackRange() && currentAP >= 1;
+        bool canMove = !IsTargetInAttackRange() && currentAP >= 1 && !hasMovedThisTurn;
 
         // 4. 核心判断：有任意可执行行动 → true（仅普攻/移动）
-        bool hasAction = canAttack || canMove;
+        bool hasAction = canSkill || canAttack || canMove;
         // 同步到行为树的Shared Bool变量
         behaviorTree.SetVariableValue("hasAvailableAction", hasAction);
+        behaviorTree.SetVariableValue("isMoveReady", canMove);
+        behaviorTree.SetVariableValue("isAttackReady", canAttack);
+        behaviorTree.SetVariableValue("isSkillReady", canSkill);
 
         Debug.Log($"{name} 可用行动判断：\nAP={currentAP} | 普攻={canAttack} | 移动={canMove} → {hasAction}", this);
         // 无行动时强制设为false
