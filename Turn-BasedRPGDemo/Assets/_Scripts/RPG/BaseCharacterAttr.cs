@@ -64,7 +64,7 @@ public class BaseCharacterAttr : MonoBehaviour
         SetAttrValue(AttributeType.CurrentEXP, 0);
         SetAttrValue(AttributeType.EXPToLevelUp, 100);
 
-        // 先攻值存入字典（可选）
+        // 先攻值存入字典
         SetAttrValue(AttributeType.Initiative, initiative);
     }
 

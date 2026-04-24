@@ -27,6 +27,8 @@ public class PlayerMovement : MonoBehaviour
     [Header("===== 组件挂载 =====")]
     public Animator animator;             // 角色动画组件（可拖拽绑定）
 
+    // 公共属性，供外部判断玩家是否在移动
+    public bool IsPlayerMoving => isPlayerMoving;
     // 私有变量
     private NavMeshAgent navAgent;
     private PlayerAttr playerAttr;
@@ -65,14 +67,13 @@ public class PlayerMovement : MonoBehaviour
         // 鼠标左键点击逻辑
         if (Input.GetMouseButtonDown(0))
         {
-            // ============ ✅ 核心穿透拦截【万能检测，100%生效】 ============
             // 优先级最高：如果点击在任意UI上 → 直接退出，不执行任何移动逻辑
             if (IsMouseClickOnUI())
             {
                 return;
             }
 
-            // ========== 新增：战斗状态下先判断是否是玩家回合 ==========
+            // ========== 战斗状态下先判断是否是玩家回合 ==========
             if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState())
             {
                 // 假设你有回合管理器（TurnManager），提供「是否是玩家回合」的判断方法
@@ -299,6 +300,37 @@ public class PlayerMovement : MonoBehaviour
 
         // 重置标记
         isAPDeducted = false;
+    }
+
+    /// <summary>
+    /// 【新增供外部调用】直接移动到指定世界坐标
+    /// （复用了内部的所有逻辑：UI穿透、战斗校验、AP消耗、动画、标记等）
+    /// </summary>
+    public void MoveToTargetPosition(Vector3 targetPos)
+    {
+        // 复用你现有的完整逻辑
+        StopPlayerMove();
+
+        if (IsTargetPosReachable(targetPos))
+        {
+            // 这里直接复用你现有的AP计算、扣除、动画、标记逻辑
+            currentMoveAPCost = CalculateMoveAPCost(targetPos);
+
+            bool canMove = true;
+            if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState() && playerAttr != null)
+            {
+                canMove = playerAttr.ConsumeAP(currentMoveAPCost);
+                if (!canMove) return;
+                isAPDeducted = true;
+            }
+
+            moveStartPos = transform.position;
+            moveStartPos.y = 0;
+            ShowMoveMarker(targetPos);
+            navAgent.SetDestination(targetPos);
+            isPlayerMoving = true;
+            if (animator != null) animator.SetBool(isWalkingHash, true);
+        }
     }
     #endregion
 }
