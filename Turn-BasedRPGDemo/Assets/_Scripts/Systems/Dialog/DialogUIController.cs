@@ -17,10 +17,10 @@ public class DialogUIController : MonoBehaviour
     public Image avatarImage;
 
     [Tooltip("面板上的NPC名字Text")]
-    public TextMeshProUGUI npcNameText; // 旧版Text改成: public Text npcNameText;
+    public TextMeshProUGUI npcNameText; 
 
     [Tooltip("面板上的对话内容Text")]
-    public TextMeshProUGUI dialogContentText; // 旧版Text改成: public Text dialogContentText;
+    //public TextMeshProUGUI dialogContentText; 
 
     // 公开属性，供外部判断
     public bool IsDialogOpen => dialogPanel.activeSelf;
@@ -52,7 +52,7 @@ public class DialogUIController : MonoBehaviour
         // 2. 更新UI组件
         if (avatarImage != null) avatarImage.sprite = avatar;
         if (npcNameText != null) npcNameText.text = npcName;
-        if (dialogContentText != null) dialogContentText.text = content;
+        //if (dialogContentText != null) dialogContentText.text = content;
 
         // 3. 显示面板
         dialogPanel.SetActive(true);

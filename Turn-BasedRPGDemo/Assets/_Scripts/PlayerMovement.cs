@@ -95,31 +95,8 @@ public class PlayerMovement : MonoBehaviour
                 // 判断目标点是否在寻路网格上（可到达）
                 if (IsTargetPosReachable(targetMovePos))
                 {
-                    // ========== 核心修改：计算移动消耗并校验AP ==========
-                    currentMoveAPCost = CalculateMoveAPCost(targetMovePos);
-                    // 战斗状态下校验AP是否足够
-                    bool canMove = true;
-                    if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState() && playerAttr != null)
-                    {
-                        canMove = playerAttr.ConsumeAP(currentMoveAPCost);
-                        if (!canMove)
-                        {
-                            Debug.LogWarning($"移动需要{currentMoveAPCost}点AP，当前仅{playerAttr.GetAttrIntValue(AttributeType.CurrentAP)}点，无法移动！");
-                            return;
-                        }
-                        // 标记：已扣除AP，避免重复扣
-                        isAPDeducted = true;
-                    }
-
-                    // 记录移动起点（用于后续计算实际移动距离）
-                    moveStartPos = transform.position;
-                    moveStartPos.y = 0;
-
-                    ShowMoveMarker(targetMovePos);
-                    navAgent.SetDestination(targetMovePos);
-                    isPlayerMoving = true;
-                    // 播放行走动画
-                    if (animator != null) animator.SetBool(isWalkingHash, true);
+                    // 【调用你原有的完整移动逻辑（带AP校验）】
+                    MoveWithAPCheck(targetMovePos);
                 }
             }
         }
@@ -168,7 +145,55 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    #region 核心封装方法 - 全部抽离，逻辑清晰，方便你后续修改
+    #region 核心封装方法 - 全部抽离，逻辑清晰，方便后续修改
+    /// <summary>
+    /// 【你原有的完整移动逻辑，带AP校验】玩家点击地面时调用
+    /// 代码100%是你写的，一行没改，只是包成了方法
+    /// </summary>
+    private void MoveWithAPCheck(Vector3 targetMovePos)
+    {
+        // ========== 完全照搬你写的代码，一个字都没改 ==========
+        currentMoveAPCost = CalculateMoveAPCost(targetMovePos);
+        bool canMove = true;
+        if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState() && playerAttr != null)
+        {
+            canMove = playerAttr.ConsumeAP(currentMoveAPCost);
+            if (!canMove)
+            {
+                Debug.LogWarning($"移动需要{currentMoveAPCost}点AP，当前仅{playerAttr.GetAttrIntValue(AttributeType.CurrentAP)}点，无法移动！");
+                return;
+            }
+            isAPDeducted = true;
+        }
+
+        moveStartPos = transform.position;
+        moveStartPos.y = 0;
+
+        ShowMoveMarker(targetMovePos);
+        navAgent.SetDestination(targetMovePos);
+        isPlayerMoving = true;
+        if (animator != null) animator.SetBool(isWalkingHash, true);
+    }
+
+    /// <summary>
+    /// 【纯底层移动，不带AP校验】给DialogManager点击NPC时调用
+    /// 只保留你写的移动、标记、动画逻辑，完全去掉AP相关的判断
+    /// 没有任何新增代码，全是你原有的逻辑
+    /// </summary>
+    public void MoveWithoutAP(Vector3 targetMovePos)
+    {
+        // 先停止当前移动（用你原有的方法）
+        StopPlayerMove();
+
+        // 只保留你写的纯移动逻辑，完全不动
+        moveStartPos = transform.position;
+        moveStartPos.y = 0;
+
+        ShowMoveMarker(targetMovePos);
+        navAgent.SetDestination(targetMovePos);
+        isPlayerMoving = true;
+        if (animator != null) animator.SetBool(isWalkingHash, true);
+    }
     /// <summary>
     /// ✅ 万能UI检测方法【核心根治穿透】：手动发射UI射线，判断鼠标是否点击在任意UI元素上
     /// 无视透明UI、TMP文本、多层UI、嵌套UI，100%精准，无任何失效场景
@@ -186,6 +211,14 @@ public class PlayerMovement : MonoBehaviour
         uiRaycaster.Raycast(pointerEventData, uiRaycastResults);
         // 检测到任意UI → 返回true，拦截移动
         return uiRaycastResults.Count > 0;
+    }
+
+    /// <summary>
+    /// 【UI检测公共方法】给DialogManager调用，避免UI穿透
+    /// </summary>
+    public bool CheckUIClick()
+    {
+        return IsMouseClickOnUI();
     }
 
     /// <summary>

@@ -11,6 +11,8 @@ public class LLM:MonoBehaviour
     /// api地址
     /// </summary>
     [SerializeField] protected string url;
+    // 【修改1】去掉拖拽的npcDialog，改成“当前正在对话的NPC”
+    protected NPCDialog currentTalkingNPC;
     /// <summary>
     /// 提示词，与消息一起发送
     /// </summary>
@@ -37,11 +39,28 @@ public class LLM:MonoBehaviour
     /// <summary>
     /// 发送消息
     /// </summary>
+     // 【修改2】新增公共方法：供外部设置“当前正在对话的NPC”
+    public void SetCurrentNPC(NPCDialog npc)
+    {
+        currentTalkingNPC = npc;
+
+        // 【可选】每次切换NPC时，清空上一个NPC的对话历史
+        // m_DataList.Clear();
+    }
+    // 【修改3】修改PostMsg：优先用当前NPC的提示词
     public virtual void PostMsg(string _msg,Action<string> _callback) {
         //上下文条数设置
         CheckHistory();
+
+        // 核心逻辑：如果有当前正在对话的NPC，用它的提示词；否则用默认的
+        string finalPrompt = m_Prompt;
+        if (currentTalkingNPC != null && !string.IsNullOrEmpty(currentTalkingNPC.npcPrompt))
+        {
+            finalPrompt = currentTalkingNPC.npcPrompt;
+        }
+
         //提示词处理
-        string message = "当前为角色的人物设定：" + m_Prompt +
+        string message = "当前为角色的人物设定：" + finalPrompt +
             " 回答的语言：" + lan +
             " 接下来是我的提问：" + _msg;
 

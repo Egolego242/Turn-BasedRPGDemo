@@ -1,23 +1,26 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-/// <summary>
-/// 对话系统核心管理器（简化版：完全复用PlayerMovement的移动逻辑）
-/// </summary>
 public class DialogManager : MonoBehaviour
 {
     public static DialogManager Instance { get; private set; }
 
-    [Header("核心引用")]
+    [Header("核心配置")]
     [Tooltip("交互距离（米）")]
     public float interactDistance = 3f;
 
-    [Tooltip("直接拖入你场景里的PlayerMovement脚本")]
+    [Header("引用")]
+    [Tooltip("拖入场景里的PlayerMovement")]
     public PlayerMovement playerMovement;
+    // 【新增】引用你的ChatDeepSeek脚本（拖入场景里的ChatDeepSeek物体）
+    public LLM chatLLM;
 
     // 内部变量
     private NPCDialog currentNPC;
-    private bool isWaitingForArrival = false;
+    private bool isMovingToNPC = false;
 
     private void Awake()
     {
@@ -29,15 +32,52 @@ public class DialogManager : MonoBehaviour
         Instance = this;
     }
 
-    /// <summary>
-    /// 外部调用：玩家点击了NPC
-    /// </summary>
+    private void Update()
+    {
+        // 1. 只有探索状态才能点击NPC
+        if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState())
+            return;
+
+        // 2. 鼠标左键点击：判断是NPC还是地面
+        if (Input.GetMouseButtonDown(0))
+        {
+            // 复用PlayerMovement里的UI检测（或者你自己的UI检测方法）
+            if (IsPointerOverUI()) return;
+
+            // 发射射线
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                // 优先判断是否点击了NPC
+                NPCDialog npc = hit.collider.GetComponent<NPCDialog>();
+                if (npc != null)
+                {
+                    OnNPCClicked(npc);
+                }
+                // 如果没点到NPC，PlayerMovement的Update会自己处理点击地面，这里不管
+            }
+        }
+
+        // 3. 检测是否移动到达NPC
+        if (isMovingToNPC && currentNPC != null)
+        {
+            // 复用PlayerMovement的公共属性判断是否在移动
+            if (!playerMovement.IsPlayerMoving)
+            {
+                isMovingToNPC = false;
+                OpenDialogPanel();
+            }
+        }
+    }
+
+    // 处理点击NPC
     public void OnNPCClicked(NPCDialog npc)
     {
         // 如果正在对话，先关闭
         if (DialogUIController.Instance.IsDialogOpen)
         {
             CloseDialog();
+            return;
         }
 
         currentNPC = npc;
@@ -45,48 +85,34 @@ public class DialogManager : MonoBehaviour
 
         if (distance <= interactDistance)
         {
-            // 距离足够，直接打开
-            OpenDialog();
+            // 距离足够，直接开面板
+            OpenDialogPanel();
         }
         else
         {
-            // 距离不足：复用PlayerMovement的移动逻辑，让它移动到NPC身边
-            MoveToNPC(npc.transform.position);
+            // 距离不足，【核心复用】调用PlayerMovement封装好的纯移动方法
+            isMovingToNPC = true;
+
+            // 计算目标点：在NPC周围找一个可达点
+            NavMesh.SamplePosition(npc.transform.position, out NavMeshHit hit, interactDistance, NavMesh.AllAreas);
+
+            // 调用你PlayerMovement里的MoveWithoutAP
+            playerMovement.MoveWithoutAP(hit.position);
         }
     }
 
-    private void MoveToNPC(Vector3 npcPos)
-    {
-        isWaitingForArrival = true;
-
-        // 1. 计算目标点：在NPC周围找一个可达点
-        NavMesh.SamplePosition(npcPos, out NavMeshHit hit, interactDistance, NavMesh.AllAreas);
-
-        // 2. 【核心复用】直接调用PlayerMovement里的“移动到指定点”逻辑
-        // 注意：需要你在PlayerMovement里加一个公共方法，专门供外部调用移动
-        playerMovement.MoveToTargetPosition(hit.position);
-    }
-
-    private void Update()
-    {
-        // 【简化】不再自己写到达检测，而是监听PlayerMovement的“是否在移动”状态
-        if (isWaitingForArrival && currentNPC != null)
-        {
-            // 监听PlayerMovement的isPlayerMoving（需要把这个变量改成public，或者加一个public属性）
-            if (!playerMovement.IsPlayerMoving)
-            {
-                // PlayerMovement停止了，说明到达了
-                isWaitingForArrival = false;
-                OpenDialog();
-            }
-        }
-    }
-
-    private void OpenDialog()
+    // 【修改】打开面板时，把当前NPC传给AI系统
+    private void OpenDialogPanel()
     {
         if (currentNPC == null) return;
 
-        // 通知UI显示面板
+        // 1. 先告诉AI系统：现在要跟这个NPC对话了
+        if (chatLLM != null)
+        {
+            chatLLM.SetCurrentNPC(currentNPC);
+        }
+
+        // 2. 再显示UI面板
         DialogUIController.Instance.ShowPanel(
             currentNPC.npcAvatar,
             currentNPC.npcName,
@@ -95,10 +121,18 @@ public class DialogManager : MonoBehaviour
         );
     }
 
+    // 关闭对话面板
     public void CloseDialog()
     {
         DialogUIController.Instance.HidePanel();
         currentNPC = null;
-        isWaitingForArrival = false;
+        isMovingToNPC = false;
+    }
+
+    // 辅助方法：UI穿透检测（直接复制你PlayerMovement里的IsMouseClickOnUI代码即可）
+    private bool IsPointerOverUI()
+    {
+        if (playerMovement == null) return false;
+        return playerMovement.CheckUIClick();
     }
 }

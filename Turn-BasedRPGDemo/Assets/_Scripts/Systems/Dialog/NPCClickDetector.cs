@@ -1,33 +1,21 @@
 using UnityEngine;
 
-/// <summary>
-/// 挂载到NPC物体上，处理点击和悬停
-/// </summary>
-public class NPCClickDetector : MonoBehaviour
+public class NPCClickHandler : MonoBehaviour
 {
     [Header("悬停设置")]
-    [Tooltip("鼠标悬停时的光标")]
+    [Tooltip("鼠标悬停时的光标（可选，不填则不变）")]
     public Texture2D hoverCursor;
 
-    [Tooltip("光标热点（一般设为(0,0)）")]
+    [Tooltip("光标热点")]
     public Vector2 cursorHotspot = Vector2.zero;
 
-    // 缓存组件
-    private NPCDialog npcDialog;
-    private Collider npcCollider;
-
-    private void Awake()
-    {
-        npcDialog = GetComponent<NPCDialog>();
-        npcCollider = GetComponent<Collider>();
-    }
-
-    // 鼠标按下
+    // 鼠标按下（这里只是转发给DialogManager，核心逻辑在DialogManager里）
     private void OnMouseDown()
     {
-        if (npcDialog != null)
+        NPCDialog npc = GetComponent<NPCDialog>();
+        if (npc != null)
         {
-            DialogManager.Instance.OnNPCClicked(npcDialog);
+            DialogManager.Instance.OnNPCClicked(npc);
         }
     }
 
@@ -45,7 +33,6 @@ public class NPCClickDetector : MonoBehaviour
     {
         if (hoverCursor != null)
         {
-            // 恢复默认光标
             Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
         }
     }
