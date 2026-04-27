@@ -36,3 +36,13 @@ public enum ItemType
     Helmet,      // 头盔：帽子、头盔等（预留扩展）
     Accessory    // 饰品：戒指、项链等（预留扩展）
 }
+
+// 新增：装备部位枚举（对应 equipPart 字段）
+public enum EquipPart
+{
+    None,
+    Weapon,    // 武器位
+    Armor,     // 护甲位
+    Helmet,    // 头盔位
+    Accessory  // 饰品位
+}

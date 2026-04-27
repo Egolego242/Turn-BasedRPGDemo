@@ -127,13 +127,13 @@ public class BattleManager : MonoBehaviour
         if (playerAllDead)
         {
             Debug.Log("Õ½¶·Ê§°Ü£¡");
-            SaveSystem.Instance?.LoadGame(FindObjectOfType<PlayerAttr>());
+            //SaveSystem.Instance?.LoadGame(FindObjectOfType<PlayerAttr>());
             EndBattle();
         }
         else if (enemyAllDead)
         {
             Debug.Log("Õ½¶·Ê¤Àû£¡");
-            SaveSystem.Instance?.SaveGame(FindObjectOfType<PlayerAttr>());
+            //SaveSystem.Instance?.SaveGame(FindObjectOfType<PlayerAttr>());
             EndBattle();
         }
     }

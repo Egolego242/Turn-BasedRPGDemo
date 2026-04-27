@@ -18,7 +18,7 @@ public class BaseCharacterAttr : MonoBehaviour
     [HideInInspector] public bool hasActInRound = false; // 本回合是否已行动（防止重复行动）
 
     // 核心属性字典（合并管理）
-    protected Dictionary<AttributeType, float> attrDic;
+    public Dictionary<AttributeType, float> attrDic;
     [Header("===== 阵营配置 =====")]
     public CampType currentCamp;
 

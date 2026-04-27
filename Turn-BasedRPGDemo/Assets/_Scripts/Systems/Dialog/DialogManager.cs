@@ -1,24 +1,19 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 public class DialogManager : MonoBehaviour
 {
     public static DialogManager Instance { get; private set; }
 
     [Header("核心配置")]
-    [Tooltip("交互距离（米）")]
     public float interactDistance = 3f;
 
     [Header("引用")]
-    [Tooltip("拖入场景里的PlayerMovement")]
     public PlayerMovement playerMovement;
-    // 【新增】引用你的ChatDeepSeek脚本（拖入场景里的ChatDeepSeek物体）
+    // 【新增】直接引用NavMeshAgent，自己检测状态，不依赖PlayerMovement
+    public NavMeshAgent playerNavAgent;
     public LLM chatLLM;
 
-    // 内部变量
     private NPCDialog currentNPC;
     private bool isMovingToNPC = false;
 
@@ -30,89 +25,104 @@ public class DialogManager : MonoBehaviour
             return;
         }
         Instance = this;
+
+        // 【自动获取】如果没拖NavMeshAgent，自动从PlayerMovement里拿
+        if (playerNavAgent == null && playerMovement != null)
+        {
+            playerNavAgent = playerMovement.GetComponent<NavMeshAgent>();
+        }
     }
 
     private void Update()
     {
-        // 1. 只有探索状态才能点击NPC
         if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState())
             return;
 
-        // 2. 鼠标左键点击：判断是NPC还是地面
         if (Input.GetMouseButtonDown(0))
         {
-            // 复用PlayerMovement里的UI检测（或者你自己的UI检测方法）
             if (IsPointerOverUI()) return;
 
-            // 发射射线
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                // 优先判断是否点击了NPC
                 NPCDialog npc = hit.collider.GetComponent<NPCDialog>();
                 if (npc != null)
                 {
                     OnNPCClicked(npc);
                 }
-                // 如果没点到NPC，PlayerMovement的Update会自己处理点击地面，这里不管
             }
         }
 
-        // 3. 检测是否移动到达NPC
+        // 【核心修改】直接检测NavMeshAgent的真实状态，不依赖IsPlayerMoving
         if (isMovingToNPC && currentNPC != null)
         {
-            // 复用PlayerMovement的公共属性判断是否在移动
-            if (!playerMovement.IsPlayerMoving)
+            // 1. 先等NavMesh计算完路径
+            if (playerNavAgent.pathPending)
             {
-                isMovingToNPC = false;
-                OpenDialogPanel();
+                return; // 还在计算路径，继续等
+            }
+
+            // 2. 路径计算完了，检测是否真的到达
+            if (!playerNavAgent.pathPending && playerNavAgent.remainingDistance <= playerNavAgent.stoppingDistance)
+            {
+                // 3. 再确认一下速度是否为0
+                if (!playerNavAgent.hasPath || playerNavAgent.velocity.sqrMagnitude == 0f)
+                {
+                    // 【确认】真的到达了
+                    Debug.Log("【确认到达】NavMeshAgent检测到真正到达");
+                    isMovingToNPC = false;
+                    OpenDialogPanel();
+                }
             }
         }
     }
 
-    // 处理点击NPC
     public void OnNPCClicked(NPCDialog npc)
     {
-        // 如果正在对话，先关闭
+        ForceResetAllStates();
+
         if (DialogUIController.Instance.IsDialogOpen)
         {
             CloseDialog();
-            return;
         }
 
         currentNPC = npc;
-        float distance = Vector3.Distance(playerMovement.transform.position, npc.transform.position);
+        Vector3 playerPos = playerMovement.transform.position;
+        Vector3 npcPos = currentNPC.transform.position;
+        float distance = Vector3.Distance(playerPos, npcPos);
+
+        Debug.Log($"【位置】玩家：{playerPos}");
+        Debug.Log($"【位置】NPC：{npcPos}");
+        Debug.Log($"【距离】{distance:F2}米，交互距离：{interactDistance}米");
+        Debug.Log($"【判断】是否小于交互距离：{distance <= interactDistance}");
 
         if (distance <= interactDistance)
         {
-            // 距离足够，直接开面板
+            Debug.Log("【分支】距离足够，直接开面板");
             OpenDialogPanel();
         }
         else
         {
-            // 距离不足，【核心复用】调用PlayerMovement封装好的纯移动方法
+            Debug.Log("【分支】距离不足，开始移动");
             isMovingToNPC = true;
 
-            // 计算目标点：在NPC周围找一个可达点
             NavMesh.SamplePosition(npc.transform.position, out NavMeshHit hit, interactDistance, NavMesh.AllAreas);
+            Debug.Log($"【移动目标】采样点：{hit.position}");
 
-            // 调用你PlayerMovement里的MoveWithoutAP
             playerMovement.MoveWithoutAP(hit.position);
         }
     }
 
-    // 【修改】打开面板时，把当前NPC传给AI系统
     private void OpenDialogPanel()
     {
         if (currentNPC == null) return;
+        Debug.Log($"【打开面板】{currentNPC.npcName}");
 
-        // 1. 先告诉AI系统：现在要跟这个NPC对话了
         if (chatLLM != null)
         {
             chatLLM.SetCurrentNPC(currentNPC);
         }
 
-        // 2. 再显示UI面板
         DialogUIController.Instance.ShowPanel(
             currentNPC.npcAvatar,
             currentNPC.npcName,
@@ -121,15 +131,19 @@ public class DialogManager : MonoBehaviour
         );
     }
 
-    // 关闭对话面板
     public void CloseDialog()
     {
+        Debug.Log("【关闭面板】");
         DialogUIController.Instance.HidePanel();
+        ForceResetAllStates();
+    }
+
+    private void ForceResetAllStates()
+    {
         currentNPC = null;
         isMovingToNPC = false;
     }
 
-    // 辅助方法：UI穿透检测（直接复制你PlayerMovement里的IsMouseClickOnUI代码即可）
     private bool IsPointerOverUI()
     {
         if (playerMovement == null) return false;

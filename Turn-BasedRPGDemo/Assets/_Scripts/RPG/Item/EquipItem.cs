@@ -9,7 +9,10 @@ using System.Collections.Generic;
 [CreateAssetMenu(fileName = "NewEquip", menuName = "RPG/EquipItem")]
 public class EquipItem : ItemBase
 {
-    [Header("装备属性加成（核心：你的需求5）")]
+    //[Header("装备基础配置")]
+    //public EquipPart equipPart; // 新增：装备部位
+
+    [Header("装备属性加成")]
     public List<AttrBonus> attrBonusList = new List<AttrBonus>(); // 属性加成列表
 
     // 装备方法：给角色添加属性加成
