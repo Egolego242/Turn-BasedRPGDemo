@@ -67250,6 +67250,7 @@ MonoBehaviour:
   battleStartTip: {fileID: 854003289}
   skillTooltip: {fileID: 934332563}
   rangeVisualizer: {fileID: 2019945764}
+  currentTurnTipText: {fileID: 1042616146}
 --- !u!4 &820189363 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1157093240893244617, guid: fba6f107e60137045a4d8707859dd652,
@@ -87299,8 +87300,9 @@ MonoBehaviour:
       m_Calls: []
   m_text: New Text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 9b978b342b7c422499d93f641a076dd4, type: 2}
+  m_sharedMaterial: {fileID: -4542847815365691060, guid: 9b978b342b7c422499d93f641a076dd4,
+    type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -182611,6 +182613,12 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 97614430}
     m_Modifications:
+    - target: {fileID: 2443591953782134459, guid: 87218ae4ca979c646a648e2bac7fb41e,
+        type: 3}
+      propertyPath: headIconSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 29390d5833aa6714dbcaf1c147abb323,
+        type: 3}
     - target: {fileID: 2566571430675733464, guid: 87218ae4ca979c646a648e2bac7fb41e,
         type: 3}
       propertyPath: mBehaviorSource.mTaskData.fieldSerializationData.unityObjects.Array.data[14]
@@ -185162,6 +185170,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: HumanMale_Character_Free
       objectReference: {fileID: 0}
+    - target: {fileID: 6336693680576785762, guid: 5b5e7cae3346a054ea6b2e0b889a83b3,
+        type: 3}
+      propertyPath: headIconSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 3b8dba5d66a3d594cbce6576b31549ac,
+        type: 3}
     - target: {fileID: 6516937840705503201, guid: 5b5e7cae3346a054ea6b2e0b889a83b3,
         type: 3}
       propertyPath: m_LocalPosition.x

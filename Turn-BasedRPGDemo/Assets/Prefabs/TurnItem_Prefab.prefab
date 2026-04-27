@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 3b8dba5d66a3d594cbce6576b31549ac, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -242,7 +242,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   headIcon: {fileID: 7794570898021632141}
-  highlightFrame: {fileID: 4506227094108324060}
   deadMask: {fileID: 2738998444027281040}
   owner: {fileID: 0}
 --- !u!1 &7558498064219286271
