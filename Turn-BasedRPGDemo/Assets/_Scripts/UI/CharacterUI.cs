@@ -3,13 +3,13 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Éñ½çÔ­×ï2·ç¸ñ - ½ÇÉ«ÏêÏ¸ÊôĞÔÃæ°å (TextMeshProĞÂ°æÊÊÅä)
-/// ÏÔÊ¾ËùÓĞ½ÇÉ«»ù´¡ÊôĞÔ+ÒÑ×°±¸µÀ¾ß£¬µ¯´°Ê½£¬µã»÷¿ª¹Ø
-/// ÎŞ¾É´úÂëĞŞ¸Ä£¬ÎŞ·ì¶Ô½ÓÊôĞÔ/±³°üÏµÍ³
+/// ç¥ç•ŒåŸç½ª2é£æ ¼ - è§’è‰²è¯¦ç»†å±æ€§é¢æ¿ (TextMeshProæ–°ç‰ˆé€‚é…)
+/// æ˜¾ç¤ºæ‰€æœ‰è§’è‰²åŸºç¡€å±æ€§+å·²è£…å¤‡é“å…·ï¼Œå¼¹çª—å¼ï¼Œç‚¹å‡»å¼€å…³
+/// æ— æ—§ä»£ç ä¿®æ”¹ï¼Œæ— ç¼å¯¹æ¥å±æ€§/èƒŒåŒ…ç³»ç»Ÿ
 /// </summary>
 public class CharacterUI : MonoBehaviour
 {
-    [Header("=== ½ÇÉ«ºËĞÄÊôĞÔ TMPÎÄ±¾ ===")]
+    [Header("=== è§’è‰²æ ¸å¿ƒå±æ€§ TMPæ–‡æœ¬ ===")]
     public TextMeshProUGUI txt_Level;
     public TextMeshProUGUI txt_Strength;
     public TextMeshProUGUI txt_Intelligence;
@@ -17,16 +17,16 @@ public class CharacterUI : MonoBehaviour
     public TextMeshProUGUI txt_MaxMP;
     //public TextMeshProUGUI txt_MaxAP;
 
-    [Header("=== ·ÀÓùÊôĞÔ TMPÎÄ±¾ ===")]
+    [Header("=== é˜²å¾¡å±æ€§ TMPæ–‡æœ¬ ===")]
     public TextMeshProUGUI txt_Armor;
     public TextMeshProUGUI txt_MagicResist;
 
-    [Header("=== ×°±¸²Û Í¼Æ¬ ===")]
-    public Image img_WeaponSlot;  // ÎäÆ÷²Û
-    public Image img_ArmorSlot;   // »¤¼×²Û
+    [Header("=== è£…å¤‡æ§½ å›¾ç‰‡ ===")]
+    public Image img_WeaponSlot;  // æ­¦å™¨æ§½
+    public Image img_ArmorSlot;   // æŠ¤ç”²æ§½
 
-    [Header("=== ×°±¸²ÛÕ¼Î»Í¼ ===")]
-    public Sprite emptySlotSprite; // ÎŞ×°±¸Ê±ÏÔÊ¾µÄ¿Õ²ÛÍ¼
+    [Header("=== è£…å¤‡æ§½å ä½å›¾ ===")]
+    public Sprite emptySlotSprite; // æ— è£…å¤‡æ—¶æ˜¾ç¤ºçš„ç©ºæ§½å›¾
 
     private PlayerAttr playerAttr;
     private Inventory inventory;
@@ -34,7 +34,7 @@ public class CharacterUI : MonoBehaviour
 
     void Awake()
     {
-        // ³õÊ¼»¯×é¼ş
+        // åˆå§‹åŒ–ç»„ä»¶
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
@@ -42,14 +42,14 @@ public class CharacterUI : MonoBehaviour
             inventory = player.GetComponent<Inventory>();
             isInit = true;
         }
-        // Ä¬ÈÏÒş²Ø½ÇÉ«Ãæ°å£¬±ÏÉèºËĞÄÂß¼­
+        // é»˜è®¤éšè—è§’è‰²é¢æ¿ï¼Œæ¯•è®¾æ ¸å¿ƒé€»è¾‘
         gameObject.SetActive(false);
-        // ¿Õ²Û³õÊ¼»¯
+        // ç©ºæ§½åˆå§‹åŒ–
         img_WeaponSlot.sprite = emptySlotSprite;
         img_ArmorSlot.sprite = emptySlotSprite;
     }
 
-    // ===== °ó¶¨µ½¡¾½ÇÉ«°´Å¥¡¿µÄµã»÷ÊÂ¼ş =====
+    // ===== ç»‘å®šåˆ°ã€è§’è‰²æŒ‰é’®ã€‘çš„ç‚¹å‡»äº‹ä»¶ =====
     public void OpenCharacterPanel()
     {
         if (!isInit) return;
@@ -57,46 +57,46 @@ public class CharacterUI : MonoBehaviour
         UpdateCharacterAllInfo();
     }
 
-    // ===== °ó¶¨µ½¡¾¹Ø±Õ°´Å¥¡¿µÄµã»÷ÊÂ¼ş =====
+    // ===== ç»‘å®šåˆ°ã€å…³é—­æŒ‰é’®ã€‘çš„ç‚¹å‡»äº‹ä»¶ =====
     public void CloseCharacterPanel()
     {
         gameObject.SetActive(false);
     }
 
     /// <summary>
-    /// Í¬²½½ÇÉ«ËùÓĞÏêÏ¸ÊôĞÔ+×°±¸µ½UI
-    /// Íâ²¿¿Éµ÷ÓÃ£¬È·±£×°±¸/Ê¹ÓÃµÀ¾ßºóÊıÖµÍ¬²½
+    /// åŒæ­¥è§’è‰²æ‰€æœ‰è¯¦ç»†å±æ€§+è£…å¤‡åˆ°UI
+    /// å¤–éƒ¨å¯è°ƒç”¨ï¼Œç¡®ä¿è£…å¤‡/ä½¿ç”¨é“å…·åæ•°å€¼åŒæ­¥
     /// </summary>
     public void UpdateCharacterAllInfo()
     {
         if (playerAttr == null || inventory == null) return;
 
-        // »ù´¡ÊôĞÔ¸³Öµ
-        txt_Level.text = $"½ÇÉ«µÈ¼¶ : {Mathf.RoundToInt(playerAttr.GetAttrValue(AttributeType.Level))}";
-        txt_Strength.text = $"Á¦Á¿ : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.Strength))}";
-        txt_Intelligence.text = $"ÖÇÁ¦ : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.Intelligence))}";
-        txt_MaxHP.text = $"×î´óÉúÃü : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.MaxHP))}";
-        txt_MaxMP.text = $"×î´ó·¨Á¦ : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.MaxMP))}";
-        //txt_MaxAP.text = $"×î´óĞĞ¶¯µã : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.MaxAP))}";
+        // åŸºç¡€å±æ€§èµ‹å€¼
+        txt_Level.text = $"è§’è‰²ç­‰çº§ : {Mathf.RoundToInt(playerAttr.GetAttrValue(AttributeType.Level))}";
+        txt_Strength.text = $"åŠ›é‡ : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.Strength))}";
+        txt_Intelligence.text = $"æ™ºåŠ› : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.Intelligence))}";
+        txt_MaxHP.text = $"æœ€å¤§ç”Ÿå‘½ : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.MaxHP))}";
+        txt_MaxMP.text = $"æœ€å¤§æ³•åŠ› : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.MaxMP))}";
+        //txt_MaxAP.text = $"æœ€å¤§è¡ŒåŠ¨ç‚¹ : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.MaxAP))}";
 
-        // ·ÀÓùÊôĞÔ¸³Öµ
-        txt_Armor.text = $"ÎïÀí·ÀÓù : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.Armor))}";
-        txt_MagicResist.text = $"Ä§·¨¿¹ĞÔ : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.MagicResist))}";
+        // é˜²å¾¡å±æ€§èµ‹å€¼
+        txt_Armor.text = $"ç‰©ç†é˜²å¾¡ : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.Armor))}";
+        txt_MagicResist.text = $"é­”æ³•æŠ—æ€§ : {Mathf.Round(playerAttr.GetAttrValue(AttributeType.MagicResist))}";
 
-        // ×°±¸²ÛË¢ĞÂ - ºËĞÄ
+        // è£…å¤‡æ§½åˆ·æ–° - æ ¸å¿ƒ
         UpdateEquipSlots();
     }
 
     /// <summary>
-    /// Ë¢ĞÂ×°±¸²Û£ºÓĞ×°±¸ÏÔÊ¾Í¼±ê£¬ÎŞ×°±¸ÏÔÊ¾¿Õ²Û
+    /// åˆ·æ–°è£…å¤‡æ§½ï¼šæœ‰è£…å¤‡æ˜¾ç¤ºå›¾æ ‡ï¼Œæ— è£…å¤‡æ˜¾ç¤ºç©ºæ§½
     /// </summary>
     private void UpdateEquipSlots()
     {
-        // ÖØÖÃ×°±¸²ÛÎª¿Õ
+        // é‡ç½®è£…å¤‡æ§½ä¸ºç©º
         img_WeaponSlot.sprite = emptySlotSprite;
         img_ArmorSlot.sprite = emptySlotSprite;
 
-        // ±éÀúÒÑ×°±¸ÁĞ±í£¬ÏÔÊ¾¶ÔÓ¦×°±¸
+        // éå†å·²è£…å¤‡åˆ—è¡¨ï¼Œæ˜¾ç¤ºå¯¹åº”è£…å¤‡
         foreach (var equip in inventory.equipedItemList)
         {
             if (equip == null) continue;
@@ -111,7 +111,7 @@ public class CharacterUI : MonoBehaviour
         }
     }
 
-    // ĞÂÔö£ºÍâ²¿µ÷ÓÃË¢ĞÂ£¨±ÈÈç×°±¸ºóÖ÷¶¯´¥·¢£©
+    // æ–°å¢ï¼šå¤–éƒ¨è°ƒç”¨åˆ·æ–°ï¼ˆæ¯”å¦‚è£…å¤‡åä¸»åŠ¨è§¦å‘ï¼‰
     public void ForceRefresh()
     {
         UpdateCharacterAllInfo();

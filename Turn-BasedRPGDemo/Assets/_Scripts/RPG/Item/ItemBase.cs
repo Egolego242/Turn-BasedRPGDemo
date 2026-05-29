@@ -1,23 +1,23 @@
 using UnityEngine;
 
 /// <summary>
-/// µÀ¾ß»ùÀà - ScriptableObjectÅäÖÃÎÄ¼ş
-/// ËùÓĞµÀ¾ß£¨ÏûºÄÆ·/×°±¸£©¶¼¼Ì³Ğ´ËÀà£¬·â×°Í¨ÓÃµÀ¾ßÊôĞÔ
-/// ¿ÉÀ©Õ¹£ººóĞøĞÂÔöÈÎºÎµÀ¾ßÀàĞÍ£¬Ö»ĞèÒª¼Ì³Ğ´ËÀà¼´¿É
+/// é“å…·åŸºç±» - ScriptableObjecté…ç½®æ–‡ä»¶
+/// æ‰€æœ‰é“å…·ï¼ˆæ¶ˆè€—å“/è£…å¤‡ï¼‰éƒ½ç»§æ‰¿æ­¤ç±»ï¼Œå°è£…é€šç”¨é“å…·å±æ€§
+/// å¯æ‰©å±•ï¼šåç»­æ–°å¢ä»»ä½•é“å…·ç±»å‹ï¼Œåªéœ€è¦ç»§æ‰¿æ­¤ç±»å³å¯
 /// </summary>
 [CreateAssetMenu(fileName = "NewItem", menuName = "RPG/ItemBase")]
 public class ItemBase : ScriptableObject
 {
-    [Header("Í¨ÓÃµÀ¾ß/ÎäÆ÷ÊôĞÔ")]
-    public string itemName = "ĞÂµÀ¾ß"; // µÀ¾ßÃû³Æ
-    public Sprite itemIcon; // µÀ¾ßÍ¼±ê
-    [TextArea(2, 4)]                          // ¶àĞĞÎÄ±¾¿ò£¬·½±ãĞ´¶àĞĞ½éÉÜ
-    public string itemDesc = "µÀ¾ßÏêÏ¸½éÉÜ";  // µÀ¾ß½éÉÜ£¨Êó±êĞüÍ£ºËĞÄÏÔÊ¾ÄÚÈİ£©
-    public ItemType itemType = ItemType.None; // µÀ¾ßÀàĞÍ
-    public int itemCount = 1; // µÀ¾ßÊıÁ¿
-    public bool isStackable = true; // ÊÇ·ñ¿É¶Ñµş£¨ÏûºÄÆ·¿É¶Ñ£¬×°±¸²»¿É¶Ñ£©
+    [Header("é€šç”¨é“å…·/æ­¦å™¨å±æ€§")]
+    public string itemName = "æ–°é“å…·"; // é“å…·åç§°
+    public Sprite itemIcon; // é“å…·å›¾æ ‡
+    [TextArea(2, 4)]                          // å¤šè¡Œæ–‡æœ¬æ¡†ï¼Œæ–¹ä¾¿å†™å¤šè¡Œä»‹ç»
+    public string itemDesc = "é“å…·è¯¦ç»†ä»‹ç»";  // é“å…·ä»‹ç»ï¼ˆé¼ æ ‡æ‚¬åœæ ¸å¿ƒæ˜¾ç¤ºå†…å®¹ï¼‰
+    public ItemType itemType = ItemType.None; // é“å…·ç±»å‹
+    public int itemCount = 1; // é“å…·æ•°é‡
+    public bool isStackable = true; // æ˜¯å¦å¯å †å ï¼ˆæ¶ˆè€—å“å¯å †ï¼Œè£…å¤‡ä¸å¯å †ï¼‰
 
-    // µÀ¾ßÊ¹ÓÃ·½·¨£¨×ÓÀàÖØĞ´£©
+    // é“å…·ä½¿ç”¨æ–¹æ³•ï¼ˆå­ç±»é‡å†™ï¼‰
     public virtual bool UseItem(GameObject target)
     {
         return false;
@@ -25,24 +25,24 @@ public class ItemBase : ScriptableObject
 }
 
 /// <summary>
-/// µÀ¾ßÀàĞÍÃ¶¾Ù£¨ºËĞÄÀ©Õ¹µã£¬ºóĞøĞÂÔöµÀ¾ßÀàĞÍÖ±½Ó¼Ó£©
+/// é“å…·ç±»å‹æšä¸¾ï¼ˆæ ¸å¿ƒæ‰©å±•ç‚¹ï¼Œåç»­æ–°å¢é“å…·ç±»å‹ç›´æ¥åŠ ï¼‰
 /// </summary>
 public enum ItemType
 {
     None,
-    Consumable,  // ÏûºÄÆ·£ºÑªÆ¿¡¢À¶Æ¿¡¢»¤¼×Ò©¼ÁµÈ£¬Ê¹ÓÃºóÏûÊ§
-    Weapon,      // ÎäÆ÷£º½£¡¢¸«¡¢·¨ÕÈµÈ
-    Armor,       // »¤¼×£ºĞØ¼×¡¢Æ¤¼×¡¢ÖØ¼×µÈ
-    Helmet,      // Í·¿ø£ºÃ±×Ó¡¢Í·¿øµÈ£¨Ô¤ÁôÀ©Õ¹£©
-    Accessory    // ÊÎÆ·£º½äÖ¸¡¢ÏîÁ´µÈ£¨Ô¤ÁôÀ©Õ¹£©
+    Consumable,  // æ¶ˆè€—å“ï¼šè¡€ç“¶ã€è“ç“¶ã€æŠ¤ç”²è¯å‰‚ç­‰ï¼Œä½¿ç”¨åæ¶ˆå¤±
+    Weapon,      // æ­¦å™¨ï¼šå‰‘ã€æ–§ã€æ³•æ–ç­‰
+    Armor,       // æŠ¤ç”²ï¼šèƒ¸ç”²ã€çš®ç”²ã€é‡ç”²ç­‰
+    Helmet,      // å¤´ç›”ï¼šå¸½å­ã€å¤´ç›”ç­‰ï¼ˆé¢„ç•™æ‰©å±•ï¼‰
+    Accessory    // é¥°å“ï¼šæˆ’æŒ‡ã€é¡¹é“¾ç­‰ï¼ˆé¢„ç•™æ‰©å±•ï¼‰
 }
 
-// ĞÂÔö£º×°±¸²¿Î»Ã¶¾Ù£¨¶ÔÓ¦ equipPart ×Ö¶Î£©
+// æ–°å¢ï¼šè£…å¤‡éƒ¨ä½æšä¸¾ï¼ˆå¯¹åº” equipPart å­—æ®µï¼‰
 public enum EquipPart
 {
     None,
-    Weapon,    // ÎäÆ÷Î»
-    Armor,     // »¤¼×Î»
-    Helmet,    // Í·¿øÎ»
-    Accessory  // ÊÎÆ·Î»
+    Weapon,    // æ­¦å™¨ä½
+    Armor,     // æŠ¤ç”²ä½
+    Helmet,    // å¤´ç›”ä½
+    Accessory  // é¥°å“ä½
 }

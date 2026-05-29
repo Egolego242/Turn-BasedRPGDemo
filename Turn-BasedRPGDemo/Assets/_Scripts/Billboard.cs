@@ -1,6 +1,6 @@
 using UnityEngine;
 /// <summary>
-/// µã»÷±ê¼ÇUIµÄÃæÏòÏà»ú½Å±¾£º±ê¼ÇÓÀÔ¶Õı¶Ô×ÅÖ÷Ïà»ú£¬ÎŞÈÎºÎĞı×ªÆ«²î
+/// ç‚¹å‡»æ ‡è®°UIçš„é¢å‘ç›¸æœºè„šæœ¬ï¼šæ ‡è®°æ°¸è¿œæ­£å¯¹ç€ä¸»ç›¸æœºï¼Œæ— ä»»ä½•æ—‹è½¬åå·®
 /// </summary>
 public class Billboard : MonoBehaviour
 {
@@ -11,7 +11,7 @@ public class Billboard : MonoBehaviour
     }
     void LateUpdate()
     {
-        // Ö»Ğı×ªYÖá£¬±£Ö¤±ê¼ÇÌùµØ£¬²»ÑöÍ·µÍÍ·
+        // åªæ—‹è½¬Yè½´ï¼Œä¿è¯æ ‡è®°è´´åœ°ï¼Œä¸ä»°å¤´ä½å¤´
         transform.LookAt(transform.position + mainCamera.transform.rotation * Vector3.forward, mainCamera.transform.rotation * Vector3.up);
     }
 }

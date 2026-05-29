@@ -1,34 +1,34 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// ÄãµÄ±³°üÏµÍ³£¬Ö»Ğ´ÔÚÕâÀï£¬ÎŞÖØ¸´
+// ä½ çš„èƒŒåŒ…ç³»ç»Ÿï¼Œåªå†™åœ¨è¿™é‡Œï¼Œæ— é‡å¤
 public class Inventory : MonoBehaviour
 {
-    [Header("½ğ±Ò")]
+    [Header("é‡‘å¸")]
     public int currentGold = 0;
 
-    // Î¨Ò»µÄAddGold·½·¨£¨ÎŞ¶şÒåĞÔ£©
+    // å”¯ä¸€çš„AddGoldæ–¹æ³•ï¼ˆæ— äºŒä¹‰æ€§ï¼‰
     public void AddGold(int gold)
     {
         if (gold <= 0) return;
         currentGold += gold;
-        Debug.Log($"½ğ±Ò+{gold}£¬µ±Ç°£º{currentGold}");
+        Debug.Log($"é‡‘å¸+{gold}ï¼Œå½“å‰ï¼š{currentGold}");
     }
 
-    [Header("±³°üÅäÖÃ")]
-    public int bagCapacity = 20; // ±³°üÈİÁ¿
-    public List<ItemBase> itemList = new List<ItemBase>(); // ±³°üµÀ¾ßÁĞ±í
-    public List<EquipItem> equipedItemList = new List<EquipItem>(); // ÒÑ×°±¸µÀ¾ßÁĞ±í
+    [Header("èƒŒåŒ…é…ç½®")]
+    public int bagCapacity = 20; // èƒŒåŒ…å®¹é‡
+    public List<ItemBase> itemList = new List<ItemBase>(); // èƒŒåŒ…é“å…·åˆ—è¡¨
+    public List<EquipItem> equipedItemList = new List<EquipItem>(); // å·²è£…å¤‡é“å…·åˆ—è¡¨
 
-    #region ±³°üºËĞÄ·½·¨£ºÌí¼Ó/ÒÆ³ıµÀ¾ß
+    #region èƒŒåŒ…æ ¸å¿ƒæ–¹æ³•ï¼šæ·»åŠ /ç§»é™¤é“å…·
     public bool AddItem(ItemBase item)
     {
         if (itemList.Count >= bagCapacity)
         {
-            Debug.Log("±³°üÒÑÂú£¡");
+            Debug.Log("èƒŒåŒ…å·²æ»¡ï¼");
             return false;
         }
-        // ¿É¶ÑµşµÀ¾ß£ºÊıÁ¿µş¼Ó
+        // å¯å †å é“å…·ï¼šæ•°é‡å åŠ 
         if (item.isStackable)
         {
             foreach (var bagItem in itemList)
@@ -40,9 +40,9 @@ public class Inventory : MonoBehaviour
                 }
             }
         }
-        // ²»¿É¶ÑµşµÀ¾ß£ºÖ±½ÓÌí¼Ó
+        // ä¸å¯å †å é“å…·ï¼šç›´æ¥æ·»åŠ 
         itemList.Add(item);
-        Debug.Log("»ñµÃµÀ¾ß£º" + item.itemName);
+        Debug.Log("è·å¾—é“å…·ï¼š" + item.itemName);
         return true;
     }
 
@@ -51,16 +51,16 @@ public class Inventory : MonoBehaviour
         if (itemList.Contains(item))
         {
             itemList.Remove(item);
-            Debug.Log("ÒÆ³ıµÀ¾ß£º" + item.itemName);
+            Debug.Log("ç§»é™¤é“å…·ï¼š" + item.itemName);
         }
     }
     #endregion
 
-    #region µÀ¾ßÊ¹ÓÃ/×°±¸ºËĞÄ·½·¨
+    #region é“å…·ä½¿ç”¨/è£…å¤‡æ ¸å¿ƒæ–¹æ³•
     public void UseItem(ItemBase item)
     {
         if (item == null) return;
-        // ÏûºÄÆ·£ºÊ¹ÓÃºóÊıÁ¿-1£¬ÓÃÍêÒÆ³ı
+        // æ¶ˆè€—å“ï¼šä½¿ç”¨åæ•°é‡-1ï¼Œç”¨å®Œç§»é™¤
         if (item is ConsumableItem)
         {
             bool isUsed = item.UseItem(gameObject);
@@ -71,12 +71,12 @@ public class Inventory : MonoBehaviour
                 {
                     RemoveItem(item);
                 }
-                // ºËĞÄĞŞ¸Ä£ºÊ¹ÓÃÏûºÄÆ·ºóË¢ĞÂ½ÇÉ«Ãæ°å
+                // æ ¸å¿ƒä¿®æ”¹ï¼šä½¿ç”¨æ¶ˆè€—å“ååˆ·æ–°è§’è‰²é¢æ¿
                 CharacterUI characterUI = FindObjectOfType<CharacterUI>();
                 if (characterUI != null) characterUI.ForceRefresh();
             }
         }
-        // ×°±¸Æ·£º×°±¸/Ğ¶ÏÂÇĞ»»
+        // è£…å¤‡å“ï¼šè£…å¤‡/å¸ä¸‹åˆ‡æ¢
         else if (item is EquipItem)
         {
             EquipItem equip = item as EquipItem;
@@ -86,17 +86,17 @@ public class Inventory : MonoBehaviour
             }
             else
             {
-                // ºËĞÄĞŞ¸Ä£ºÍ¬ÀàĞÍ×°±¸×Ô¶¯Ğ¶ÏÂ£¨±ÜÃâÖØ¸´×°±¸£©
+                // æ ¸å¿ƒä¿®æ”¹ï¼šåŒç±»å‹è£…å¤‡è‡ªåŠ¨å¸ä¸‹ï¼ˆé¿å…é‡å¤è£…å¤‡ï¼‰
                 UnEquipSameType(equip.itemType);
                 EquipItem(equip);
             }
-            // ×°±¸ºóË¢ĞÂ½ÇÉ«Ãæ°å
+            // è£…å¤‡ååˆ·æ–°è§’è‰²é¢æ¿
             CharacterUI characterUI = FindObjectOfType<CharacterUI>();
             if (characterUI != null) characterUI.ForceRefresh();
         }
     }
 
-    // ĞÂÔö£º×Ô¶¯Ğ¶ÏÂÍ¬ÀàĞÍ×°±¸£¨±ÈÈç´©ĞÂÎäÆ÷Ê±×Ô¶¯Ğ¶¾ÉÎäÆ÷£©
+    // æ–°å¢ï¼šè‡ªåŠ¨å¸ä¸‹åŒç±»å‹è£…å¤‡ï¼ˆæ¯”å¦‚ç©¿æ–°æ­¦å™¨æ—¶è‡ªåŠ¨å¸æ—§æ­¦å™¨ï¼‰
     private void UnEquipSameType(ItemType type)
     {
         List<EquipItem> toRemove = new List<EquipItem>();
@@ -113,20 +113,20 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    // ×°±¸µÀ¾ß£ºÌí¼ÓÊôĞÔ¼Ó³É£¬¼ÓÈëÒÑ×°±¸ÁĞ±í
+    // è£…å¤‡é“å…·ï¼šæ·»åŠ å±æ€§åŠ æˆï¼ŒåŠ å…¥å·²è£…å¤‡åˆ—è¡¨
     private void EquipItem(EquipItem equip)
     {
         equip.Equip(gameObject);
         equipedItemList.Add(equip);
-        Debug.Log("×°±¸ÁË£º" + equip.itemName + "£¬ÊôĞÔ¼Ó³ÉÉúĞ§£¡");
+        Debug.Log("è£…å¤‡äº†ï¼š" + equip.itemName + "ï¼Œå±æ€§åŠ æˆç”Ÿæ•ˆï¼");
     }
 
-    // Ğ¶ÏÂµÀ¾ß£º»¹Ô­ÊôĞÔ£¬ÒÆ³öÒÑ×°±¸ÁĞ±í
+    // å¸ä¸‹é“å…·ï¼šè¿˜åŸå±æ€§ï¼Œç§»å‡ºå·²è£…å¤‡åˆ—è¡¨
     private void UnEquipItem(EquipItem equip)
     {
         equip.UnEquip(gameObject);
         equipedItemList.Remove(equip);
-        Debug.Log("Ğ¶ÏÂÁË£º" + equip.itemName + "£¬ÊôĞÔ¼Ó³É»¹Ô­£¡");
+        Debug.Log("å¸ä¸‹äº†ï¼š" + equip.itemName + "ï¼Œå±æ€§åŠ æˆè¿˜åŸï¼");
     }
     #endregion
 }

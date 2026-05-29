@@ -1,31 +1,31 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // Èç¹ûÄãÓÃµÄÊÇ¾É°æText£¬É¾µôÕâĞĞ£¬°ÑÏÂÃæµÄTextMeshProUGUI¸Ä³ÉText
+using TMPro; 
 
 /// <summary>
-/// ¶Ô»°UI¿ØÖÆÆ÷£¬¶Ô½ÓÄãÏÖÓĞµÄÃæ°å
+/// å¯¹è¯UIæ§åˆ¶å™¨ï¼Œå¯¹æ¥ä½ ç°æœ‰çš„é¢æ¿
 /// </summary>
 public class DialogUIController : MonoBehaviour
 {
     public static DialogUIController Instance { get; private set; }
 
-    [Header("ÄãµÄÏÖÓĞÃæ°å×é¼ş")]
-    [Tooltip("Õû¸ö¶Ô»°Ãæ°åµÄ¸ùÎïÌå")]
+    [Header("ä½ çš„ç°æœ‰é¢æ¿ç»„ä»¶")]
+    [Tooltip("æ•´ä¸ªå¯¹è¯é¢æ¿çš„æ ¹ç‰©ä½“")]
     public GameObject dialogPanel;
 
-    [Tooltip("Ãæ°åÉÏµÄNPCÍ·ÏñImage")]
+    [Tooltip("é¢æ¿ä¸Šçš„NPCå¤´åƒImage")]
     public Image avatarImage;
 
-    [Tooltip("Ãæ°åÉÏµÄNPCÃû×ÖText")]
+    [Tooltip("é¢æ¿ä¸Šçš„NPCåå­—Text")]
     public TextMeshProUGUI npcNameText; 
 
-    [Tooltip("Ãæ°åÉÏµÄ¶Ô»°ÄÚÈİText")]
+    [Tooltip("é¢æ¿ä¸Šçš„å¯¹è¯å†…å®¹Text")]
     //public TextMeshProUGUI dialogContentText; 
 
-    // ¹«¿ªÊôĞÔ£¬¹©Íâ²¿ÅĞ¶Ï
+    // å…¬å¼€å±æ€§ï¼Œä¾›å¤–éƒ¨åˆ¤æ–­
     public bool IsDialogOpen => dialogPanel.activeSelf;
 
-    // ±£´æµ±Ç°ÈËÉè£¬¹©ºóĞø·¢ËÍAIÏûÏ¢ÓÃ
+    // ä¿å­˜å½“å‰äººè®¾ï¼Œä¾›åç»­å‘é€AIæ¶ˆæ¯ç”¨
     public string CurrentNpcPrompt { get; private set; }
 
     private void Awake()
@@ -37,29 +37,29 @@ public class DialogUIController : MonoBehaviour
         }
         Instance = this;
 
-        // ³õÊ¼Òş²ØÃæ°å
+        // åˆå§‹éšè—é¢æ¿
         dialogPanel.SetActive(false);
     }
 
     /// <summary>
-    /// ÏÔÊ¾Ãæ°å²¢¸üĞÂÄÚÈİ
+    /// æ˜¾ç¤ºé¢æ¿å¹¶æ›´æ–°å†…å®¹
     /// </summary>
     public void ShowPanel(Sprite avatar, string npcName, string content, string prompt)
     {
-        // 1. ±£´æÈËÉè
+        // 1. ä¿å­˜äººè®¾
         CurrentNpcPrompt = prompt;
 
-        // 2. ¸üĞÂUI×é¼ş
+        // 2. æ›´æ–°UIç»„ä»¶
         if (avatarImage != null) avatarImage.sprite = avatar;
         if (npcNameText != null) npcNameText.text = npcName;
         //if (dialogContentText != null) dialogContentText.text = content;
 
-        // 3. ÏÔÊ¾Ãæ°å
+        // 3. æ˜¾ç¤ºé¢æ¿
         dialogPanel.SetActive(true);
     }
 
     /// <summary>
-    /// Òş²ØÃæ°å
+    /// éšè—é¢æ¿
     /// </summary>
     public void HidePanel()
     {

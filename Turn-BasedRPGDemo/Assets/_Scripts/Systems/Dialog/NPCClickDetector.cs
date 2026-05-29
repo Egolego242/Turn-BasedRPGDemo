@@ -2,14 +2,14 @@ using UnityEngine;
 
 public class NPCClickHandler : MonoBehaviour
 {
-    [Header("悬停设置")]
-    [Tooltip("鼠标悬停时的光标（可选，不填则不变）")]
+    [Header("鎮仠璁剧疆")]
+    [Tooltip("榧犳爣鎮仠鏃剁殑鍏夋爣锛堝彲閫夛紝涓嶅～鍒欎笉鍙橈級")]
     public Texture2D hoverCursor;
 
-    [Tooltip("光标热点")]
+    [Tooltip("鍏夋爣鐑偣")]
     public Vector2 cursorHotspot = Vector2.zero;
 
-    // 鼠标按下（这里只是转发给DialogManager，核心逻辑在DialogManager里）
+    // 榧犳爣鎸変笅锛堣繖閲屽彧鏄浆鍙戠粰DialogManager锛屾牳蹇冮�昏緫鍦―ialogManager閲岋級
     private void OnMouseDown()
     {
         NPCDialog npc = GetComponent<NPCDialog>();
@@ -19,7 +19,7 @@ public class NPCClickHandler : MonoBehaviour
         }
     }
 
-    // 鼠标悬停进入
+    // 榧犳爣鎮仠杩涘叆
     private void OnMouseEnter()
     {
         if (hoverCursor != null)
@@ -28,7 +28,7 @@ public class NPCClickHandler : MonoBehaviour
         }
     }
 
-    // 鼠标悬停离开
+    // 榧犳爣鎮仠绂诲紑
     private void OnMouseExit()
     {
         if (hoverCursor != null)

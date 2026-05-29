@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 
 /// <summary>
-/// »ù´¡ÎïÆ·Êı¾İ£¨´¿Êı¾İ£¬¿ÉĞòÁĞ»¯£©
+/// åŸºç¡€ç‰©å“æ•°æ®ï¼ˆçº¯æ•°æ®ï¼Œå¯åºåˆ—åŒ–ï¼‰
 /// </summary>
 [Serializable]
 public class ItemData
@@ -15,7 +15,7 @@ public class ItemData
 
     public ItemData() { }
 
-    // ´ÓItemBase×ª»»
+    // ä»ItemBaseè½¬æ¢
     public ItemData(ItemBase item)
     {
         itemName = item.itemName;
@@ -26,7 +26,7 @@ public class ItemData
 }
 
 /// <summary>
-/// ×°±¸ÎïÆ·Êı¾İ£¨´¿Êı¾İ£¬¿ÉĞòÁĞ»¯£©
+/// è£…å¤‡ç‰©å“æ•°æ®ï¼ˆçº¯æ•°æ®ï¼Œå¯åºåˆ—åŒ–ï¼‰
 /// </summary>
 [Serializable]
 public class EquipItemData : ItemData
@@ -35,7 +35,7 @@ public class EquipItemData : ItemData
 
     public EquipItemData() : base() { }
 
-    // ´ÓEquipItem×ª»»
+    // ä»EquipItemè½¬æ¢
     public EquipItemData(EquipItem equip) : base(equip)
     {
         foreach (var bonus in equip.attrBonusList)
@@ -46,7 +46,7 @@ public class EquipItemData : ItemData
 }
 
 /// <summary>
-/// ÊôĞÔ¼Ó³ÉÊı¾İ£¨¿ÉĞòÁĞ»¯£¬Ìæ´úÔ­AttrBonus½á¹¹Ìå£©
+/// å±æ€§åŠ æˆæ•°æ®ï¼ˆå¯åºåˆ—åŒ–ï¼Œæ›¿ä»£åŸAttrBonusç»“æ„ä½“ï¼‰
 /// </summary>
 [Serializable]
 public struct AttrBonusData
@@ -62,29 +62,50 @@ public struct AttrBonusData
 }
 
 /// <summary>
-/// ¡¾ºËĞÄ¡¿ÓÎÏ·´æµµÊı¾İÀà£¨´¿Êı¾İ£¬¿ÉĞòÁĞ»¯£©
+/// å•ä¸ªè§’è‰²çŠ¶æ€æ•°æ®ï¼ˆæ•Œäºº/NPCï¼Œå¯åºåˆ—åŒ–ï¼‰
+/// </summary>
+[Serializable]
+public class CharacterStateData
+{
+    public string characterName;
+    public Vector3 position;
+    public Quaternion rotation;
+    public bool isDead;
+    public List<AttributeType> attrKeys = new List<AttributeType>();
+    public List<float> attrValues = new List<float>();
+}
+
+/// <summary>
+/// ã€æ ¸å¿ƒã€‘æ¸¸æˆå­˜æ¡£æ•°æ®ç±»ï¼ˆçº¯æ•°æ®ï¼Œå¯åºåˆ—åŒ–ï¼‰
 /// </summary>
 [Serializable]
 public class GameSaveData
 {
-    // 1. Íæ¼ÒÊôĞÔ×Öµä£¨²ğ·ÖÎªÁ½¸öList£¬¼æÈİJsonĞòÁĞ»¯£©
+    // 1. ç©å®¶å±æ€§å­—å…¸ï¼ˆæ‹†åˆ†ä¸ºä¸¤ä¸ªListï¼Œå…¼å®¹Jsonåºåˆ—åŒ–ï¼‰
     public List<AttributeType> attrKeys = new List<AttributeType>();
     public List<float> attrValues = new List<float>();
 
-    // 2. Íæ¼ÒÎ»ÖÃÓëĞı×ª£¨Vector3/Quaternion¿ÉÖ±½ÓĞòÁĞ»¯£©
+    // 2. ç©å®¶ä½ç½®ä¸æ—‹è½¬ï¼ˆVector3/Quaternionå¯ç›´æ¥åºåˆ—åŒ–ï¼‰
     public Vector3 position;
     public Quaternion rotation;
 
-    // 3. ±³°üÓë½ğ±Ò
+    // 3. ç›¸æœºä½ç½®ä¸æ—‹è½¬
+    public Vector3 cameraPosition;
+    public Quaternion cameraRotation;
+
+    // 4. èƒŒåŒ…ä¸é‡‘å¸
     public int currentGold;
     public List<ItemData> bagItemDatas = new List<ItemData>();
     public List<EquipItemData> equipedItemDatas = new List<EquipItemData>();
 
-    // 4. µÈ¼¶¾­Ñé£¨ÈßÓà±¸·İ£©
+    // 5. ç­‰çº§ç»éªŒï¼ˆå†—ä½™å¤‡ä»½ï¼‰
     public int level;
     public float currentEXP;
     public float expToLevelUp;
 
-    // 5. ¡¾ĞÂÔö¡¿´æµµÊ±¼ä£¨½â¾öCS0117´íÎóµÄºËĞÄ£©
+    // 6. æ‰€æœ‰å…¶ä»–è§’è‰²çŠ¶æ€ï¼ˆæ•Œäºº/NPCï¼‰
+    public List<CharacterStateData> characters = new List<CharacterStateData>();
+
+    // 7. å­˜æ¡£æ—¶é—´
     public string saveTime;
 }

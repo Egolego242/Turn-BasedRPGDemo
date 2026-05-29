@@ -3,24 +3,24 @@ using System.Collections.Generic;
 using System;
 
 /// <summary>
-/// 角色属性基类（所有角色共用，消除字段缺失错误）
+/// 角色属性基类（所有角色共用，受伤,消耗回复行动点等也有）
 /// </summary>
 public class BaseCharacterAttr : MonoBehaviour
 {
-    // 通用战斗状态字段（解决isMyTurn/isInBattle/isDead报错）
+    // 通用战斗状态字段
     [HideInInspector] public bool isInBattle;
     [HideInInspector] public bool isMyTurn;
     [HideInInspector] public bool isDead;
 
     // 回合制核心字段
-    [Header("===== 回合制核心 =====")]
+    [Header("===== 回合制核心(基类) =====")]
     public float initiative = 5f; // 先攻值（越高行动越靠前）
     public Sprite headIconSprite;
     [HideInInspector] public bool hasActInRound = false; // 本回合是否已行动（防止重复行动）
 
     // 核心属性字典（合并管理）
     public Dictionary<AttributeType, float> attrDic;
-    [Header("===== 阵营配置 =====")]
+    [Header("===== 阵营配置(基类) =====")]
     public CampType currentCamp;
 
 
@@ -73,7 +73,7 @@ public class BaseCharacterAttr : MonoBehaviour
     public float GetInitiative() => initiative;
     public void SetInitiative(float value) => initiative = Mathf.Max(1, value); // 保底1
 
-    // 战力计算（解决GetCombatPower报错）
+    // 战力计算
     public float GetCombatPower()
     {
         float strength = GetAttrValue(AttributeType.Strength);

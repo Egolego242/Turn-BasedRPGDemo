@@ -1,26 +1,26 @@
 using UnityEngine;
 
 /// <summary>
-/// ¹ÒÔØµ½Ã¿¸öNPCÎïÌåÉÏ£¬´æ´¢¸ÃNPCµÄ×¨Êô¶Ô»°Êı¾İ
+/// æŒ‚è½½åˆ°æ¯ä¸ªNPCç‰©ä½“ä¸Šï¼Œå­˜å‚¨è¯¥NPCçš„ä¸“å±å¯¹è¯æ•°æ®
 /// </summary>
 public class NPCDialog : MonoBehaviour
 {
-    [Header("NPC»ù´¡ÅäÖÃ")]
-    [Tooltip("NPCµÄÎ¨Ò»ID£¨²»ÄÜÖØ¸´£©")]
+    [Header("NPCåŸºç¡€é…ç½®")]
+    [Tooltip("NPCçš„å”¯ä¸€IDï¼ˆä¸èƒ½é‡å¤ï¼‰")]
     public string npcId = "npc_001";
 
-    [Tooltip("NPCµÄÏÔÊ¾Ãû³Æ")]
-    public string npcName = "ÎŞÃûNPC";
+    [Tooltip("NPCçš„æ˜¾ç¤ºåç§°")]
+    public string npcName = "æ— åNPC";
 
-    [Header("¶Ô»°UIÅäÖÃ")]
-    [Tooltip("NPCµÄÍ·ÏñÍ¼Æ¬£¨ÏÔÊ¾ÔÚ¶Ô»°Ãæ°å£©")]
+    [Header("å¯¹è¯UIé…ç½®")]
+    [Tooltip("NPCçš„å¤´åƒå›¾ç‰‡ï¼ˆæ˜¾ç¤ºåœ¨å¯¹è¯é¢æ¿ï¼‰")]
     public Sprite npcAvatar;
 
-    [Header("¶Ô»°ÄÚÈİÅäÖÃ")]
-    [Tooltip("NPCµÄ³õÊ¼ÎÊºòÓï£¨´ò¿ªÃæ°åÊ±ÏÔÊ¾£©")]
-    [TextArea] public string initialGreeting = "ÄãºÃ£¬ÂÃĞĞÕß¡£";
+    [Header("å¯¹è¯å†…å®¹é…ç½®")]
+    [Tooltip("NPCçš„åˆå§‹é—®å€™è¯­ï¼ˆæ‰“å¼€é¢æ¿æ—¶æ˜¾ç¤ºï¼‰")]
+    [TextArea] public string initialGreeting = "ä½ å¥½ï¼Œæ—…è¡Œè€…ã€‚";
 
-    [Header("AIÈËÉèÅäÖÃ")]
-    [Tooltip("NPCµÄÈËÉèÌáÊ¾´Ê£¨´«¸ø´óÄ£ĞÍ£©")]
-    [TextArea(3, 10)] public string npcPrompt = "ÄãÊÇÒ»¸öÖĞÊÀ¼ÍµÄ´åÃñ£¬ĞÔ¸ñÎÂºÍ£¬Ëµ»°¼ò½à¡£";
+    [Header("AIäººè®¾é…ç½®")]
+    [Tooltip("NPCçš„äººè®¾æç¤ºè¯ï¼ˆä¼ ç»™å¤§æ¨¡å‹ï¼‰")]
+    [TextArea(3, 10)] public string npcPrompt = "ä½ æ˜¯ä¸€ä¸ªä¸­ä¸–çºªçš„æ‘æ°‘ï¼Œæ€§æ ¼æ¸©å’Œï¼Œè¯´è¯ç®€æ´ã€‚";
 }

@@ -3,24 +3,24 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// ÓÎÍæ½çÃæ³£Ì¬HUD - ÊµÊ±ÏÔÊ¾ÉúÃü¡¢»¤¼×¡¢¾­Ñé
-/// ÍêÈ«ÊÊÅäÄãµÄPlayerAttrÏµÍ³£¬ÎŞĞèĞŞ¸Ä¾É´úÂë
+/// æ¸¸ç©ç•Œé¢å¸¸æ€HUD - å®æ—¶æ˜¾ç¤ºç”Ÿå‘½ã€æŠ¤ç”²ã€ç»éªŒ
+/// å®Œå…¨é€‚é…ä½ çš„PlayerAttrç³»ç»Ÿï¼Œæ— éœ€ä¿®æ”¹æ—§ä»£ç 
 /// </summary>
 public class PlayerHUD : MonoBehaviour
 {
-    [Header("=== ÉúÃüÏà¹Ø TMP UI ===")]
+    [Header("=== ç”Ÿå‘½ç›¸å…³ TMP UI ===")]
     public Slider HPSlider;
     public TextMeshProUGUI HPText;
 
-    [Header("=== ÎïÀí»¤¼×Ïà¹Ø TMP UI ===")]
+    [Header("=== ç‰©ç†æŠ¤ç”²ç›¸å…³ TMP UI ===")]
     public Slider ArmorSlider;
     public TextMeshProUGUI ArmorText;
 
-    [Header("=== Ä§·¨»¤¼×Ïà¹Ø TMP UI ===")]
+    [Header("=== é­”æ³•æŠ¤ç”²ç›¸å…³ TMP UI ===")]
     public Slider MagicResistSlider;
     public TextMeshProUGUI MagicResistText;
 
-    //[Header("=== ¾­ÑéµÈ¼¶Ïà¹Ø TMP UI ===")]
+    //[Header("=== ç»éªŒç­‰çº§ç›¸å…³ TMP UI ===")]
     //public TextMeshProUGUI levelText;
     //public TextMeshProUGUI expText;
 
@@ -29,7 +29,7 @@ public class PlayerHUD : MonoBehaviour
 
     void Awake()
     {
-        // ÕÒµ½Íæ¼ÒµÄPlayerAttr×é¼ş£¨È«¾ÖÎ¨Ò»£©
+        // æ‰¾åˆ°ç©å®¶çš„PlayerAttrç»„ä»¶ï¼ˆå…¨å±€å”¯ä¸€ï¼‰
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {
@@ -38,7 +38,7 @@ public class PlayerHUD : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("Î´ÕÒµ½Íæ¼Ò¶ÔÏó£¬Çë¼ì²éPlayerµÄTagÊÇ·ñÉèÖÃÎªPlayer");
+            Debug.LogWarning("æœªæ‰¾åˆ°ç©å®¶å¯¹è±¡ï¼Œè¯·æ£€æŸ¥Playerçš„Tagæ˜¯å¦è®¾ç½®ä¸ºPlayer");
         }
     }
 
@@ -49,36 +49,36 @@ public class PlayerHUD : MonoBehaviour
     }
 
     /// <summary>
-    /// ºËĞÄ£ºÍ¬²½ËùÓĞÊôĞÔµ½UI£¬ºÍÉñ½çÔ­×ï2ÏÔÊ¾¸ñÊ½Ò»ÖÂ
+    /// æ ¸å¿ƒï¼šåŒæ­¥æ‰€æœ‰å±æ€§åˆ°UIï¼Œå’Œç¥ç•ŒåŸç½ª2æ˜¾ç¤ºæ ¼å¼ä¸€è‡´
     /// </summary>
     private void UpdateHUDData()
     {
-        // 1. ÉúÃüÖµ ¸üĞÂ (ÂÌÉ«ÑªÌõ)
+        // 1. ç”Ÿå‘½å€¼ æ›´æ–° (ç»¿è‰²è¡€æ¡)
         float curHp = playerAttr.GetAttrValue(AttributeType.CurrentHP);
         float maxHp = playerAttr.GetAttrValue(AttributeType.MaxHP);
         HPSlider.maxValue = maxHp;
         HPSlider.value = curHp;
-        HPText.text = $"{Mathf.Round(curHp)}/{Mathf.Round(maxHp)}"; // È¡ÕûÏÔÊ¾£¬¸üÃÀ¹Û
+        HPText.text = $"{Mathf.Round(curHp)}/{Mathf.Round(maxHp)}"; // å–æ•´æ˜¾ç¤ºï¼Œæ›´ç¾è§‚
 
-        // 2. ÎïÀí»¤¼× ¸üĞÂ (»ÒÉ«»¤¼×Ìõ£¬Éñ½çÔ­×ï2ºËĞÄ)
+        // 2. ç‰©ç†æŠ¤ç”² æ›´æ–° (ç°è‰²æŠ¤ç”²æ¡ï¼Œç¥ç•ŒåŸç½ª2æ ¸å¿ƒ)
         float curPhysArmor = playerAttr.GetAttrValue(AttributeType.CurrentPhysArmor);
         float maxPhysArmor = playerAttr.GetAttrValue(AttributeType.MaxPhysArmor);
         ArmorSlider.maxValue = maxPhysArmor;
         ArmorSlider.value = curPhysArmor;
         ArmorText.text = $"{Mathf.Round(curPhysArmor)}/{Mathf.Round(maxPhysArmor)}";
 
-        // 3. Ä§·¨»¤¼× ¸üĞÂ (À¶É«»¤¼×Ìõ£¬Éñ½çÔ­×ï2ºËĞÄ)
+        // 3. é­”æ³•æŠ¤ç”² æ›´æ–° (è“è‰²æŠ¤ç”²æ¡ï¼Œç¥ç•ŒåŸç½ª2æ ¸å¿ƒ)
         float curMagicArmor = playerAttr.GetAttrValue(AttributeType.CurrentMagicArmor);
         float maxMagicArmor = playerAttr.GetAttrValue(AttributeType.MaxMagicArmor);
         MagicResistSlider.maxValue = maxMagicArmor;
         MagicResistSlider.value = curMagicArmor;
         MagicResistText.text = $"{Mathf.Round(curMagicArmor)}/{Mathf.Round(maxMagicArmor)}";
 
-        //// 4. µÈ¼¶+¾­Ñé ¸üĞÂ
+        //// 4. ç­‰çº§+ç»éªŒ æ›´æ–°
         //int level = Mathf.RoundToInt(playerAttr.GetAttrValue(AttributeType.Level));
         //float curExp = playerAttr.GetAttrValue(AttributeType.CurrentEXP);
         //float needExp = playerAttr.GetAttrValue(AttributeType.EXPToLevelUp);
         //levelText.text = $"Lv.{level}";
-        //expText.text = $"¾­Ñé: {Mathf.Round(curExp)}/{Mathf.Round(needExp)}";
+        //expText.text = $"ç»éªŒ: {Mathf.Round(curExp)}/{Mathf.Round(needExp)}";
     }
 }

@@ -4,7 +4,7 @@ using BehaviorDesigner.Runtime;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
-//编译
+
 /// <summary>
 /// 敌人属性类 - 行为树专属适配版
 /// 所有AI逻辑完全交由Behavior Designer行为树控制
@@ -554,7 +554,7 @@ public class EnemyAttr : BaseCharacterAttr
         Debug.Log($"{gameObject.name}距离玩家{distance}m");
         return distance <= skillRange;
     }
-    #region 整合判断
+    #region 整合判断(技能普攻和移动)
     /// <summary>
     /// 【行为树调用】合并判断技能所有就绪条件（冷却+AP+射程），结果存到行为树isSkillReady变量
     /// </summary>

@@ -7,49 +7,49 @@ public class EnemyBehaviorTreeAutoInit : MonoBehaviour
 
     private void Awake()
     {
-        // 1. ×Ô¶¯»ñÈ¡ĞĞÎªÊ÷×é¼ş£¨¾É°æ¼æÈİĞ´·¨£©
+        // 1. è‡ªåŠ¨è·å–è¡Œä¸ºæ ‘ç»„ä»¶ï¼ˆæ—§ç‰ˆå…¼å®¹å†™æ³•ï¼‰
         behaviorTree = GetComponent<BehaviorTree>();
         if (behaviorTree == null)
         {
             behaviorTree = GetComponentInChildren<BehaviorTree>();
             if (behaviorTree == null)
             {
-                Debug.LogError($"[{gameObject.name}] ÕÒ²»µ½BehaviorTree×é¼ş£¡", this);
+                Debug.LogError($"[{gameObject.name}] æ‰¾ä¸åˆ°BehaviorTreeç»„ä»¶ï¼", this);
                 return;
             }
         }
 
-        // 2. ×Ô¶¯¸³ÖµselfObject£¨¾É°æÉèÖÃ±äÁ¿µÄºËĞÄĞ´·¨£©
+        // 2. è‡ªåŠ¨èµ‹å€¼selfObjectï¼ˆæ—§ç‰ˆè®¾ç½®å˜é‡çš„æ ¸å¿ƒå†™æ³•ï¼‰
         var selfVar = behaviorTree.GetVariable("selfObject");
         if (selfVar != null)
         {
-            selfVar.SetValue(gameObject); // ¸³ÖµÎª×Ô¼ºµÄÊµÀı
-            Debug.Log($"{gameObject.name} selfObject×Ô¶¯¸³Öµ³É¹¦", this);
+            selfVar.SetValue(gameObject); // èµ‹å€¼ä¸ºè‡ªå·±çš„å®ä¾‹
+            Debug.Log($"{gameObject.name} selfObjectè‡ªåŠ¨èµ‹å€¼æˆåŠŸ", this);
         }
         else
         {
-            Debug.LogError($"{gameObject.name} ĞĞÎªÊ÷ÀïÃ»ÓĞselfObject±äÁ¿£¡", this);
+            Debug.LogError($"{gameObject.name} è¡Œä¸ºæ ‘é‡Œæ²¡æœ‰selfObjectå˜é‡ï¼", this);
         }
 
-        // 3. ³õÊ¼»¯Õ½¶·×´Ì¬±äÁ¿Îªfalse£¨·ÀÖ¹³õÊ¼ÖµÎª¿Õ£©
+        // 3. åˆå§‹åŒ–æˆ˜æ–—çŠ¶æ€å˜é‡ä¸ºfalseï¼ˆé˜²æ­¢åˆå§‹å€¼ä¸ºç©ºï¼‰
         var combatVar = behaviorTree.GetVariable("isInCombat");
         if (combatVar != null)
         {
             combatVar.SetValue(false);
         }
 
-        // 4. ³õÊ¼»¯ÆäËûºËĞÄ±äÁ¿
+        // 4. åˆå§‹åŒ–å…¶ä»–æ ¸å¿ƒå˜é‡
         InitVariable("isMyTurn", false);
         InitVariable("isDead", false);
         InitVariable("isPlayerInRange", false);
 
-        // 5. Ç¿ÖÆË¢ĞÂĞĞÎªÊ÷£¨¾É°æÉúĞ§¹Ø¼ü£©
+        // 5. å¼ºåˆ¶åˆ·æ–°è¡Œä¸ºæ ‘ï¼ˆæ—§ç‰ˆç”Ÿæ•ˆå…³é”®ï¼‰
         behaviorTree.DisableBehavior();
         behaviorTree.EnableBehavior();
     }
 
     /// <summary>
-    /// ³õÊ¼»¯±äÁ¿£¨¾É°æ¼æÈİ£©
+    /// åˆå§‹åŒ–å˜é‡ï¼ˆæ—§ç‰ˆå…¼å®¹ï¼‰
     /// </summary>
     private void InitVariable(string varName, object value)
     {
@@ -60,18 +60,18 @@ public class EnemyBehaviorTreeAutoInit : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"{gameObject.name} ĞĞÎªÊ÷Ã»ÓĞ±äÁ¿{varName}", this);
+            Debug.LogWarning($"{gameObject.name} è¡Œä¸ºæ ‘æ²¡æœ‰å˜é‡{varName}", this);
         }
     }
 
-    // Íâ²¿µ÷ÓÃ£º¸üĞÂÕ½¶·×´Ì¬£¨¸øTriggerBattleByEnemyµ÷ÓÃ£©
+    // å¤–éƒ¨è°ƒç”¨ï¼šæ›´æ–°æˆ˜æ–—çŠ¶æ€ï¼ˆç»™TriggerBattleByEnemyè°ƒç”¨ï¼‰
     public void UpdateCombatState(bool isInCombat)
     {
         var combatVar = behaviorTree.GetVariable("isInCombat");
         if (combatVar != null)
         {
             combatVar.SetValue(isInCombat);
-            // Ë¢ĞÂĞĞÎªÊ÷
+            // åˆ·æ–°è¡Œä¸ºæ ‘
             behaviorTree.DisableBehavior();
             behaviorTree.EnableBehavior();
         }

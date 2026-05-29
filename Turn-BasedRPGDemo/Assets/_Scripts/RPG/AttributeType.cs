@@ -1,39 +1,39 @@
 using System.Collections.Generic;
 
 /// <summary>
-/// ½ÇÉ«ÊôĞÔÀàĞÍÃ¶¾Ù£¨»ù´¡/Õ½¶·/³É³¤ÊôĞÔ£¬Í³Ò»´æ´¢£©
+/// è§’è‰²å±æ€§ç±»å‹æšä¸¾ï¼ˆåŸºç¡€/æˆ˜æ–—/æˆé•¿å±æ€§ï¼Œç»Ÿä¸€å­˜å‚¨ï¼‰
 /// </summary>
 public enum AttributeType
 {
-    // ===== »ù´¡ÊôĞÔ£ºÉúÃü/·¨Á¦/ÎïÀí/Ä§·¨»¤¼× =====
-    MaxHP,       // ×î´óÉúÃüÖµ
-    CurrentHP,   // µ±Ç°ÉúÃüÖµ
-    MaxMP,       // ×î´ó·¨Á¦Öµ
-    CurrentMP,   // µ±Ç°·¨Á¦Öµ
-    MaxPhysArmor,// ×î´óÎïÀí»¤¼×
-    CurrentPhysArmor, // µ±Ç°ÎïÀí»¤¼×£¨À©Õ¹×Ö¶Î£©
-    MaxMagicArmor,// ×î´óÄ§·¨»¤¼×
-    CurrentMagicArmor, // µ±Ç°Ä§·¨»¤¼×£¨À©Õ¹×Ö¶Î£©
-    // ===== Õ½¶·ÊôĞÔ£ºĞĞ¶¯µã/Á¦Á¿/ÖÇÁ¦/·ÀÓù/ÏÈ¹¥ =====
-    MaxAP,       // ×î´óĞĞ¶¯µã
-    CurrentAP,   // µ±Ç°ĞĞ¶¯µã
-    Strength,    // Á¦Á¿£¨ÎïÀíÉËº¦¼Ó³É£©
-    Intelligence,// ÖÇÁ¦£¨Ä§·¨ÉËº¦¼Ó³É£©
-    Armor,       // ÎïÀí·ÀÓù
-    MagicResist, // Ä§·¨¿¹ĞÔ
-    Initiative,  // ÏÈ¹¥Öµ£¨ĞÂÔö£º½â¾öCS0117±¨´í£©
-    // ===== ³É³¤ÊôĞÔ£ºµÈ¼¶/¾­ÑéÖµ =====
-    Level,       // µÈ¼¶
-    CurrentEXP,  // µ±Ç°¾­ÑéÖµ
-    EXPToLevelUp,// Éı¼¶ËùĞè¾­Ñé
+    // ===== åŸºç¡€å±æ€§ï¼šç”Ÿå‘½/æ³•åŠ›/ç‰©ç†/é­”æ³•æŠ¤ç”² =====
+    MaxHP,       // æœ€å¤§ç”Ÿå‘½å€¼
+    CurrentHP,   // å½“å‰ç”Ÿå‘½å€¼
+    MaxMP,       // æœ€å¤§æ³•åŠ›å€¼
+    CurrentMP,   // å½“å‰æ³•åŠ›å€¼
+    MaxPhysArmor,// æœ€å¤§ç‰©ç†æŠ¤ç”²
+    CurrentPhysArmor, // å½“å‰ç‰©ç†æŠ¤ç”²ï¼ˆæ‰©å±•å­—æ®µï¼‰
+    MaxMagicArmor,// æœ€å¤§é­”æ³•æŠ¤ç”²
+    CurrentMagicArmor, // å½“å‰é­”æ³•æŠ¤ç”²ï¼ˆæ‰©å±•å­—æ®µï¼‰
+    // ===== æˆ˜æ–—å±æ€§ï¼šè¡ŒåŠ¨ç‚¹/åŠ›é‡/æ™ºåŠ›/é˜²å¾¡/å…ˆæ”» =====
+    MaxAP,       // æœ€å¤§è¡ŒåŠ¨ç‚¹
+    CurrentAP,   // å½“å‰è¡ŒåŠ¨ç‚¹
+    Strength,    // åŠ›é‡ï¼ˆç‰©ç†ä¼¤å®³åŠ æˆï¼‰
+    Intelligence,// æ™ºåŠ›ï¼ˆé­”æ³•ä¼¤å®³åŠ æˆï¼‰
+    Armor,       // ç‰©ç†é˜²å¾¡
+    MagicResist, // é­”æ³•æŠ—æ€§
+    Initiative,  // å…ˆæ”»å€¼ï¼ˆæ–°å¢ï¼šè§£å†³CS0117æŠ¥é”™ï¼‰
+    // ===== æˆé•¿å±æ€§ï¼šç­‰çº§/ç»éªŒå€¼ =====
+    Level,       // ç­‰çº§
+    CurrentEXP,  // å½“å‰ç»éªŒå€¼
+    EXPToLevelUp,// å‡çº§æ‰€éœ€ç»éªŒ
 }
 
 /// <summary>
-/// ÊôĞÔ·Ö×é¾²Ì¬Àà£¨Âß¼­·ÖÀà£¬·½±ãÅúÁ¿´¦Àí£©
+/// å±æ€§åˆ†ç»„é™æ€ç±»ï¼ˆé€»è¾‘åˆ†ç±»ï¼Œæ–¹ä¾¿æ‰¹é‡å¤„ç†ï¼‰
 /// </summary>
 public static class AttrGroup
 {
-    // »ù´¡ÊôĞÔ£ºÉúÃü/·¨Á¦/»¤¼×Ïà¹Ø
+    // åŸºç¡€å±æ€§ï¼šç”Ÿå‘½/æ³•åŠ›/æŠ¤ç”²ç›¸å…³
     public static readonly IReadOnlyList<AttributeType> BasicAttrs = new List<AttributeType>()
     {
         AttributeType.MaxHP, AttributeType.CurrentHP,
@@ -42,16 +42,16 @@ public static class AttrGroup
         AttributeType.MaxMagicArmor, AttributeType.CurrentMagicArmor
     }.AsReadOnly();
 
-    // Õ½¶·ÊôĞÔ£ºĞĞ¶¯µã/¹¥»÷Á¦/·ÀÓù/ÏÈ¹¥Ïà¹Ø
+    // æˆ˜æ–—å±æ€§ï¼šè¡ŒåŠ¨ç‚¹/æ”»å‡»åŠ›/é˜²å¾¡/å…ˆæ”»ç›¸å…³
     public static readonly IReadOnlyList<AttributeType> CombatAttrs = new List<AttributeType>()
     {
         AttributeType.MaxAP, AttributeType.CurrentAP,
         AttributeType.Strength, AttributeType.Intelligence,
         AttributeType.Armor, AttributeType.MagicResist,
-        AttributeType.Initiative // ĞÂÔö£ºÏÈ¹¥Öµ¼ÓÈëÕ½¶·ÊôĞÔ·Ö×é
+        AttributeType.Initiative // æ–°å¢ï¼šå…ˆæ”»å€¼åŠ å…¥æˆ˜æ–—å±æ€§åˆ†ç»„
     }.AsReadOnly();
 
-    // ³É³¤ÊôĞÔ£ºµÈ¼¶/¾­ÑéÏà¹Ø
+    // æˆé•¿å±æ€§ï¼šç­‰çº§/ç»éªŒç›¸å…³
     public static readonly IReadOnlyList<AttributeType> GrowAttrs = new List<AttributeType>()
     {
         AttributeType.Level, AttributeType.CurrentEXP, AttributeType.EXPToLevelUp
@@ -59,11 +59,11 @@ public static class AttrGroup
 }
 
 /// <summary>
-/// ÕóÓªÀàĞÍÃ¶¾Ù
+/// é˜µè¥ç±»å‹æšä¸¾
 /// </summary>
 public enum CampType
 {
-    Player,   // Íæ¼ÒÕóÓª
-    Enemy,    // µĞÈËÕóÓª
-    Neutral   // ÖĞÁ¢ÕóÓª
+    Player,   // ç©å®¶é˜µè¥
+    Enemy,    // æ•Œäººé˜µè¥
+    Neutral   // ä¸­ç«‹é˜µè¥
 }

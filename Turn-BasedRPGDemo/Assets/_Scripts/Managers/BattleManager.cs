@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// Õ½¶·¹ÜÀíÆ÷£¨ÎŞ×Ö¶ÎÈ±Ê§´íÎó£¬ÊÊÅä»ùÀà£©
+/// æˆ˜æ–—ç®¡ç†å™¨ï¼ˆæ— å­—æ®µç¼ºå¤±é”™è¯¯ï¼Œé€‚é…åŸºç±»ï¼‰
 /// </summary>
 public class BattleManager : MonoBehaviour
 {
     public static BattleManager Instance;
 
-    [Header("=== Õ½¶·ÅäÖÃ ===")]
+    [Header("=== æˆ˜æ–—é…ç½® ===")]
     public bool isBattleStart = false;
     public List<BaseCharacterAttr> allBattleUnits = new List<BaseCharacterAttr>();
     public List<BaseCharacterAttr> battleTurnOrder = new List<BaseCharacterAttr>();
@@ -25,26 +25,26 @@ public class BattleManager : MonoBehaviour
         CollectAllBattleUnits();
     }
 
-    // ÊÕ¼¯ËùÓĞÕ½¶·µ¥Î»
+    // æ”¶é›†æ‰€æœ‰æˆ˜æ–—å•ä½
     public void CollectAllBattleUnits()
     {
         allBattleUnits.Clear();
         allBattleUnits.AddRange(FindObjectsOfType<BaseCharacterAttr>());
     }
 
-    // Æô¶¯Õ½¶·
+    // å¯åŠ¨æˆ˜æ–—
     public void StartBattle()
     {
         if (isBattleStart) return;
         isBattleStart = true;
 
-        // É¸Ñ¡+ÅÅĞò»ØºÏË³Ğò
+        // ç­›é€‰+æ’åºå›åˆé¡ºåº
         battleTurnOrder = allBattleUnits
             .Where(unit => unit.currentCamp != CampType.Neutral && !unit.isDead)
             .OrderByDescending(unit => unit.GetAttrValue(AttributeType.Strength) + unit.GetAttrValue(AttributeType.Intelligence))
             .ToList();
 
-        // ³õÊ¼»¯»ØºÏ×´Ì¬
+        // åˆå§‹åŒ–å›åˆçŠ¶æ€
         foreach (var unit in battleTurnOrder)
         {
             unit.SetAttrValue(AttributeType.CurrentAP, initAP);
@@ -55,13 +55,13 @@ public class BattleManager : MonoBehaviour
         StartCurrentTurn();
     }
 
-    // Æô¶¯µ±Ç°»ØºÏ
+    // å¯åŠ¨å½“å‰å›åˆ
     private void StartCurrentTurn()
     {
-        // ÖØÖÃËùÓĞ»ØºÏ×´Ì¬
+        // é‡ç½®æ‰€æœ‰å›åˆçŠ¶æ€
         battleTurnOrder.ForEach(unit => unit.isMyTurn = false);
 
-        // »ØºÏÂÖÑ¯Íê±Ï£º»Ø¸´AP+Ë¢ĞÂ¼¼ÄÜÀäÈ´
+        // å›åˆè½®è¯¢å®Œæ¯•ï¼šå›å¤AP+åˆ·æ–°æŠ€èƒ½å†·å´
         if (currentTurnIndex >= battleTurnOrder.Count)
         {
             currentTurnIndex = 0;
@@ -69,7 +69,7 @@ public class BattleManager : MonoBehaviour
             SkillManager.Instance?.RefreshAllSkillCoolDown();
         }
 
-        // Ìø¹ıËÀÍö½ÇÉ«
+        // è·³è¿‡æ­»äº¡è§’è‰²
         BaseCharacterAttr currentUnit = battleTurnOrder[currentTurnIndex];
         if (currentUnit.isDead)
         {
@@ -78,12 +78,12 @@ public class BattleManager : MonoBehaviour
             return;
         }
 
-        // ¼¤»îµ±Ç°»ØºÏ
+        // æ¿€æ´»å½“å‰å›åˆ
         currentUnit.isMyTurn = true;
-        Debug.Log($"µ±Ç°ĞĞ¶¯£º{currentUnit.gameObject.name} | Ê£ÓàAP£º{currentUnit.GetAttrValue(AttributeType.CurrentAP)}");
+        Debug.Log($"å½“å‰è¡ŒåŠ¨ï¼š{currentUnit.gameObject.name} | å‰©ä½™APï¼š{currentUnit.GetAttrValue(AttributeType.CurrentAP)}");
     }
 
-    // »Ø¸´ËùÓĞ½ÇÉ«AP
+    // å›å¤æ‰€æœ‰è§’è‰²AP
     private void RecoverAllUnitAP()
     {
         foreach (var unit in battleTurnOrder)
@@ -94,51 +94,51 @@ public class BattleManager : MonoBehaviour
         }
     }
 
-    // ½áÊøµ±Ç°»ØºÏ
+    // ç»“æŸå½“å‰å›åˆ
     public void EndCurrentTurn()
     {
         if (!isBattleStart) return;
 
-        // ÖØÖÃµ±Ç°»ØºÏ×´Ì¬
+        // é‡ç½®å½“å‰å›åˆçŠ¶æ€
         battleTurnOrder[currentTurnIndex].isMyTurn = false;
 
-        // ¼ì²âÊ¤¸º
+        // æ£€æµ‹èƒœè´Ÿ
         CheckBattleResult();
 
-        // ÇĞ»»ÏÂÒ»¸ö½ÇÉ«
+        // åˆ‡æ¢ä¸‹ä¸€ä¸ªè§’è‰²
         currentTurnIndex++;
         StartCurrentTurn();
     }
 
-    // Ê¤¸ºÅĞ¶¨
+    // èƒœè´Ÿåˆ¤å®š
     private void CheckBattleResult()
     {
-        // Íæ¼ÒÈ«Ãğ
+        // ç©å®¶å…¨ç­
         bool playerAllDead = allBattleUnits
             .Where(unit => unit.currentCamp == CampType.Player)
             .All(unit => unit.isDead);
 
-        // µĞÈËÈ«Ãğ
+        // æ•Œäººå…¨ç­
         bool enemyAllDead = allBattleUnits
             .Where(unit => unit.currentCamp == CampType.Enemy)
             .All(unit => unit.isDead);
 
-        // Ê¤¸º´¦Àí
+        // èƒœè´Ÿå¤„ç†
         if (playerAllDead)
         {
-            Debug.Log("Õ½¶·Ê§°Ü£¡");
+            Debug.Log("æˆ˜æ–—å¤±è´¥ï¼");
             //SaveSystem.Instance?.LoadGame(FindObjectOfType<PlayerAttr>());
             EndBattle();
         }
         else if (enemyAllDead)
         {
-            Debug.Log("Õ½¶·Ê¤Àû£¡");
+            Debug.Log("æˆ˜æ–—èƒœåˆ©ï¼");
             //SaveSystem.Instance?.SaveGame(FindObjectOfType<PlayerAttr>());
             EndBattle();
         }
     }
 
-    // ½áÊøÕ½¶·
+    // ç»“æŸæˆ˜æ–—
     public void EndBattle()
     {
         isBattleStart = false;
@@ -150,7 +150,7 @@ public class BattleManager : MonoBehaviour
         });
     }
 
-    // ¹¥»÷ÖĞÁ¢´¥·¢Õ½¶·
+    // æ”»å‡»ä¸­ç«‹è§¦å‘æˆ˜æ–—
     public void StartBattleByAttackNeutral(BaseCharacterAttr neutralUnit)
     {
         if (isBattleStart) return;

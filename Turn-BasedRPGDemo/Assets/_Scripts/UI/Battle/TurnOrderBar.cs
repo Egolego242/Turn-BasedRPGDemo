@@ -5,23 +5,23 @@ using UnityEngine.UI;
 
 public class TurnOrderBar : MonoBehaviour
 {
-    [Header("ÅäÖÃ")]
+    [Header("é…ç½®")]
     public GameObject turnItemPrefab;
     public Transform itemParent;
 
     private List<TurnItem> turnItemList = new List<TurnItem>();
 
     /// <summary>
-    /// Õ½¶·¿ªÊ¼Ê±Éú³ÉÍ·Ïñ
+    /// æˆ˜æ–—å¼€å§‹æ—¶ç”Ÿæˆå¤´åƒ
     /// </summary>
     public void InitTurnOrder(List<BaseCharacterAttr> combatants)
     {
-        // Çå¿Õ¾ÉÍ·Ïñ
+        // æ¸…ç©ºæ—§å¤´åƒ
         foreach (var item in turnItemList)
             Destroy(item.gameObject);
         turnItemList.Clear();
 
-        // Éú³ÉËùÓĞ½ÇÉ«Í·Ïñ
+        // ç”Ÿæˆæ‰€æœ‰è§’è‰²å¤´åƒ
         foreach (var character in combatants)
         {
             GameObject go = Instantiate(turnItemPrefab, itemParent);
@@ -32,18 +32,18 @@ public class TurnOrderBar : MonoBehaviour
     }
 
     /// <summary>
-    /// ¡¾ºËĞÄ¡¿Ã¿´Î»ØºÏ¶¼ÖØĞÂÅÅĞò
-    /// 1. Ö»±£Áô´æ»î½ÇÉ«
-    /// 2. °´×îĞÂÏÈ¹¥Öµ´Ó¸ßµ½µÍÅÅ
-    /// 3. µ±Ç°½ÇÉ«Ç¿ÖÆ·Å×î×ó
-    /// 4. ËÀÍö½ÇÉ«Ö±½Ó²»ÏÔÊ¾
+    /// ã€æ ¸å¿ƒã€‘æ¯æ¬¡å›åˆéƒ½é‡æ–°æ’åº
+    /// 1. åªä¿ç•™å­˜æ´»è§’è‰²
+    /// 2. æŒ‰æœ€æ–°å…ˆæ”»å€¼ä»é«˜åˆ°ä½æ’
+    /// 3. å½“å‰è§’è‰²å¼ºåˆ¶æ”¾æœ€å·¦
+    /// 4. æ­»äº¡è§’è‰²ç›´æ¥ä¸æ˜¾ç¤º
     /// </summary>
     public void UpdateTurnOrder(BaseCharacterAttr currentActor)
     {
         if (currentActor == null) return;
 
         // ==========================
-        // 1. Ö»ÄÃ¡¾´æ»î¡¿µÄ½ÇÉ«£¨ËÀÍöÖ±½ÓÅÅ³ı£©
+        // 1. åªæ‹¿ã€å­˜æ´»ã€‘çš„è§’è‰²ï¼ˆæ­»äº¡ç›´æ¥æ’é™¤ï¼‰
         // ==========================
         var aliveCharacters = turnItemList
             .Where(item => item.owner != null && !item.owner.isDead)
@@ -51,20 +51,20 @@ public class TurnOrderBar : MonoBehaviour
             .ToList();
 
         // ==========================
-        // 2. °´¡¾×îĞÂÏÈ¹¥Öµ¡¿´Ó¸ßµ½µÍÅÅĞò
+        // 2. æŒ‰ã€æœ€æ–°å…ˆæ”»å€¼ã€‘ä»é«˜åˆ°ä½æ’åº
         // ==========================
         var sortedByInitiative = aliveCharacters
             .OrderByDescending(c => c.GetInitiative())
             .ToList();
 
         // ==========================
-        // 3. µ±Ç°½ÇÉ« ¡ú Ç¿ÖÆ·Å×î×ó±ß
+        // 3. å½“å‰è§’è‰² â†’ å¼ºåˆ¶æ”¾æœ€å·¦è¾¹
         // ==========================
         sortedByInitiative.Remove(currentActor);
         sortedByInitiative.Insert(0, currentActor);
 
         // ==========================
-        // 4. ¸ù¾İĞÂË³ĞòÖØĞÂÅÅÁĞÍ·Ïñ
+        // 4. æ ¹æ®æ–°é¡ºåºé‡æ–°æ’åˆ—å¤´åƒ
         // ==========================
         foreach (var character in sortedByInitiative)
         {
@@ -74,7 +74,7 @@ public class TurnOrderBar : MonoBehaviour
         }
 
         // ==========================
-        // 5. Òş²ØËùÓĞËÀÍö½ÇÉ«µÄÍ·Ïñ£¨³¹µ×²»ÏÔÊ¾£©
+        // 5. éšè—æ‰€æœ‰æ­»äº¡è§’è‰²çš„å¤´åƒï¼ˆå½»åº•ä¸æ˜¾ç¤ºï¼‰
         // ==========================
         foreach (var item in turnItemList)
         {
@@ -82,10 +82,10 @@ public class TurnOrderBar : MonoBehaviour
             item.gameObject.SetActive(!isDead);
         }
 
-        // Ë¢ĞÂ²¼¾Ö
+        // åˆ·æ–°å¸ƒå±€
         LayoutRebuilder.ForceRebuildLayoutImmediate(itemParent as RectTransform);
     }
 
-    // ¾É·½·¨±£Áô£¬·ÀÖ¹±¨´í
+    // æ—§æ–¹æ³•ä¿ç•™ï¼Œé˜²æ­¢æŠ¥é”™
     public void HighlightCurrentTurn(BaseCharacterAttr currentActor) { }
 }

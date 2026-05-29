@@ -7,31 +7,34 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager Instance;
 
-    [Header("UI×éÒıÓÃ")]
+    [Header("UIç»„å¼•ç”¨")]
     public GameObject baseExploreUI;
     public GameObject overlayBattleUI;
 
-    [Header("×ÓÄ£¿éÒıÓÃ")]
+    [Header("å­æ¨¡å—å¼•ç”¨")]
     public TurnOrderBar turnOrderBar;
     public ActionPointBar actionPointBar;
     public BattleStartTip battleStartTip;
     public SkillTooltip skillTooltip;
     public RangeVisualizer rangeVisualizer;
 
-    // ĞÂÔö£ºµ±Ç°»ØºÏÌáÊ¾ÎÄ±¾£¨ÍÏÈë³¡¾°ÖĞµÄTextMeshPro×é¼ş£©
-    [Header("»ØºÏÌáÊ¾")]
+    // æ–°å¢ï¼šå½“å‰å›åˆæç¤ºæ–‡æœ¬ï¼ˆæ‹–å…¥åœºæ™¯ä¸­çš„TextMeshProç»„ä»¶ï¼‰
+    [Header("å›åˆæç¤º")]
     public TextMeshProUGUI currentTurnTipText;
+
+    [Header("ç»“ç®—é¢æ¿")]
+    public GameObject settlementPanel;
 
     private void Awake()
     {
-        // µ¥Àı³õÊ¼»¯
+        // å•ä¾‹åˆå§‹åŒ–
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
     }
 
     private void OnEnable()
     {
-        // ¶©ÔÄËùÓĞÕ½¶·ÊÂ¼ş
+        // è®¢é˜…æ‰€æœ‰æˆ˜æ–—äº‹ä»¶
         GameStateMgr.OnGameStateChanged += OnGameStateChanged;
         TurnBattleManager.OnBattleStart += OnBattleStart;
         TurnBattleManager.OnTurnChanged += OnTurnChanged;
@@ -41,7 +44,7 @@ public class UIManager : MonoBehaviour
 
     private void OnDisable()
     {
-        // È¡Ïû¶©ÔÄ£¬·ÀÖ¹ÄÚ´æĞ¹Â©
+        // å–æ¶ˆè®¢é˜…ï¼Œé˜²æ­¢å†…å­˜æ³„æ¼
         GameStateMgr.OnGameStateChanged -= OnGameStateChanged;
         TurnBattleManager.OnBattleStart -= OnBattleStart;
         TurnBattleManager.OnTurnChanged -= OnTurnChanged;
@@ -49,60 +52,60 @@ public class UIManager : MonoBehaviour
         TurnBattleManager.OnActionPointChanged -= OnActionPointChanged;
     }
 
-    // ÓÎÏ·×´Ì¬ÇĞ»»£ºÌ½Ë÷/Õ½¶·UIÏÔÒş
+    // æ¸¸æˆçŠ¶æ€åˆ‡æ¢ï¼šæ¢ç´¢/æˆ˜æ–—UIæ˜¾éš
     private void OnGameStateChanged(GameStateMgr.GamePlayState state)
     {
-        // baseExploreUI.SetActive(true); // Èç¹û³õÊ¼ÊÇÒş²ØµÄ£¬ÕâÀï¿ÉÒÔÉèÎªtrue£¬·ñÔò¿ÉÒÔÊ¡ÂÔ
+        // baseExploreUI.SetActive(true); // å¦‚æœåˆå§‹æ˜¯éšè—çš„ï¼Œè¿™é‡Œå¯ä»¥è®¾ä¸ºtrueï¼Œå¦åˆ™å¯ä»¥çœç•¥
 
-        // Ö»¿ØÖÆµş¼ÓÕ½¶·UIµÄÏÔÒş£ºÌ½Ë÷Ê±Òş²Ø£¬Õ½¶·Ê±ÏÔÊ¾
+        // åªæ§åˆ¶å åŠ æˆ˜æ–—UIçš„æ˜¾éšï¼šæ¢ç´¢æ—¶éšè—ï¼Œæˆ˜æ–—æ—¶æ˜¾ç¤º
         overlayBattleUI.SetActive(state == GameStateMgr.GamePlayState.BattleState);
     }
 
-    // Õ½¶·¿ªÊ¼£º³õÊ¼»¯»ØºÏÌõ¡¢ÏÔÊ¾Èë³¡ÌáÊ¾
+    // æˆ˜æ–—å¼€å§‹ï¼šåˆå§‹åŒ–å›åˆæ¡ã€æ˜¾ç¤ºå…¥åœºæç¤º
     private void OnBattleStart(List<BaseCharacterAttr> combatants)
     {
         turnOrderBar.InitTurnOrder(combatants);
         battleStartTip.ShowBattleStartTip();
     }
 
-    // »ØºÏÇĞ»»£º¸üĞÂ»ØºÏÌõ¸ßÁÁ¡¢Ë¢ĞÂĞĞ¶¯µã
+    // å›åˆåˆ‡æ¢ï¼šæ›´æ–°å›åˆæ¡é«˜äº®ã€åˆ·æ–°è¡ŒåŠ¨ç‚¹
     private void OnTurnChanged(BaseCharacterAttr currentActor)
     {
         turnOrderBar.UpdateTurnOrder(currentActor);
         actionPointBar.UpdateActionPoint(currentActor);
-        // ĞÂÔö£º¸üĞÂµ±Ç°»ØºÏÌáÊ¾ÎÄ±¾
+        // æ–°å¢ï¼šæ›´æ–°å½“å‰å›åˆæç¤ºæ–‡æœ¬
         UpdateCurrentTurnTip(currentActor);
     }
 
-    // ĞÂÔö£º·â×°»ØºÏÌáÊ¾¸üĞÂÂß¼­
+    // æ–°å¢ï¼šå°è£…å›åˆæç¤ºæ›´æ–°é€»è¾‘
     private void UpdateCurrentTurnTip(BaseCharacterAttr currentActor)
     {
         if (currentTurnTipText == null)
         {
-            Debug.LogWarning("UIManagerÎ´¸³ÖµcurrentTurnTipText£¡");
+            Debug.LogWarning("UIManageræœªèµ‹å€¼currentTurnTipTextï¼");
             return;
         }
 
-        // ÅĞ¶Ïµ±Ç°½ÇÉ«ÊÇÍæ¼Ò»¹ÊÇµĞÈË£¬ÉèÖÃ¶ÔÓ¦ÌáÊ¾ÎÄ±¾
-        if (currentActor is PlayerAttr) // Íæ¼Ò½ÇÉ«£¨ÄãµÄBaseCharacterAttr×ÓÀà£©
+        // åˆ¤æ–­å½“å‰è§’è‰²æ˜¯ç©å®¶è¿˜æ˜¯æ•Œäººï¼Œè®¾ç½®å¯¹åº”æç¤ºæ–‡æœ¬
+        if (currentActor is PlayerAttr) // ç©å®¶è§’è‰²ï¼ˆä½ çš„BaseCharacterAttrå­ç±»ï¼‰
         {
-            currentTurnTipText.text = "ÄãµÄ»ØºÏ";
-            // ¿ÉÑ¡£ºÉèÖÃÎÄ±¾ÑÕÉ«£¨±ÈÈçÍæ¼Ò»ØºÏÓÃÂÌÉ«£©
+            currentTurnTipText.text = "ä½ çš„å›åˆ";
+            // å¯é€‰ï¼šè®¾ç½®æ–‡æœ¬é¢œè‰²ï¼ˆæ¯”å¦‚ç©å®¶å›åˆç”¨ç»¿è‰²ï¼‰
             currentTurnTipText.color = Color.green;
         }
-        else if (currentActor is EnemyAttr) // µĞÈË½ÇÉ«
+        else if (currentActor is EnemyAttr) // æ•Œäººè§’è‰²
         {
-            currentTurnTipText.text = "µĞÈËµÄ»ØºÏ";
-            // ¿ÉÑ¡£ºµĞÈË»ØºÏÓÃºìÉ«
+            currentTurnTipText.text = "æ•Œäººçš„å›åˆ";
+            // å¯é€‰ï¼šæ•Œäººå›åˆç”¨çº¢è‰²
             currentTurnTipText.color = Color.red;
         }
-        else // ÆäËû½ÇÉ«£¨¶µµ×£©
+        else // å…¶ä»–è§’è‰²ï¼ˆå…œåº•ï¼‰
         {
-            currentTurnTipText.text = $"{currentActor.name}µÄ»ØºÏ";
+            currentTurnTipText.text = $"{currentActor.name}çš„å›åˆ";
         }
     }
 
-    // ĞĞ¶¯µã±ä»¯£ºË¢ĞÂĞĞ¶¯µãUI
+    // è¡ŒåŠ¨ç‚¹å˜åŒ–ï¼šåˆ·æ–°è¡ŒåŠ¨ç‚¹UI
     private void OnActionPointChanged()
     {
         if (TurnBattleManager.Instance != null)
@@ -113,10 +116,11 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // Õ½¶·½áÊø£ºÒş²ØÕ½¶·UI
+    // æˆ˜æ–—ç»“æŸï¼šéšè—ç»“ç®—é¢æ¿ï¼ˆå…œåº•æ¸…ç†ï¼‰ï¼Œæˆ˜æ–—UIç”±OnGameStateChangedè‡ªåŠ¨éšè—
     private void OnBattleEnd(bool playerWin)
     {
-        // ¿ÉÀ©Õ¹£ºÏÔÊ¾Ê¤Àû/Ê§°ÜÃæ°å
-        Debug.Log(playerWin ? "Õ½¶·Ê¤Àû£¡" : "Õ½¶·Ê§°Ü£¡");
+        if (settlementPanel != null)
+            settlementPanel.SetActive(false);
+        Debug.Log(playerWin ? "æˆ˜æ–—èƒœåˆ©ï¼" : "æˆ˜æ–—å¤±è´¥ï¼");
     }
 }

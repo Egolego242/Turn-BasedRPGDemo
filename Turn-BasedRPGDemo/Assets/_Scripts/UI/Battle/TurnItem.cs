@@ -2,29 +2,29 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// µ¥¸ö»ØºÏÍ·ÏñÀà
-/// ¹ÒÔØÔÚ»ØºÏÍ·ÏñÔ¤ÖÆÌåÉÏ
+/// å•ä¸ªå›åˆå¤´åƒç±»
+/// æŒ‚è½½åœ¨å›åˆå¤´åƒé¢„åˆ¶ä½“ä¸Š
 /// </summary>
 public class TurnItem : MonoBehaviour
 {
-    [Header("UIÒıÓÃ")]
-    [Tooltip("½ÇÉ«Í·ÏñImage")]
+    [Header("UIå¼•ç”¨")]
+    [Tooltip("è§’è‰²å¤´åƒImage")]
     public Image headIcon;
-    //[Tooltip("¸ßÁÁ±ß¿òImage£¨Ä¬ÈÏÒş²Ø£©")]
+    //[Tooltip("é«˜äº®è¾¹æ¡†Imageï¼ˆé»˜è®¤éšè—ï¼‰")]
     //public Image highlightFrame;
-    [Tooltip("ËÀÍö»Ò»¯ÕÚÕÖImage£¨Ä¬ÈÏÒş²Ø£©")]
+    [Tooltip("æ­»äº¡ç°åŒ–é®ç½©Imageï¼ˆé»˜è®¤éšè—ï¼‰")]
     public Image deadMask;
 
     [HideInInspector] public BaseCharacterAttr owner;
 
     /// <summary>
-    /// ³õÊ¼»¯»ØºÏÍ·Ïñ
+    /// åˆå§‹åŒ–å›åˆå¤´åƒ
     /// </summary>
     public void Init(BaseCharacterAttr character)
     {
         owner = character;
 
-        // ³õÊ¼»¯×´Ì¬
+        // åˆå§‹åŒ–çŠ¶æ€
         //if (highlightFrame != null)
         //{
         //    highlightFrame.gameObject.SetActive(false);
@@ -34,24 +34,24 @@ public class TurnItem : MonoBehaviour
             deadMask.gameObject.SetActive(character.isDead);
         }
 
-        // ĞÂÔö£ºÉèÖÃ½ÇÉ«¶ÔÓ¦µÄÍ·Ïñ
+        // æ–°å¢ï¼šè®¾ç½®è§’è‰²å¯¹åº”çš„å¤´åƒ
         if (headIcon != null && character.headIconSprite != null)
         {
             headIcon.sprite = character.headIconSprite;
             headIcon.color = Color.white;
-            headIcon.gameObject.SetActive(true); // È·±£Í·ÏñÏÔÊ¾
+            headIcon.gameObject.SetActive(true); // ç¡®ä¿å¤´åƒæ˜¾ç¤º
         }
         else
         {
-            headIcon.gameObject.SetActive(false); // ÎŞÍ·ÏñÔòÒş²Ø
-            Debug.LogWarning($"{character.name} Î´ÉèÖÃÍ·ÏñSprite£¡");
+            headIcon.gameObject.SetActive(false); // æ— å¤´åƒåˆ™éšè—
+            Debug.LogWarning($"{character.name} æœªè®¾ç½®å¤´åƒSpriteï¼");
         }
-        // £¨¿ÉÑ¡£©Èç¹ûÓĞ½ÇÉ«Ãû³Æ£¬Ìí¼ÓÒ»¸öText²¢ÔÚÕâÀï¸³Öµ
+        // ï¼ˆå¯é€‰ï¼‰å¦‚æœæœ‰è§’è‰²åç§°ï¼Œæ·»åŠ ä¸€ä¸ªTextå¹¶åœ¨è¿™é‡Œèµ‹å€¼
         // if (nameText != null) nameText.text = character.gameObject.name;
     }
 
     /// <summary>
-    /// ÉèÖÃ¸ßÁÁ×´Ì¬
+    /// è®¾ç½®é«˜äº®çŠ¶æ€
     /// </summary>
     public void SetHighlight(bool isHighlight)
     {
@@ -60,7 +60,7 @@ public class TurnItem : MonoBehaviour
         //    highlightFrame.gameObject.SetActive(isHighlight);
         //}
 
-        // ÊµÊ±¸üĞÂËÀÍö×´Ì¬
+        // å®æ—¶æ›´æ–°æ­»äº¡çŠ¶æ€
         if (deadMask != null && owner != null)
         {
             deadMask.gameObject.SetActive(owner.isDead);

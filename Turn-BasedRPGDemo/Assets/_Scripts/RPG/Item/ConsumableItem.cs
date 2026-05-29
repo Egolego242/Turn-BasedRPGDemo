@@ -1,18 +1,18 @@
 using UnityEngine;
 
 /// <summary>
-/// ÏûºÄÆ·ÅäÖÃÎÄ¼ş - ¼Ì³ĞItemBase»ùÀà£¨ÑªÆ¿¡¢À¶Æ¿¡¢»¤¼×Ò©¼ÁµÈ£©
-/// Ê¹ÓÃºó£º»Ö¸´¶ÔÓ¦ÊıÖµ ¡ú ÊıÁ¿-1 ¡ú ÊıÁ¿Îª0×Ô¶¯ÒÆ³ı
+/// æ¶ˆè€—å“é…ç½®æ–‡ä»¶ - ç»§æ‰¿ItemBaseåŸºç±»ï¼ˆè¡€ç“¶ã€è“ç“¶ã€æŠ¤ç”²è¯å‰‚ç­‰ï¼‰
+/// ä½¿ç”¨åï¼šæ¢å¤å¯¹åº”æ•°å€¼ â†’ æ•°é‡-1 â†’ æ•°é‡ä¸º0è‡ªåŠ¨ç§»é™¤
 /// </summary>
 [CreateAssetMenu(fileName = "NewConsumable", menuName = "RPG/ConsumableItem")]
 public class ConsumableItem : ItemBase
 {
-    [Header("ÏûºÄÆ·ÊôĞÔ")]
-    public AttributeType recoverType; // »Ö¸´ÀàĞÍ£ºHP/MP/AP
-    public float recoverValue = 20f; // »Ö¸´ÊıÖµ
-    public int recoverApValue = 20; // »Ö¸´APÊıÖµ
+    [Header("æ¶ˆè€—å“å±æ€§")]
+    public AttributeType recoverType; // æ¢å¤ç±»å‹ï¼šHP/MP/AP
+    public float recoverValue = 20f; // æ¢å¤æ•°å€¼
+    public int recoverApValue = 20; // æ¢å¤APæ•°å€¼
 
-    // ÖØĞ´Ê¹ÓÃ·½·¨£ºÊ¹ÓÃµÀ¾ß»Ö¸´ÊôĞÔ
+    // é‡å†™ä½¿ç”¨æ–¹æ³•ï¼šä½¿ç”¨é“å…·æ¢å¤å±æ€§
     public override bool UseItem(GameObject target)
     {
         BaseCharacterAttr attr = target.GetComponent<BaseCharacterAttr>();
@@ -30,7 +30,7 @@ public class ConsumableItem : ItemBase
                 attr.RecoverAP(recoverApValue);
                 break;
         }
-        Debug.Log("Ê¹ÓÃÁË£º" + itemName + "£¬»Ö¸´ÁË" + recoverValue + "µã" + recoverType);
-        return true; // Ê¹ÓÃ³É¹¦£¬µÀ¾ßÊıÁ¿-1
+        Debug.Log("ä½¿ç”¨äº†ï¼š" + itemName + "ï¼Œæ¢å¤äº†" + recoverValue + "ç‚¹" + recoverType);
+        return true; // ä½¿ç”¨æˆåŠŸï¼Œé“å…·æ•°é‡-1
     }
 }

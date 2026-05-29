@@ -4,59 +4,59 @@ using TMPro;
 using UnityEngine.EventSystems;
 
 /// <summary>
-/// ¼¼ÄÜ°´Å¥½Å±¾
-/// ¹ÒÔØÔÚ¿ì½İ¼¼ÄÜÀ¸µÄÃ¿¸ö¼¼ÄÜ°´Å¥ÉÏ
-/// ¹¦ÄÜ£ºÊó±êĞüÍ£ÏÔÊ¾¼¼ÄÜÏêÇé¡¢µã»÷ÊÍ·Å¼¼ÄÜ¡¢ÏÔÊ¾¼¼ÄÜ·¶Î§
+/// æŠ€èƒ½æŒ‰é’®è„šæœ¬
+/// æŒ‚è½½åœ¨å¿«æ·æŠ€èƒ½æ çš„æ¯ä¸ªæŠ€èƒ½æŒ‰é’®ä¸Š
+/// åŠŸèƒ½ï¼šé¼ æ ‡æ‚¬åœæ˜¾ç¤ºæŠ€èƒ½è¯¦æƒ…ã€ç‚¹å‡»é‡Šæ”¾æŠ€èƒ½ã€æ˜¾ç¤ºæŠ€èƒ½èŒƒå›´
 /// </summary>
 public class SkillButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
-    [Header("¼¼ÄÜÅäÖÃ")]
-    [Tooltip("°ó¶¨µÄ¼¼ÄÜ×Ê²ú£¨ScriptableObject£©")]
+    [Header("æŠ€èƒ½é…ç½®")]
+    [Tooltip("ç»‘å®šçš„æŠ€èƒ½èµ„äº§ï¼ˆScriptableObjectï¼‰")]
     public SkillBase skill;
 
-    [Header("UIÒıÓÃ")]
-    [Tooltip("¼¼ÄÜÍ¼±êImage")]
+    [Header("UIå¼•ç”¨")]
+    [Tooltip("æŠ€èƒ½å›¾æ ‡Image")]
     public Image skillIcon;
-    [Tooltip("¼¼ÄÜÀäÈ´ÕÚÕÖImage")]
+    [Tooltip("æŠ€èƒ½å†·å´é®ç½©Image")]
     public Image coolDownMask;
-    [Tooltip("¼¼ÄÜÏûºÄText£¨¿ÉÑ¡£©")]
+    [Tooltip("æŠ€èƒ½æ¶ˆè€—Textï¼ˆå¯é€‰ï¼‰")]
     public TMP_Text costText;
 
     private Button btn;
 
     private void Awake()
     {
-        // ×Ô¶¯»ñÈ¡Button×é¼ş
+        // è‡ªåŠ¨è·å–Buttonç»„ä»¶
         btn = GetComponent<Button>();
 
-        // ³õÊ¼»¯UIÏÔÊ¾
+        // åˆå§‹åŒ–UIæ˜¾ç¤º
         InitSkillUI();
     }
 
     /// <summary>
-    /// ³õÊ¼»¯¼¼ÄÜ°´Å¥UI
+    /// åˆå§‹åŒ–æŠ€èƒ½æŒ‰é’®UI
     /// </summary>
     private void InitSkillUI()
     {
         if (skill == null)
         {
-            Debug.LogWarning($"¼¼ÄÜ°´Å¥ {gameObject.name} Î´°ó¶¨¼¼ÄÜ×Ê²ú£¡", this);
+            Debug.LogWarning($"æŠ€èƒ½æŒ‰é’® {gameObject.name} æœªç»‘å®šæŠ€èƒ½èµ„äº§ï¼", this);
             return;
         }
 
-        // ÏÔÊ¾¼¼ÄÜÏûºÄ
+        // æ˜¾ç¤ºæŠ€èƒ½æ¶ˆè€—
         if (costText != null)
         {
             costText.text = $"{skill.apCost}AP";
         }
 
-        // £¨¿ÉÑ¡£©Èç¹ûÓĞ¼¼ÄÜÍ¼±êSprite£¬¸³Öµ¸øskillIcon
+        // ï¼ˆå¯é€‰ï¼‰å¦‚æœæœ‰æŠ€èƒ½å›¾æ ‡Spriteï¼Œèµ‹å€¼ç»™skillIcon
         // if (skillIcon != null && skill.skillIcon != null)
         // {
         //     skillIcon.sprite = skill.skillIcon;
         // }
 
-        // ³õÊ¼»¯ÀäÈ´ÕÚÕÖ
+        // åˆå§‹åŒ–å†·å´é®ç½©
         if (coolDownMask != null)
         {
             coolDownMask.fillAmount = 0;
@@ -64,16 +64,16 @@ public class SkillButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     }
 
     /// <summary>
-    /// Êó±êĞüÍ£½øÈë£ºÏÔÊ¾¼¼ÄÜÏêÇé
+    /// é¼ æ ‡æ‚¬åœè¿›å…¥ï¼šæ˜¾ç¤ºæŠ€èƒ½è¯¦æƒ…
     /// </summary>
     public void OnPointerEnter(PointerEventData eventData)
     {
         if (skill == null) return;
 
-        // µ÷ÓÃSkillTooltipÏÔÊ¾ÏêÇé
+        // è°ƒç”¨SkillTooltipæ˜¾ç¤ºè¯¦æƒ…
         SkillTooltip.ShowTooltip(skill);
 
-        // £¨¿ÉÑ¡£©Èç¹ûÊÇÕ½¶·×´Ì¬ÇÒÊÇÍæ¼Ò»ØºÏ£¬ÏÔÊ¾¼¼ÄÜ·¶Î§
+        // ï¼ˆå¯é€‰ï¼‰å¦‚æœæ˜¯æˆ˜æ–—çŠ¶æ€ä¸”æ˜¯ç©å®¶å›åˆï¼Œæ˜¾ç¤ºæŠ€èƒ½èŒƒå›´
         if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState())
         {
             UIManager.Instance?.rangeVisualizer.ShowSkillRange(skill);
@@ -81,74 +81,74 @@ public class SkillButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     }
 
     /// <summary>
-    /// Êó±êĞüÍ£ÍË³ö£ºÒş²Ø¼¼ÄÜÏêÇé
+    /// é¼ æ ‡æ‚¬åœé€€å‡ºï¼šéšè—æŠ€èƒ½è¯¦æƒ…
     /// </summary>
     public void OnPointerExit(PointerEventData eventData)
     {
-        // Òş²Ø¼¼ÄÜÏêÇé
+        // éšè—æŠ€èƒ½è¯¦æƒ…
         SkillTooltip.HideTooltip();
 
-        // Òş²Ø¼¼ÄÜ·¶Î§
+        // éšè—æŠ€èƒ½èŒƒå›´
         UIManager.Instance?.rangeVisualizer.HideAllRange();
     }
 
     /// <summary>
-    /// Êó±êµã»÷£ºÊÍ·Å¼¼ÄÜ
+    /// é¼ æ ‡ç‚¹å‡»ï¼šé‡Šæ”¾æŠ€èƒ½
     /// </summary>
     public void OnPointerClick(PointerEventData eventData)
     {
         if (skill == null) return;
 
-        // Ö»ÓĞÔÚÕ½¶·×´Ì¬ÇÒÊÇÍæ¼Ò»ØºÏÊ±²ÅÄÜÊÍ·Å¼¼ÄÜ
+        // åªæœ‰åœ¨æˆ˜æ–—çŠ¶æ€ä¸”æ˜¯ç©å®¶å›åˆæ—¶æ‰èƒ½é‡Šæ”¾æŠ€èƒ½
         if (GameStateMgr.Instance == null || !GameStateMgr.Instance.IsBattleState())
         {
-            Debug.Log("·ÇÕ½¶·×´Ì¬£¬ÎŞ·¨ÊÍ·Å¼¼ÄÜ£¡");
+            Debug.Log("éæˆ˜æ–—çŠ¶æ€ï¼Œæ— æ³•é‡Šæ”¾æŠ€èƒ½ï¼");
             return;
         }
 
-        // ÕÒµ½Íæ¼Ò
+        // æ‰¾åˆ°ç©å®¶
         PlayerAttr player = FindObjectOfType<PlayerAttr>();
         if (player == null || !player.isMyTurn || player.isDead)
         {
-            Debug.Log("²»ÊÇÍæ¼Ò»ØºÏ»òÍæ¼ÒÒÑËÀÍö£¬ÎŞ·¨ÊÍ·Å¼¼ÄÜ£¡");
+            Debug.Log("ä¸æ˜¯ç©å®¶å›åˆæˆ–ç©å®¶å·²æ­»äº¡ï¼Œæ— æ³•é‡Šæ”¾æŠ€èƒ½ï¼");
             return;
         }
 
-        // ÕÒµ½Ä¿±ê£¨¼ò»¯£ºÈ¡µÚÒ»¸öµĞÈË£©
+        // æ‰¾åˆ°ç›®æ ‡ï¼ˆç®€åŒ–ï¼šå–ç¬¬ä¸€ä¸ªæ•Œäººï¼‰
         BaseCharacterAttr target = FindObjectOfType<EnemyAttr>();
         if (target == null || target.isDead)
         {
-            Debug.Log("Ã»ÓĞ¿ÉÓÃµÄÄ¿±ê£¡");
+            Debug.Log("æ²¡æœ‰å¯ç”¨çš„ç›®æ ‡ï¼");
             return;
         }
 
-        // µ÷ÓÃSkillManagerÊÍ·Å¼¼ÄÜ
+        // è°ƒç”¨SkillManageré‡Šæ”¾æŠ€èƒ½
         bool success = SkillManager.Instance?.CastCharacterSkill(player, skill.skillID, target) ?? false;
 
         if (success)
         {
-            Debug.Log($"Íæ¼ÒÊÍ·ÅÁË¼¼ÄÜ£º{skill.skillName}");
-            // ÊÍ·Å³É¹¦ºóÒş²Ø·¶Î§
+            Debug.Log($"ç©å®¶é‡Šæ”¾äº†æŠ€èƒ½ï¼š{skill.skillName}");
+            // é‡Šæ”¾æˆåŠŸåéšè—èŒƒå›´
             UIManager.Instance?.rangeVisualizer.HideAllRange();
         }
         else
         {
-            Debug.Log($"¼¼ÄÜÊÍ·ÅÊ§°Ü£º{skill.skillName}£¨ÀäÈ´ÖĞ/AP²»×ã/MP²»×ã£©");
+            Debug.Log($"æŠ€èƒ½é‡Šæ”¾å¤±è´¥ï¼š{skill.skillName}ï¼ˆå†·å´ä¸­/APä¸è¶³/MPä¸è¶³ï¼‰");
         }
     }
 
     /// <summary>
-    /// ¸üĞÂ¼¼ÄÜÀäÈ´ÏÔÊ¾£¨Ã¿Ö¡µ÷ÓÃ£¬»òÍ¨¹ıÊÂ¼şµ÷ÓÃ£©
+    /// æ›´æ–°æŠ€èƒ½å†·å´æ˜¾ç¤ºï¼ˆæ¯å¸§è°ƒç”¨ï¼Œæˆ–é€šè¿‡äº‹ä»¶è°ƒç”¨ï¼‰
     /// </summary>
     public void UpdateCoolDownDisplay()
     {
         if (skill == null || coolDownMask == null) return;
 
-        // ¼ÆËãÀäÈ´°Ù·Ö±È
+        // è®¡ç®—å†·å´ç™¾åˆ†æ¯”
         float coolDownPercent = (float)skill.currentCoolDown / skill.coolDownRound;
         coolDownMask.fillAmount = coolDownPercent;
 
-        // ÀäÈ´ÖĞ½ûÓÃ°´Å¥
+        // å†·å´ä¸­ç¦ç”¨æŒ‰é’®
         if (btn != null)
         {
             btn.interactable = skill.currentCoolDown <= 0;

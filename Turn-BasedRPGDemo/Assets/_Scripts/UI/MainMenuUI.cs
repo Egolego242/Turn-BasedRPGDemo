@@ -5,32 +5,33 @@ using System;
 
 public class MainMenuUI : MonoBehaviour
 {
-    // ========== 1. UIÒıÓÃ£¨ÔÚUnity±à¼­Æ÷ÀïÍÏ½øÈ¥£© ==========
-    [Header("Ö÷²Ëµ¥Ãæ°å")]
+    // ========== 1. UIå¼•ç”¨ï¼ˆåœ¨Unityç¼–è¾‘å™¨é‡Œæ‹–è¿›å»ï¼‰ ==========
+    [Header("ä¸»èœå•é¢æ¿")]
     public GameObject mainMenuPanel;
+    public GameObject DefeatPanel;
     public Button btnSaveGame;
     public Button btnLoadGame;
     public Button btnExitGame;
 
-    [Header("´æµµÎ»Ãæ°å")]
+    [Header("å­˜æ¡£ä½é¢æ¿")]
     public GameObject saveSlotPanel;
     public TMP_Text txtSlotPanelTitle;
     public SaveSlotUI[] saveSlots = new SaveSlotUI[3];
     public Button btnBackFromSlot;
 
-    [Header("È·ÈÏ¸²¸Çµ¯´°")]
+    [Header("ç¡®è®¤è¦†ç›–å¼¹çª—")]
     public GameObject confirmPanel;
     public TMP_Text txtConfirmMessage;
     public Button btnConfirm;
     public Button btnCancel;
 
-    // ========== 2. ÄÚ²¿±äÁ¿ ==========
+    // ========== 2. å†…éƒ¨å˜é‡ ==========
     private enum MenuMode { None, Save, Load }
     private MenuMode currentMode = MenuMode.None;
     private int pendingSaveSlot = -1;
     private GameObject playerObj;
 
-    // ========== 3. ´æµµÎ»UI½á¹¹Ìå ==========
+    // ========== 3. å­˜æ¡£ä½UIç»“æ„ä½“ ==========
     [System.Serializable]
     public class SaveSlotUI
     {
@@ -39,47 +40,47 @@ public class MainMenuUI : MonoBehaviour
         public Button clickBtn;
     }
 
-    // ========== 4. UnityÉúÃüÖÜÆÚ ==========
+    // ========== 4. Unityç”Ÿå‘½å‘¨æœŸ ==========
     private void Awake()
     {
-        // ³õÊ¼»¯£ºËùÓĞÃæ°åÄ¬ÈÏÒş²Ø
+        // åˆå§‹åŒ–ï¼šæ‰€æœ‰é¢æ¿é»˜è®¤éšè—
         mainMenuPanel.SetActive(false);
         saveSlotPanel.SetActive(false);
         confirmPanel.SetActive(false);
 
-        // ²éÕÒÍæ¼Ò¶ÔÏó
+        // æŸ¥æ‰¾ç©å®¶å¯¹è±¡
         playerObj = GameObject.FindGameObjectWithTag("Player");
 
-        // °ó¶¨Ö÷²Ëµ¥°´Å¥ÊÂ¼ş
+        // ç»‘å®šä¸»èœå•æŒ‰é’®äº‹ä»¶
         btnSaveGame.onClick.AddListener(OnClickSaveGameMenu);
         btnLoadGame.onClick.AddListener(OnClickLoadGameMenu);
         btnExitGame.onClick.AddListener(OnClickExitGame);
 
-        // °ó¶¨´æµµÎ»Ãæ°å°´Å¥ÊÂ¼ş
+        // ç»‘å®šå­˜æ¡£ä½é¢æ¿æŒ‰é’®äº‹ä»¶
         btnBackFromSlot.onClick.AddListener(OnClickBackFromSlot);
 
-        // °ó¶¨3¸ö´æµµÎ»µã»÷ÊÂ¼ş
+        // ç»‘å®š3ä¸ªå­˜æ¡£ä½ç‚¹å‡»äº‹ä»¶
         for (int i = 0; i < saveSlots.Length; i++)
         {
             int slotIndex = i;
             saveSlots[i].clickBtn.onClick.AddListener(() => OnClickSaveSlot(slotIndex));
         }
 
-        // °ó¶¨È·ÈÏµ¯´°°´Å¥ÊÂ¼ş
+        // ç»‘å®šç¡®è®¤å¼¹çª—æŒ‰é’®äº‹ä»¶
         btnConfirm.onClick.AddListener(OnConfirmSave);
         btnCancel.onClick.AddListener(OnCancelSave);
     }
 
     private void Update()
     {
-        // °´ESC¼ü¿ª¹ØÖ÷²Ëµ¥
+        // æŒ‰ESCé”®å¼€å…³ä¸»èœå•
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             ToggleMainMenu();
         }
     }
 
-    // ========== 5. Ö÷²Ëµ¥Âß¼­ ==========
+    // ========== 5. ä¸»èœå•é€»è¾‘ ==========
     private void ToggleMainMenu()
     {
         if (saveSlotPanel.activeSelf)
@@ -103,16 +104,17 @@ public class MainMenuUI : MonoBehaviour
         currentMode = MenuMode.Save;
         mainMenuPanel.SetActive(false);
         saveSlotPanel.SetActive(true);
-        txtSlotPanelTitle.text = "´æ´¢ÓÎÏ·";
+        txtSlotPanelTitle.text = "å­˜å‚¨æ¸¸æˆ";
         RefreshAllSaveSlots();
     }
 
-    private void OnClickLoadGameMenu()
+    public void OnClickLoadGameMenu()
     {
         currentMode = MenuMode.Load;
         mainMenuPanel.SetActive(false);
+        DefeatPanel.SetActive(false);
         saveSlotPanel.SetActive(true);
-        txtSlotPanelTitle.text = "¼ÓÔØÓÎÏ·";
+        txtSlotPanelTitle.text = "åŠ è½½æ¸¸æˆ";
         RefreshAllSaveSlots();
     }
 
@@ -125,7 +127,7 @@ public class MainMenuUI : MonoBehaviour
 #endif
     }
 
-    // ========== 6. ´æµµÎ»Ãæ°åÂß¼­ ==========
+    // ========== 6. å­˜æ¡£ä½é¢æ¿é€»è¾‘ ==========
     private void RefreshAllSaveSlots()
     {
         for (int i = 0; i < saveSlots.Length; i++)
@@ -144,14 +146,14 @@ public class MainMenuUI : MonoBehaviour
         if (hasSave)
         {
             GameSaveData saveData = SaveManager.Instance.GetSaveInfo(slotIndex);
-            slotUI.infoText.text = $"´æµµÎ» {slotIndex + 1}\n" +
-                                    $"½ÇÉ«µÈ¼¶£ºLv.{saveData.level}\n" +
-                                    $"´æµµÊ±¼ä£º{saveData.saveTime}";
+            slotUI.infoText.text = $"å­˜æ¡£ä½ {slotIndex + 1}\n" +
+                                    $"è§’è‰²ç­‰çº§ï¼šLv.{saveData.level}\n" +
+                                    $"å­˜æ¡£æ—¶é—´ï¼š{saveData.saveTime}";
             slotUI.clickBtn.interactable = currentMode == MenuMode.Load || currentMode == MenuMode.Save;
         }
         else
         {
-            slotUI.infoText.text = $"´æµµÎ» {slotIndex + 1}\n¿Õ´æµµ";
+            slotUI.infoText.text = $"å­˜æ¡£ä½ {slotIndex + 1}\nç©ºå­˜æ¡£";
             slotUI.clickBtn.interactable = currentMode == MenuMode.Save;
         }
     }
@@ -164,7 +166,7 @@ public class MainMenuUI : MonoBehaviour
             if (hasSave)
             {
                 pendingSaveSlot = slotIndex;
-                txtConfirmMessage.text = $"È·¶¨Òª¸²¸Ç¡¸´æµµÎ» {slotIndex + 1}¡¹Âğ£¿\nÉÏ´Î´æµµÊ±¼ä£º{SaveManager.Instance.GetSaveInfo(slotIndex).saveTime}";
+                txtConfirmMessage.text = $"ç¡®å®šè¦è¦†ç›–ã€Œå­˜æ¡£ä½ {slotIndex + 1}ã€å—ï¼Ÿ\nä¸Šæ¬¡å­˜æ¡£æ—¶é—´ï¼š{SaveManager.Instance.GetSaveInfo(slotIndex).saveTime}";
                 confirmPanel.SetActive(true);
             }
             else
@@ -189,7 +191,7 @@ public class MainMenuUI : MonoBehaviour
         currentMode = MenuMode.None;
     }
 
-    // ========== 7. È·ÈÏ¸²¸Çµ¯´°Âß¼­ ==========
+    // ========== 7. ç¡®è®¤è¦†ç›–å¼¹çª—é€»è¾‘ ==========
     private void OnConfirmSave()
     {
         if (pendingSaveSlot >= 0)
@@ -206,14 +208,14 @@ public class MainMenuUI : MonoBehaviour
         pendingSaveSlot = -1;
     }
 
-    // ========== 8. ºËĞÄ´æµµ/¶Áµµµ÷ÓÃ ==========
+    // ========== 8. æ ¸å¿ƒå­˜æ¡£/è¯»æ¡£è°ƒç”¨ ==========
     private void DoSaveGame(int slotIndex)
     {
         if (playerObj == null) playerObj = GameObject.FindGameObjectWithTag("Player");
-        Debug.Log($"¶ÔÏó£º{playerObj}");
+        Debug.Log($"å¯¹è±¡ï¼š{playerObj}");
         SaveManager.Instance.SaveGame(slotIndex, playerObj);
         RefreshSingleSaveSlot(slotIndex);
-        Debug.Log($"´æ´¢³É¹¦£¡´æµµÎ»£º{slotIndex + 1}");
+        Debug.Log($"å­˜å‚¨æˆåŠŸï¼å­˜æ¡£ä½ï¼š{slotIndex + 1}");
     }
 
     private void DoLoadGame(int slotIndex)
@@ -226,7 +228,7 @@ public class MainMenuUI : MonoBehaviour
             mainMenuPanel.SetActive(false);
             Time.timeScale = 1f;
             currentMode = MenuMode.None;
-            Debug.Log($"¼ÓÔØ³É¹¦£¡´æµµÎ»£º{slotIndex + 1}");
+            Debug.Log($"åŠ è½½æˆåŠŸï¼å­˜æ¡£ä½ï¼š{slotIndex + 1}");
         }
     }
 }

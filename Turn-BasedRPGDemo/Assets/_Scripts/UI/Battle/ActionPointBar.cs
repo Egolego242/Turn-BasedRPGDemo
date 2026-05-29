@@ -3,28 +3,28 @@ using UnityEngine.UI;
 
 public class ActionPointBar : MonoBehaviour
 {
-    [Header("ÅäÖÃ")]
-    public GameObject apPointPrefab; // ĞĞ¶¯µãÔ¤ÖÆÌå£¨ÂÌµã/ºìµã£©
-    public Transform pointParent; // ¸¸ÎïÌå£¨Horizontal Layout Group£©
-    public Color availableColor = Color.green; // ¿ÉÓÃµãÑÕÉ«
-    public Color usedColor = Color.red; // ÒÑÓÃµãÑÕÉ«
+    [Header("é…ç½®")]
+    public GameObject apPointPrefab; // è¡ŒåŠ¨ç‚¹é¢„åˆ¶ä½“ï¼ˆç»¿ç‚¹/çº¢ç‚¹ï¼‰
+    public Transform pointParent; // çˆ¶ç‰©ä½“ï¼ˆHorizontal Layout Groupï¼‰
+    public Color availableColor = Color.green; // å¯ç”¨ç‚¹é¢œè‰²
+    public Color usedColor = Color.red; // å·²ç”¨ç‚¹é¢œè‰²
 
-    // ¸üĞÂĞĞ¶¯µãÏÔÊ¾
+    // æ›´æ–°è¡ŒåŠ¨ç‚¹æ˜¾ç¤º
     public void UpdateActionPoint(BaseCharacterAttr character)
     {
-        // Çå¿Õ¾ÉµÄ
+        // æ¸…ç©ºæ—§çš„
         foreach (Transform child in pointParent) Destroy(child.gameObject);
 
-        // »ñÈ¡×î´ó/µ±Ç°ĞĞ¶¯µã
+        // è·å–æœ€å¤§/å½“å‰è¡ŒåŠ¨ç‚¹
         float maxAP = character.GetAttrValue(AttributeType.MaxAP);
         float currentAP = character.GetAttrValue(AttributeType.CurrentAP);
 
-        // Éú³ÉĞĞ¶¯µã
+        // ç”Ÿæˆè¡ŒåŠ¨ç‚¹
         for (int i = 0; i < maxAP; i++)
         {
             GameObject pointObj = Instantiate(apPointPrefab, pointParent);
             Image pointImg = pointObj.GetComponent<Image>();
-            // Ğ¡ÓÚµ±Ç°APµÄÎª¿ÉÓÃ£¨ÂÌ£©£¬·ñÔòÎªÒÑÓÃ£¨ºì£©
+            // å°äºå½“å‰APçš„ä¸ºå¯ç”¨ï¼ˆç»¿ï¼‰ï¼Œå¦åˆ™ä¸ºå·²ç”¨ï¼ˆçº¢ï¼‰
             pointImg.color = i < currentAP ? availableColor : usedColor;
         }
     }

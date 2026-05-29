@@ -4,51 +4,57 @@ using System.Linq;
 using System;
 
 /// <summary>
-/// »ØºÏÕ½¶·ºËĞÄ¹ÜÀíÆ÷£¨Ô­TurnBattleManagerÖØ¹¹°æ£©
-/// ¸ºÔğ»ØºÏÁ÷³Ì¡¢ĞĞ¶¯µã¹ÜÀí¡¢È«¾Ö»ØºÏÂÖ»»¡¢Õ½¶·Ê¤¸ºÅĞ¶¨
+/// å›åˆæˆ˜æ–—æ ¸å¿ƒç®¡ç†å™¨ï¼ˆåŸTurnBattleManageré‡æ„ç‰ˆï¼‰
+/// è´Ÿè´£å›åˆæµç¨‹ã€è¡ŒåŠ¨ç‚¹ç®¡ç†ã€å…¨å±€å›åˆè½®æ¢ã€æˆ˜æ–—èƒœè´Ÿåˆ¤å®š
 /// </summary>
 public class TurnBattleManager : MonoBehaviour
 {
     public static TurnBattleManager Instance { get; private set; }
 
-    #region Õ½¶·ÅäÖÃ
+    #region æˆ˜æ–—é…ç½®
     [Header("Battle Settings")]
-    [Tooltip("È«¾Ö×î´óĞĞ¶¯µãÉÏÏŞ")]
+    [Tooltip("å…¨å±€æœ€å¤§è¡ŒåŠ¨ç‚¹ä¸Šé™")]
     public int globalMaxAP = 6;
-    [Tooltip("Ã¿ÂÖ»Ö¸´µÄĞĞ¶¯µãÊıÁ¿")]
+    [Tooltip("æ¯è½®æ¢å¤çš„è¡ŒåŠ¨ç‚¹æ•°é‡")]
     public int roundRecoverAP = 4;
     #endregion
 
-    #region Õ½¶·×´Ì¬
-    // ËùÓĞ²ÎÕ½½ÇÉ«£¨Íæ¼Ò+µĞÈË£©
+    #region æˆ˜æ–—çŠ¶æ€
+    // æ‰€æœ‰å‚æˆ˜è§’è‰²ï¼ˆç©å®¶+æ•Œäººï¼‰
     private List<BaseCharacterAttr> allCombatants = new List<BaseCharacterAttr>();
-    // °´ÏÈÊÖÖµÅÅĞòºóµÄ²ÎÕ½½ÇÉ«
+    // æŒ‰å…ˆæ‰‹å€¼æ’åºåçš„å‚æˆ˜è§’è‰²
     private List<BaseCharacterAttr> sortedCombatants = new List<BaseCharacterAttr>();
-    // µ±Ç°ĞĞ¶¯½ÇÉ«Ë÷Òı
+    // å½“å‰è¡ŒåŠ¨è§’è‰²ç´¢å¼•
     private int currentActorIndex = -1;
-    // Õ½¶·ÊÇ·ñ¼¤»î
+    // æˆ˜æ–—æ˜¯å¦æ¿€æ´»
     private bool isBattleActive = false;
+    // æ˜¯å¦å¤„äºç»“ç®—é˜¶æ®µï¼ˆé˜»æ­¢é‡å¤è§¦å‘ï¼‰
+    private bool isSettling = false;
+    // å½“å‰ç»“ç®—æ•°æ®
+    private BattleSettlementData currentSettlementData;
     #endregion
 
-    #region Õ½¶·ÊÂ¼ş
-    /// <summary>Õ½¶·¿ªÊ¼£¨²ÎÊı£ºÅÅĞòºóµÄ²ÎÕ½½ÇÉ«ÁĞ±í£©</summary>
+    #region æˆ˜æ–—äº‹ä»¶
+    /// <summary>æˆ˜æ–—å¼€å§‹ï¼ˆå‚æ•°ï¼šæ’åºåçš„å‚æˆ˜è§’è‰²åˆ—è¡¨ï¼‰</summary>
     public static event Action<List<BaseCharacterAttr>> OnBattleStart;
-    /// <summary>»ØºÏÇĞ»»£¨²ÎÊı£ºµ±Ç°ĞĞ¶¯½ÇÉ«£©</summary>
+    /// <summary>å›åˆåˆ‡æ¢ï¼ˆå‚æ•°ï¼šå½“å‰è¡ŒåŠ¨è§’è‰²ï¼‰</summary>
     public static event Action<BaseCharacterAttr> OnTurnChanged;
-    /// <summary>Õ½¶·½áÊø£¨²ÎÊı£ºÍæ¼ÒÊÇ·ñÊ¤Àû£©</summary>
+    /// <summary>æˆ˜æ–—ç»“æŸï¼ˆå‚æ•°ï¼šç©å®¶æ˜¯å¦èƒœåˆ©ï¼‰</summary>
     public static event Action<bool> OnBattleEnd;
-    /// <summary>ĞĞ¶¯µã±ä¸ü£¨Ë¢ĞÂUIÓÃ£©</summary>
+    /// <summary>è¡ŒåŠ¨ç‚¹å˜æ›´ï¼ˆåˆ·æ–°UIç”¨ï¼‰</summary>
     public static event Action OnActionPointChanged;
-    /// <summary>µ¥¸ö½ÇÉ«»ØºÏ½áÊø</summary>
+    /// <summary>å•ä¸ªè§’è‰²å›åˆç»“æŸ</summary>
     public event Action OnTurnEnd;
+    /// <summary>æˆ˜æ–—ç»“ç®—è§¦å‘ï¼ˆå‚æ•°ï¼šç»“ç®—æ•°æ®ï¼Œå«å¥–åŠ±/èƒœè´Ÿï¼‰</summary>
+    public static event Action<BattleSettlementData> OnBattleSettlement;
     #endregion
 
-    private BaseCharacterAttr currentActor; // µ±Ç°ÕıÔÚĞĞ¶¯µÄ½ÇÉ«
+    private BaseCharacterAttr currentActor; // å½“å‰æ­£åœ¨è¡ŒåŠ¨çš„è§’è‰²
 
-    // ========== ĞÂÔö£º×¨ÃÅÓÃÓÚ´¥·¢ĞĞ¶¯µã±ä»¯ÊÂ¼şµÄ¹«¹²¾²Ì¬·½·¨ ==========
+    // ========== æ–°å¢ï¼šä¸“é—¨ç”¨äºè§¦å‘è¡ŒåŠ¨ç‚¹å˜åŒ–äº‹ä»¶çš„å…¬å…±é™æ€æ–¹æ³• ==========
     public static void TriggerActionPointChanged()
     {
-        // Ö»ÓĞÔÚ¶¨ÒåÊÂ¼şµÄÀàÄÚ²¿£¬²ÅÄÜÖ±½Óµ÷ÓÃÊÂ¼ş
+        // åªæœ‰åœ¨å®šä¹‰äº‹ä»¶çš„ç±»å†…éƒ¨ï¼Œæ‰èƒ½ç›´æ¥è°ƒç”¨äº‹ä»¶
         OnActionPointChanged?.Invoke();
     }
 
@@ -59,73 +65,77 @@ public class TurnBattleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// ´¥·¢Õ½¶·£¨Íæ¼Ò½øÈë¾¯½ä·¶Î§/µĞÈËÖ÷¶¯¹¥»÷£©
+    /// è§¦å‘æˆ˜æ–—ï¼ˆç©å®¶è¿›å…¥è­¦æˆ’èŒƒå›´/æ•Œäººä¸»åŠ¨æ”»å‡»ï¼‰
     /// </summary>
     public void TriggerBattle(BaseCharacterAttr player, List<BaseCharacterAttr> enemies)
     {
         if (isBattleActive) return;
         isBattleActive = true;
+        isSettling = false;
 
-        // ÊÕ¼¯Õ½¶·½ÇÉ«
+        // æˆ˜å‰è‡ªåŠ¨å­˜æ¡£ï¼ˆé˜²å´©æºƒ/å¼‚å¸¸å¯¼è‡´è¿›åº¦ä¸¢å¤±ï¼‰
+        SaveManager.Instance?.QuickSaveBeforeBattle(player.gameObject);
+
+        // æ”¶é›†æˆ˜æ–—è§’è‰²
         allCombatants.Clear();
         allCombatants.Add(player);
         allCombatants.AddRange(enemies);
 
-        // ³õÊ¼»¯ËùÓĞ²ÎÕ½½ÇÉ«Õ½¶·×´Ì¬
+        // åˆå§‹åŒ–æ‰€æœ‰å‚æˆ˜è§’è‰²æˆ˜æ–—çŠ¶æ€
         foreach (var combatant in allCombatants)
         {
             combatant.isInBattle = true;
             combatant.isMyTurn = false;
             combatant.hasActInRound = false;
 
-            // ³õÊ¼»¯ĞĞ¶¯µã
+            // åˆå§‹åŒ–è¡ŒåŠ¨ç‚¹
             combatant.SetAttrValue(AttributeType.MaxAP, globalMaxAP);
             combatant.SetAttrValue(AttributeType.CurrentAP, roundRecoverAP);
 
-            // Õ½¶·¶¯»­ÇĞ»»
+            // æˆ˜æ–—åŠ¨ç”»åˆ‡æ¢
             Animator anim = combatant.GetComponent<Animator>();
             if (anim != null) anim.SetBool("BattleMode", true);
 
-            // µĞÈË´¦Àí£ºÍ£Ö¹Ñ²Âß+ÆôÓÃĞĞÎªÊ÷Õ½¶··ÖÖ§+¸³Öµ¹¥»÷Ä¿±ê
+            // æ•Œäººå¤„ç†ï¼šåœæ­¢å·¡é€»+å¯ç”¨è¡Œä¸ºæ ‘æˆ˜æ–—åˆ†æ”¯+èµ‹å€¼æ”»å‡»ç›®æ ‡
             if (combatant is EnemyAttr enemy)
             {
                 enemy.StopPatrol();
                 enemy.attackTarget = player.transform;
-                enemy.behaviorTree?.EnableBehavior(); // ÆôÓÃĞĞÎªÊ÷
+                enemy.behaviorTree?.EnableBehavior(); // å¯ç”¨è¡Œä¸ºæ ‘
             }
         }
 
-        // ÏÈ¹¥ÖµÅÅĞò
+        // å…ˆæ”»å€¼æ’åº
         sortedCombatants = allCombatants.OrderByDescending(c => c.GetInitiative()).ToList();
-        // ´òÓ¡ÅÅĞòÈÕÖ¾£¨¹Ø¼ü£ºÑéÖ¤ÏÈ¹¥Öµ£©
-        Debug.Log("Õ½¶·¿ªÊ¼£¡ÏÈ¹¥Ë³Ğò£º" + string.Join(" > ",
-            sortedCombatants.Select(c => $"{c.name} (ÏÈ¹¥Öµ£º{c.GetInitiative()})")));
+        // æ‰“å°æ’åºæ—¥å¿—ï¼ˆå…³é”®ï¼šéªŒè¯å…ˆæ”»å€¼ï¼‰
+        Debug.Log("æˆ˜æ–—å¼€å§‹ï¼å…ˆæ”»é¡ºåºï¼š" + string.Join(" > ",
+            sortedCombatants.Select(c => $"{c.name} (å…ˆæ”»å€¼ï¼š{c.GetInitiative()})")));
         for (int i = 0; i < sortedCombatants.Count; i++)
         {
             var c = sortedCombatants[i];
-            Debug.Log($"{i + 1}. {c.name} | ÏÈ¹¥Öµ£º{c.GetInitiative()} | µÈ¼¶£º{c.GetAttrValue(AttributeType.Level)} | ÖÇÁ¦£º{c.GetAttrValue(AttributeType.Intelligence)}");
+            Debug.Log($"{i + 1}. {c.name} | å…ˆæ”»å€¼ï¼š{c.GetInitiative()} | ç­‰çº§ï¼š{c.GetAttrValue(AttributeType.Level)} | æ™ºåŠ›ï¼š{c.GetAttrValue(AttributeType.Intelligence)}");
         }
 
-        // ========== ĞÂÔö£ºÕ½¶·¿ªÊ¼ÊÂ¼ş´¥·¢ ==========
+        // ========== æ–°å¢ï¼šæˆ˜æ–—å¼€å§‹äº‹ä»¶è§¦å‘ ==========
         OnBattleStart?.Invoke(sortedCombatants);
 
-        // Æô¶¯µÚÒ»¸ö½ÇÉ«»ØºÏ
+        // å¯åŠ¨ç¬¬ä¸€ä¸ªè§’è‰²å›åˆ
         StartNextActorTurn();
     }
 
     /// <summary>
-    /// ÇĞ»»ÏÂÒ»¸ö½ÇÉ«»ØºÏ
+    /// åˆ‡æ¢ä¸‹ä¸€ä¸ªè§’è‰²å›åˆ
     /// </summary>
     public void StartNextActorTurn()
     {
-        // ¼ì²é±¾»ØºÏÊÇ·ñËùÓĞ½ÇÉ«¶¼ÒÑĞĞ¶¯
+        // æ£€æŸ¥æœ¬å›åˆæ˜¯å¦æ‰€æœ‰è§’è‰²éƒ½å·²è¡ŒåŠ¨
         if (sortedCombatants.All(c => c.hasActInRound))
         {
             EnterNewGlobalRound();
             return;
         }
 
-        // ÕÒµ½ÏÂÒ»¸öÎ´ĞĞ¶¯¡¢Î´ËÀÍöµÄ½ÇÉ«
+        // æ‰¾åˆ°ä¸‹ä¸€ä¸ªæœªè¡ŒåŠ¨ã€æœªæ­»äº¡çš„è§’è‰²
         if (currentActorIndex == -1) currentActorIndex = 0;
         else currentActorIndex = (currentActorIndex + 1) % sortedCombatants.Count;
 
@@ -136,40 +146,40 @@ public class TurnBattleManager : MonoBehaviour
             nextActor = sortedCombatants[currentActorIndex];
         }
 
-        // ¼¤»î½ÇÉ«»ØºÏ
+        // æ¿€æ´»è§’è‰²å›åˆ
         nextActor.isMyTurn = true;
-        Debug.Log($"{nextActor.name} µÄ»ØºÏ£¡Ê£ÓàĞĞ¶¯µã£º{nextActor.GetAttrValue(AttributeType.CurrentAP)}");
+        Debug.Log($"{nextActor.name} çš„å›åˆï¼å‰©ä½™è¡ŒåŠ¨ç‚¹ï¼š{nextActor.GetAttrValue(AttributeType.CurrentAP)}");
 
-        // ========== ĞÂÔö£º»ØºÏÇĞ»»ÊÂ¼ş´¥·¢ ==========
+        // ========== æ–°å¢ï¼šå›åˆåˆ‡æ¢äº‹ä»¶è§¦å‘ ==========
         OnTurnChanged?.Invoke(nextActor);
-        OnActionPointChanged?.Invoke(); // Ë¢ĞÂĞĞ¶¯µãUI
+        OnActionPointChanged?.Invoke(); // åˆ·æ–°è¡ŒåŠ¨ç‚¹UI
 
-        // ========== ºËĞÄĞŞ¸Ä£ºµĞÈË»ØºÏ½»ÓÉĞĞÎªÊ÷Ö´ĞĞ ==========
+        // ========== æ ¸å¿ƒä¿®æ”¹ï¼šæ•Œäººå›åˆäº¤ç”±è¡Œä¸ºæ ‘æ‰§è¡Œ ==========
         if (nextActor is EnemyAttr enemy)
         {
-            // ÑÓ³Ù1ÃëÖ´ĞĞ£¬¸øĞĞÎªÊ÷ÁôÖ´ĞĞÊ±¼ä£¬ºÍÔ­Âß¼­±£³ÖÒ»ÖÂ
+            // å»¶è¿Ÿ1ç§’æ‰§è¡Œï¼Œç»™è¡Œä¸ºæ ‘ç•™æ‰§è¡Œæ—¶é—´ï¼Œå’ŒåŸé€»è¾‘ä¿æŒä¸€è‡´
             Invoke(nameof(ExecuteEnemyBehaviorTree), 1f);
         }
     }
 
     /// <summary>
-    /// Ö´ĞĞµĞÈËĞĞÎªÊ÷£¨×Ô¶¯ĞĞ¶¯/×Ô¶¯½áÊø»ØºÏ£©
+    /// æ‰§è¡Œæ•Œäººè¡Œä¸ºæ ‘ï¼ˆè‡ªåŠ¨è¡ŒåŠ¨/è‡ªåŠ¨ç»“æŸå›åˆï¼‰
     /// </summary>
     private void ExecuteEnemyBehaviorTree()
     {
         BaseCharacterAttr currentEnemy = sortedCombatants[currentActorIndex];
-        // È«Á¿Ğ£Ñé£ºËÀÍö/·Çµ±Ç°»ØºÏ ¡ú Ö±½Ó½áÊø»ØºÏ
+        // å…¨é‡æ ¡éªŒï¼šæ­»äº¡/éå½“å‰å›åˆ â†’ ç›´æ¥ç»“æŸå›åˆ
         if (currentEnemy.isDead || !currentEnemy.isMyTurn)
         {
-            EndTurn(currentEnemy); // ¸ÄÓÃÍ¨ÓÃ·½·¨
+            EndTurn(currentEnemy); // æ”¹ç”¨é€šç”¨æ–¹æ³•
             return;
         }
-        // ĞĞÎªÊ÷»á×Ô¶¯Ö´ĞĞÕ½¶··ÖÖ§µÄ¼¼ÄÜ/ÆÕ¹¥/ÒÆ¶¯Âß¼­£¬×îÖÕµ÷ÓÃEndPersonalTurn½áÊø»ØºÏ
-        // ĞĞÎªÊ÷Ö´ĞĞÍê±Ïºó£¬»á×Ô¶¯´¥·¢»ØºÏÇĞ»»£¬ÎŞĞè¶îÍâÓ²±àÂë
+        // è¡Œä¸ºæ ‘ä¼šè‡ªåŠ¨æ‰§è¡Œæˆ˜æ–—åˆ†æ”¯çš„æŠ€èƒ½/æ™®æ”»/ç§»åŠ¨é€»è¾‘ï¼Œæœ€ç»ˆè°ƒç”¨EndPersonalTurnç»“æŸå›åˆ
+        // è¡Œä¸ºæ ‘æ‰§è¡Œå®Œæ¯•åï¼Œä¼šè‡ªåŠ¨è§¦å‘å›åˆåˆ‡æ¢ï¼Œæ— éœ€é¢å¤–ç¡¬ç¼–ç 
     }
 
     /// <summary>
-    /// È«¾ÖĞÂ»ØºÏ£º»Ö¸´ĞĞ¶¯µã+ÖØÖÃÀäÈ´
+    /// å…¨å±€æ–°å›åˆï¼šæ¢å¤è¡ŒåŠ¨ç‚¹+é‡ç½®å†·å´
     /// </summary>
     private void EnterNewGlobalRound()
     {
@@ -177,7 +187,7 @@ public class TurnBattleManager : MonoBehaviour
         {
             if (combatant.isDead) continue;
 
-            // »Ö¸´ĞĞ¶¯µã
+            // æ¢å¤è¡ŒåŠ¨ç‚¹
             int newAP = Mathf.Min(
                 combatant.GetAttrIntValue(AttributeType.CurrentAP) + roundRecoverAP,
                 globalMaxAP
@@ -185,64 +195,67 @@ public class TurnBattleManager : MonoBehaviour
             combatant.SetAttrValue(AttributeType.CurrentAP, newAP);
             combatant.hasActInRound = false;
 
-            // µĞÈË¼¼ÄÜÀäÈ´¼õÉÙ
+            // æ•ŒäººæŠ€èƒ½å†·å´å‡å°‘
             if (combatant is EnemyAttr enemy)
             {
                 enemy.ReduceSkillCoolDown();
             }
         }
 
-        // Ë¢ĞÂËùÓĞ¼¼ÄÜÀäÈ´
+        // åˆ·æ–°æ‰€æœ‰æŠ€èƒ½å†·å´
         SkillManager.Instance?.RefreshAllSkillCoolDown();
-        Debug.Log("===== ĞÂ»ØºÏ¿ªÊ¼£¡ËùÓĞ´æ»î½ÇÉ«»Ö¸´ĞĞ¶¯µã =====");
+        Debug.Log("===== æ–°å›åˆå¼€å§‹ï¼æ‰€æœ‰å­˜æ´»è§’è‰²æ¢å¤è¡ŒåŠ¨ç‚¹ =====");
         StartNextActorTurn();
     }
 
 
     /// <summary>
-    /// Í¨ÓÃ»ØºÏ½áÊø·½·¨£¨´¦ÀíÍæ¼Ò/µĞÈËµÄ»ØºÏ½áÊøÂß¼­£©
+    /// é€šç”¨å›åˆç»“æŸæ–¹æ³•ï¼ˆå¤„ç†ç©å®¶/æ•Œäººçš„å›åˆç»“æŸé€»è¾‘ï¼‰
     /// </summary>
-    /// <param name="actor">Òª½áÊø»ØºÏµÄ½ÇÉ«</param>
+    /// <param name="actor">è¦ç»“æŸå›åˆçš„è§’è‰²</param>
     public void EndTurn(BaseCharacterAttr actor)
     {
-        // Èİ´í£º¿ÕÖµ/·Çµ±Ç°»ØºÏ/ÒÑËÀÍö½ÇÉ«Ö±½Ó·µ»Ø
+        // å®¹é”™ï¼šç©ºå€¼/éå½“å‰å›åˆ/å·²æ­»äº¡è§’è‰²ç›´æ¥è¿”å›
         if (actor == null || !actor.isMyTurn || actor.isDead)
         {
-            Debug.LogWarning($"[{actor?.name}] ÎŞ·¨½áÊø»ØºÏ£º½ÇÉ«Îª¿Õ/·Çµ±Ç°»ØºÏ/ÒÑËÀÍö");
+            Debug.LogWarning($"[{actor?.name}] æ— æ³•ç»“æŸå›åˆï¼šè§’è‰²ä¸ºç©º/éå½“å‰å›åˆ/å·²æ­»äº¡");
             return;
         }
 
-        // ºËĞÄ×´Ì¬ÖØÖÃ
+        // æ ¸å¿ƒçŠ¶æ€é‡ç½®
         actor.isMyTurn = false;
-        actor.hasActInRound = true; // ±ê¼Ç±¾È«¾Ö»ØºÏÒÑĞĞ¶¯
-        Debug.Log($"{actor.name} »ØºÏ½áÊø£¬Ê£ÓàAP£º{actor.GetAttrValue(AttributeType.CurrentAP)}");
+        actor.hasActInRound = true; // æ ‡è®°æœ¬å…¨å±€å›åˆå·²è¡ŒåŠ¨
+        Debug.Log($"{actor.name} å›åˆç»“æŸï¼Œå‰©ä½™APï¼š{actor.GetAttrValue(AttributeType.CurrentAP)}");
 
-        // ´¥·¢AP±ä¸üÊÂ¼ş£¨Ë¢ĞÂUI£©
+        // è§¦å‘APå˜æ›´äº‹ä»¶ï¼ˆåˆ·æ–°UIï¼‰
         OnActionPointChanged?.Invoke();
 
-        // ¼ì²éÕ½¶·ÊÇ·ñ½áÊø£¨±ÈÈçµĞÈË¹¥»÷ºóÍæ¼ÒËÀÍö£©
+        // æ£€æŸ¥æˆ˜æ–—æ˜¯å¦ç»“æŸï¼ˆæ¯”å¦‚æ•Œäººæ”»å‡»åç©å®¶æ­»äº¡ï¼‰
         CheckBattleEnd();
 
-        // Æô¶¯ÏÂÒ»¸ö½ÇÉ«µÄ»ØºÏ
+        // ç»“ç®—é˜¶æ®µé˜»æ­¢è¿›å…¥ä¸‹ä¸€å›åˆï¼Œç­‰å¾…ç©å®¶ç¡®è®¤
+        if (isSettling) return;
+
+        // å¯åŠ¨ä¸‹ä¸€ä¸ªè§’è‰²çš„å›åˆ
         StartNextActorTurn();
 
     }
 
     /// <summary>
-    /// ÅĞ¶Ïµ±Ç°ÊÇ·ñÊÇÍæ¼ÒµÄ»ØºÏ£¨Íæ¼ÒËùÓĞÕ½¶·ĞĞÎªµÄºËĞÄĞ£Ñé£©
+    /// åˆ¤æ–­å½“å‰æ˜¯å¦æ˜¯ç©å®¶çš„å›åˆï¼ˆç©å®¶æ‰€æœ‰æˆ˜æ–—è¡Œä¸ºçš„æ ¸å¿ƒæ ¡éªŒï¼‰
     /// </summary>
-    /// <returns>true=Íæ¼Ò»ØºÏ£¬false=·ÇÍæ¼Ò»ØºÏ</returns>
+    /// <returns>true=ç©å®¶å›åˆï¼Œfalse=éç©å®¶å›åˆ</returns>
     public bool IsPlayerTurn()
     {
-        // 1. ·ÇÕ½¶·×´Ì¬£¨Ì½Ë÷Ä£Ê½£©£ºÍæ¼Ò¿É×ÔÓÉĞĞ¶¯£¨·µ»Øtrue£©
+        // 1. éæˆ˜æ–—çŠ¶æ€ï¼ˆæ¢ç´¢æ¨¡å¼ï¼‰ï¼šç©å®¶å¯è‡ªç”±è¡ŒåŠ¨ï¼ˆè¿”å›trueï¼‰
         if (!isBattleActive) return true;
 
-        // 2. Õ½¶·×´Ì¬£ºÕÒµ½µ±Ç°ĞĞ¶¯½ÇÉ«£¬ÅĞ¶ÏÊÇ·ñÊÇÍæ¼ÒÀàĞÍ
-        BaseCharacterAttr currentActor = GetCurrentActor(); // ĞèÊµÏÖ¡¸»ñÈ¡µ±Ç°ĞĞ¶¯½ÇÉ«¡¹µÄ·½·¨
+        // 2. æˆ˜æ–—çŠ¶æ€ï¼šæ‰¾åˆ°å½“å‰è¡ŒåŠ¨è§’è‰²ï¼Œåˆ¤æ–­æ˜¯å¦æ˜¯ç©å®¶ç±»å‹
+        BaseCharacterAttr currentActor = GetCurrentActor(); // éœ€å®ç°ã€Œè·å–å½“å‰è¡ŒåŠ¨è§’è‰²ã€çš„æ–¹æ³•
         return currentActor != null && currentActor is PlayerAttr;
     }
 
-    // ÅäÌ×£º»ñÈ¡µ±Ç°ĞĞ¶¯½ÇÉ«£¨TurnBattleManager ÖĞĞÂÔö£©
+    // é…å¥—ï¼šè·å–å½“å‰è¡ŒåŠ¨è§’è‰²ï¼ˆTurnBattleManager ä¸­æ–°å¢ï¼‰
     private BaseCharacterAttr GetCurrentActor()
     {
         if (currentActorIndex < 0 || currentActorIndex >= sortedCombatants.Count)
@@ -251,47 +264,57 @@ public class TurnBattleManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Íæ¼ÒÊÖ¶¯½áÊø»ØºÏ
+    /// ç©å®¶æ‰‹åŠ¨ç»“æŸå›åˆ
     /// </summary>
     public void PlayerEndTurn()
     {
         BaseCharacterAttr player = allCombatants.FirstOrDefault(c => c is PlayerAttr);
         if (player == null)
         {
-            Debug.LogError("Íæ¼Ò½ÇÉ«²»´æÔÚ£¬ÎŞ·¨½áÊø»ØºÏ");
+            Debug.LogError("ç©å®¶è§’è‰²ä¸å­˜åœ¨ï¼Œæ— æ³•ç»“æŸå›åˆ");
             return;
         }
 
-        // µ÷ÓÃÍ¨ÓÃ»ØºÏ½áÊø·½·¨
+        // è°ƒç”¨é€šç”¨å›åˆç»“æŸæ–¹æ³•
         EndTurn(player);
     }
 
     /// <summary>
-    /// ¼ì²éÕ½¶·½áÊøÌõ¼ş
+    /// æ£€æŸ¥æˆ˜æ–—ç»“æŸæ¡ä»¶ï¼ˆè§¦å‘ç»“ç®—æµç¨‹ï¼Œæš‚åœç­‰å¾…ç©å®¶ç¡®è®¤ï¼‰
     /// </summary>
     public void CheckBattleEnd()
     {
+        if (!isBattleActive || isSettling) return;
+
         bool allPlayerDead = allCombatants.Where(c => c is PlayerAttr).All(c => c.isDead);
         bool allEnemyDead = allCombatants.Where(c => c is EnemyAttr).All(c => c.isDead);
 
         if (allPlayerDead)
         {
-            Debug.Log("Íæ¼Ò·½È«Ãğ£¡Õ½¶·Ê§°Ü");
-            EndBattle(false);
+            isSettling = true;
+            Debug.Log("[TurnBattleManager] ç©å®¶æ–¹å…¨ç­ï¼è¿›å…¥å¤±è´¥ç»“ç®—");
+            Debug.Log($"[TurnBattleManager] OnBattleSettlement è®¢é˜…è€…æ•°é‡: {(OnBattleSettlement != null ? OnBattleSettlement.GetInvocationList().Length : 0)}");
+            currentSettlementData = new BattleSettlementData { isVictory = false };
+            OnBattleSettlement?.Invoke(currentSettlementData);
         }
         else if (allEnemyDead)
         {
-            Debug.Log("µĞ·½È«Ãğ£¡Õ½¶·Ê¤Àû");
-            EndBattle(true);
+            isSettling = true;
+            Debug.Log("[TurnBattleManager] æ•Œæ–¹å…¨ç­ï¼è¿›å…¥èƒœåˆ©ç»“ç®—");
+            Debug.Log($"[TurnBattleManager] OnBattleSettlement è®¢é˜…è€…æ•°é‡: {(OnBattleSettlement != null ? OnBattleSettlement.GetInvocationList().Length : 0)}");
+            currentSettlementData = CollectBattleRewards();
+            OnBattleSettlement?.Invoke(currentSettlementData);
         }
     }
 
     /// <summary>
-    /// ½áÊøÕ½¶·£¬»Ö¸´Ì½Ë÷×´Ì¬
+    /// ç»“æŸæˆ˜æ–—ï¼Œæ¢å¤æ¢ç´¢çŠ¶æ€
     /// </summary>
     private void EndBattle(bool playerWin)
     {
         isBattleActive = false;
+        isSettling = false;
+        currentSettlementData = null;
         GameStateMgr.Instance?.SwitchGameState(GameStateMgr.GamePlayState.ExploreState);
 
         foreach (var combatant in allCombatants)
@@ -299,26 +322,93 @@ public class TurnBattleManager : MonoBehaviour
             combatant.isInBattle = false;
             combatant.isMyTurn = false;
 
-            // ÍË³öÕ½¶·¶¯»­
+            // é€€å‡ºæˆ˜æ–—åŠ¨ç”»
             Animator anim = combatant.GetComponent<Animator>();
             if (anim != null) anim.SetBool("BattleMode", false);
 
-            // µĞÈË´¦Àí£º½ûÓÃĞĞÎªÊ÷Õ½¶··ÖÖ§£¬»Ö¸´Ñ²Âß
+            // æ•Œäººå¤„ç†ï¼šç¦ç”¨è¡Œä¸ºæ ‘æˆ˜æ–—åˆ†æ”¯ï¼Œæ¢å¤å·¡é€»
             if (combatant is EnemyAttr enemy && !enemy.isDead)
             {
                 enemy.StartPatrol();
             }
         }
 
-        // Çå¿ÕÕ½¶·Êı¾İ
+        // æ¸…ç©ºæˆ˜æ–—æ•°æ®
         allCombatants.Clear();
         sortedCombatants.Clear();
         currentActorIndex = 0;
 
-        // ========== ĞÂÔö£ºÕ½¶·½áÊøÊÂ¼ş´¥·¢ ==========
+        // ========== æ–°å¢ï¼šæˆ˜æ–—ç»“æŸäº‹ä»¶è§¦å‘ ==========
         OnBattleEnd?.Invoke(playerWin);
     }
 
-    // ========== ·ÏÆú£ºÔ­È«¾Ö´¥·¢Õ½¶·Âß¼­£¬¸ÄÎªµĞÈË×ÔÉí¾¯½äÈ¦´¥·¢ ==========
+    /// <summary>
+    /// æ”¶é›†æ‰€æœ‰æ­»äº¡æ•Œäººçš„å¥–åŠ±æ•°æ®ï¼ˆç»éªŒ+é‡‘å¸+æ‰è½ç‰©å“ï¼Œä»…æ±‡æ€»ï¼Œä¸å‘æ”¾ï¼‰
+    /// </summary>
+    private BattleSettlementData CollectBattleRewards()
+    {
+        var data = new BattleSettlementData { isVictory = true };
+        foreach (var combatant in allCombatants)
+        {
+            if (combatant is EnemyAttr enemy)
+            {
+                data.totalEXP += enemy.dropEXP;
+                if (enemy.dropTable != null)
+                {
+                    DropResult drop = enemy.dropTable.GenerateRandomDrop();
+                    data.totalGold += drop.dropGold;
+                    data.rewardItems.AddRange(drop.dropItemList);
+                }
+            }
+        }
+        return data;
+    }
+
+    /// <summary>
+    /// èƒœåˆ©ç»“ç®—ç¡®è®¤ï¼šå‘æ”¾EXP/é‡‘å¸/ç‰©å“åˆ°ç©å®¶èƒŒåŒ…ï¼Œç„¶åç»“æŸæˆ˜æ–—
+    /// </summary>
+    public void ConfirmVictorySettlement()
+    {
+        if (currentSettlementData == null) return;
+
+        PlayerAttr player = allCombatants.FirstOrDefault(c => c is PlayerAttr) as PlayerAttr;
+        if (player != null)
+        {
+            player.AddEXP(currentSettlementData.totalEXP);
+
+            Inventory inventory = player.GetComponent<Inventory>();
+            if (inventory != null)
+            {
+                inventory.AddGold(currentSettlementData.totalGold);
+                foreach (var item in currentSettlementData.rewardItems)
+                    inventory.AddItem(item);
+            }
+        }
+
+        EndBattle(true);
+    }
+
+    /// <summary>
+    /// å¤±è´¥ç»“ç®—-é€€å‡ºï¼ˆé€€å‡ºæ¸¸æˆ/åœæ­¢ç¼–è¾‘å™¨è¿è¡Œï¼‰
+    /// </summary>
+    public void ConfirmDefeatExit()
+    {
+        EndBattle(false);
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
+    /// <summary>
+    /// å¤±è´¥ç»“ç®—-æ¸…ç†æˆ˜æ–—ï¼ˆè¯»æ¡£ç”±MainMenuUIå­˜æ¡£ä½é¢æ¿å¤„ç†ï¼‰
+    /// </summary>
+    public void ConfirmDefeatLoadSave()
+    {
+        EndBattle(false);
+    }
+
+    // ========== åºŸå¼ƒï¼šåŸå…¨å±€è§¦å‘æˆ˜æ–—é€»è¾‘ï¼Œæ”¹ä¸ºæ•Œäººè‡ªèº«è­¦æˆ’åœˆè§¦å‘ ==========
     // private void OnTriggerEnter(Collider other) { ... }
 }

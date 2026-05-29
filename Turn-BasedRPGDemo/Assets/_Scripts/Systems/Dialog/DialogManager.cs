@@ -5,12 +5,12 @@ public class DialogManager : MonoBehaviour
 {
     public static DialogManager Instance { get; private set; }
 
-    [Header("ºËĞÄÅäÖÃ")]
+    [Header("æ ¸å¿ƒé…ç½®")]
     public float interactDistance = 3f;
 
-    [Header("ÒıÓÃ")]
+    [Header("å¼•ç”¨")]
     public PlayerMovement playerMovement;
-    // ¡¾ĞÂÔö¡¿Ö±½ÓÒıÓÃNavMeshAgent£¬×Ô¼º¼ì²â×´Ì¬£¬²»ÒÀÀµPlayerMovement
+    // ã€æ–°å¢ã€‘ç›´æ¥å¼•ç”¨NavMeshAgentï¼Œè‡ªå·±æ£€æµ‹çŠ¶æ€ï¼Œä¸ä¾èµ–PlayerMovement
     public NavMeshAgent playerNavAgent;
     public LLM chatLLM;
 
@@ -26,7 +26,7 @@ public class DialogManager : MonoBehaviour
         }
         Instance = this;
 
-        // ¡¾×Ô¶¯»ñÈ¡¡¿Èç¹ûÃ»ÍÏNavMeshAgent£¬×Ô¶¯´ÓPlayerMovementÀïÄÃ
+        // ã€è‡ªåŠ¨è·å–ã€‘å¦‚æœæ²¡æ‹–NavMeshAgentï¼Œè‡ªåŠ¨ä»PlayerMovementé‡Œæ‹¿
         if (playerNavAgent == null && playerMovement != null)
         {
             playerNavAgent = playerMovement.GetComponent<NavMeshAgent>();
@@ -53,23 +53,23 @@ public class DialogManager : MonoBehaviour
             }
         }
 
-        // ¡¾ºËĞÄĞŞ¸Ä¡¿Ö±½Ó¼ì²âNavMeshAgentµÄÕæÊµ×´Ì¬£¬²»ÒÀÀµIsPlayerMoving
+        // ã€æ ¸å¿ƒä¿®æ”¹ã€‘ç›´æ¥æ£€æµ‹NavMeshAgentçš„çœŸå®çŠ¶æ€ï¼Œä¸ä¾èµ–IsPlayerMoving
         if (isMovingToNPC && currentNPC != null)
         {
-            // 1. ÏÈµÈNavMesh¼ÆËãÍêÂ·¾¶
+            // 1. å…ˆç­‰NavMeshè®¡ç®—å®Œè·¯å¾„
             if (playerNavAgent.pathPending)
             {
-                return; // »¹ÔÚ¼ÆËãÂ·¾¶£¬¼ÌĞøµÈ
+                return; // è¿˜åœ¨è®¡ç®—è·¯å¾„ï¼Œç»§ç»­ç­‰
             }
 
-            // 2. Â·¾¶¼ÆËãÍêÁË£¬¼ì²âÊÇ·ñÕæµÄµ½´ï
+            // 2. è·¯å¾„è®¡ç®—å®Œäº†ï¼Œæ£€æµ‹æ˜¯å¦çœŸçš„åˆ°è¾¾
             if (!playerNavAgent.pathPending && playerNavAgent.remainingDistance <= playerNavAgent.stoppingDistance)
             {
-                // 3. ÔÙÈ·ÈÏÒ»ÏÂËÙ¶ÈÊÇ·ñÎª0
+                // 3. å†ç¡®è®¤ä¸€ä¸‹é€Ÿåº¦æ˜¯å¦ä¸º0
                 if (!playerNavAgent.hasPath || playerNavAgent.velocity.sqrMagnitude == 0f)
                 {
-                    // ¡¾È·ÈÏ¡¿ÕæµÄµ½´ïÁË
-                    Debug.Log("¡¾È·ÈÏµ½´ï¡¿NavMeshAgent¼ì²âµ½ÕæÕıµ½´ï");
+                    // ã€ç¡®è®¤ã€‘çœŸçš„åˆ°è¾¾äº†
+                    Debug.Log("ã€ç¡®è®¤åˆ°è¾¾ã€‘NavMeshAgentæ£€æµ‹åˆ°çœŸæ­£åˆ°è¾¾");
                     isMovingToNPC = false;
                     OpenDialogPanel();
                 }
@@ -91,23 +91,23 @@ public class DialogManager : MonoBehaviour
         Vector3 npcPos = currentNPC.transform.position;
         float distance = Vector3.Distance(playerPos, npcPos);
 
-        Debug.Log($"¡¾Î»ÖÃ¡¿Íæ¼Ò£º{playerPos}");
-        Debug.Log($"¡¾Î»ÖÃ¡¿NPC£º{npcPos}");
-        Debug.Log($"¡¾¾àÀë¡¿{distance:F2}Ã×£¬½»»¥¾àÀë£º{interactDistance}Ã×");
-        Debug.Log($"¡¾ÅĞ¶Ï¡¿ÊÇ·ñĞ¡ÓÚ½»»¥¾àÀë£º{distance <= interactDistance}");
+        Debug.Log($"ã€ä½ç½®ã€‘ç©å®¶ï¼š{playerPos}");
+        Debug.Log($"ã€ä½ç½®ã€‘NPCï¼š{npcPos}");
+        Debug.Log($"ã€è·ç¦»ã€‘{distance:F2}ç±³ï¼Œäº¤äº’è·ç¦»ï¼š{interactDistance}ç±³");
+        Debug.Log($"ã€åˆ¤æ–­ã€‘æ˜¯å¦å°äºäº¤äº’è·ç¦»ï¼š{distance <= interactDistance}");
 
         if (distance <= interactDistance)
         {
-            Debug.Log("¡¾·ÖÖ§¡¿¾àÀë×ã¹»£¬Ö±½Ó¿ªÃæ°å");
+            Debug.Log("ã€åˆ†æ”¯ã€‘è·ç¦»è¶³å¤Ÿï¼Œç›´æ¥å¼€é¢æ¿");
             OpenDialogPanel();
         }
         else
         {
-            Debug.Log("¡¾·ÖÖ§¡¿¾àÀë²»×ã£¬¿ªÊ¼ÒÆ¶¯");
+            Debug.Log("ã€åˆ†æ”¯ã€‘è·ç¦»ä¸è¶³ï¼Œå¼€å§‹ç§»åŠ¨");
             isMovingToNPC = true;
 
             NavMesh.SamplePosition(npc.transform.position, out NavMeshHit hit, interactDistance, NavMesh.AllAreas);
-            Debug.Log($"¡¾ÒÆ¶¯Ä¿±ê¡¿²ÉÑùµã£º{hit.position}");
+            Debug.Log($"ã€ç§»åŠ¨ç›®æ ‡ã€‘é‡‡æ ·ç‚¹ï¼š{hit.position}");
 
             playerMovement.MoveWithoutAP(hit.position);
         }
@@ -116,7 +116,7 @@ public class DialogManager : MonoBehaviour
     private void OpenDialogPanel()
     {
         if (currentNPC == null) return;
-        Debug.Log($"¡¾´ò¿ªÃæ°å¡¿{currentNPC.npcName}");
+        Debug.Log($"ã€æ‰“å¼€é¢æ¿ã€‘{currentNPC.npcName}");
 
         if (chatLLM != null)
         {
@@ -133,7 +133,7 @@ public class DialogManager : MonoBehaviour
 
     public void CloseDialog()
     {
-        Debug.Log("¡¾¹Ø±ÕÃæ°å¡¿");
+        Debug.Log("ã€å…³é—­é¢æ¿ã€‘");
         DialogUIController.Instance.HidePanel();
         ForceResetAllStates();
     }

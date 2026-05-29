@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// µôÂäÏµÍ³£¨ÎŞÖØ¸´¶¨Òå£¬DropTable½ö¶¨ÒåÒ»´Î£©
+/// æ‰è½ç³»ç»Ÿï¼ˆæ— é‡å¤å®šä¹‰ï¼ŒDropTableä»…å®šä¹‰ä¸€æ¬¡ï¼‰
 /// </summary>
 public class DropSystem : MonoBehaviour
 {
@@ -19,20 +19,20 @@ public class DropSystem : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    // Éú³ÉµôÂäÎï£¨EnemyAttrµ÷ÓÃÆ¥Åä£©
+    // ç”Ÿæˆæ‰è½ç‰©ï¼ˆEnemyAttrè°ƒç”¨åŒ¹é…ï¼‰
     public void SpawnDrop(Vector3 dropPos, DropTable table)
     {
         if (table == null) return;
 
-        // Éú³ÉµôÂä½á¹û
+        // ç”Ÿæˆæ‰è½ç»“æœ
         DropResult result = table.GenerateRandomDrop();
         if (result.dropGold <= 0 && result.dropItemList.Count == 0) return;
 
-        // ´´½¨µôÂäÎï
+        // åˆ›å»ºæ‰è½ç‰©
         GameObject dropObj = new GameObject($"Drop_{Random.Range(1000, 9999)}");
         dropObj.transform.position = dropPos + Vector3.up * 0.6f;
 
-        // Ìí¼ÓÅö×²Ìå+Ê°È¡×é¼ş
+        // æ·»åŠ ç¢°æ’ä½“+æ‹¾å–ç»„ä»¶
         SphereCollider collider = dropObj.AddComponent<SphereCollider>();
         collider.isTrigger = true;
         collider.radius = 0.5f;
@@ -41,41 +41,41 @@ public class DropSystem : MonoBehaviour
         pickup.dropResult = result;
         pickup.dropObj = dropObj;
 
-        // ¿ÉÊÓ»¯ÌáÊ¾
+        // å¯è§†åŒ–æç¤º
         TextMesh text = dropObj.AddComponent<TextMesh>();
-        text.text = result.dropGold > 0 ? $"{result.dropGold}½ğ±Ò" : result.dropItemList[0].itemName;
+        text.text = result.dropGold > 0 ? $"{result.dropGold}é‡‘å¸" : result.dropItemList[0].itemName;
         text.color = Color.yellow;
         text.anchor = TextAnchor.MiddleCenter;
 
-        // »º´æ+Ğı×ª
+        // ç¼“å­˜+æ—‹è½¬
         spawnedDrops.Add(dropObj, result);
         dropObj.AddComponent<DropRotate>();
     }
 
-    // Ê°È¡µôÂäÎï
+    // æ‹¾å–æ‰è½ç‰©
     public void PickupDrop(GameObject dropObj, Inventory inventory)
     {
         if (!spawnedDrops.ContainsKey(dropObj) || inventory == null) return;
 
         DropResult result = spawnedDrops[dropObj];
-        // ½ğ±ÒÈë¿â
+        // é‡‘å¸å…¥åº“
         if (result.dropGold > 0) inventory.AddGold(result.dropGold);
-        // ÎïÆ·Èë¿â
+        // ç‰©å“å…¥åº“
         foreach (var item in result.dropItemList) inventory.AddItem(item);
 
-        // ÇåÀí
+        // æ¸…ç†
         spawnedDrops.Remove(dropObj);
         Destroy(dropObj);
     }
 }
 
-// µôÂäÊ°È¡×é¼ş
+// æ‰è½æ‹¾å–ç»„ä»¶
 public class DropPickup : MonoBehaviour
 {
     public DropResult dropResult;
     public GameObject dropObj;
 
-    // µã»÷Ê°È¡
+    // ç‚¹å‡»æ‹¾å–
     private void OnMouseDown()
     {
         GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -86,7 +86,7 @@ public class DropPickup : MonoBehaviour
         }
     }
 
-    // ¿¿½üÊ°È¡
+    // é è¿‘æ‹¾å–
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
@@ -97,31 +97,31 @@ public class DropPickup : MonoBehaviour
     }
 }
 
-// µôÂäÎïĞı×ª
+// æ‰è½ç‰©æ—‹è½¬
 public class DropRotate : MonoBehaviour
 {
     public float speed = 60f;
     private void Update() => transform.Rotate(0, speed * Time.deltaTime, 0);
 }
 
-// µôÂäÅäÖÃ±í£¨½ö¶¨ÒåÒ»´Î£¬ÎŞÖØ¸´£©
-[CreateAssetMenu(fileName = "DropTable", menuName = "Õ½¶·ÏµÍ³/µôÂä±í")]
+// æ‰è½é…ç½®è¡¨ï¼ˆä»…å®šä¹‰ä¸€æ¬¡ï¼Œæ— é‡å¤ï¼‰
+[CreateAssetMenu(fileName = "DropTable", menuName = "æˆ˜æ–—ç³»ç»Ÿ/æ‰è½è¡¨")]
 public class DropTable : ScriptableObject
 {
-    [Header("½ğ±ÒµôÂä")]
+    [Header("é‡‘å¸æ‰è½")]
     public int minGold = 10;
     public int maxGold = 50;
 
-    [Header("ÎïÆ·µôÂä")]
+    [Header("ç‰©å“æ‰è½")]
     public List<DropItem> dropItems = new List<DropItem>();
 
-    // Éú³ÉËæ»úµôÂä
+    // ç”Ÿæˆéšæœºæ‰è½
     public DropResult GenerateRandomDrop()
     {
         DropResult result = new DropResult();
-        // Ëæ»ú½ğ±Ò
+        // éšæœºé‡‘å¸
         result.dropGold = Random.Range(minGold, maxGold + 1);
-        // Ëæ»úÎïÆ·
+        // éšæœºç‰©å“
         foreach (var item in dropItems)
         {
             if (Random.value <= item.dropRate && item.item != null)
@@ -131,7 +131,7 @@ public class DropTable : ScriptableObject
     }
 }
 
-// µôÂäÏî
+// æ‰è½é¡¹
 [System.Serializable]
 public class DropItem
 {
@@ -139,7 +139,7 @@ public class DropItem
     [Range(0f, 1f)] public float dropRate = 0.5f;
 }
 
-// µôÂä½á¹û
+// æ‰è½ç»“æœ
 public class DropResult
 {
     public int dropGold;
