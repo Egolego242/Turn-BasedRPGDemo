@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
 /// 技能基类
@@ -9,6 +10,11 @@ public class SkillBase : ScriptableObject
 {
     public string skillName;
     public int skillID;
+
+    [Header("技能描述")]
+    [Tooltip("为空时自动生成，填写后优先使用")]
+    [TextArea(2, 5)]
+    public string description;
     public int apCost;
     public float mpCost;
     public int coolDownRound;
@@ -29,10 +35,21 @@ public class SkillBase : ScriptableObject
     // 释放技能
     public virtual bool CastSkill(BaseCharacterAttr caster, BaseCharacterAttr target)
     {
-        // 冷却+资源校验
-        if (currentCoolDown > 0 || !caster.ConsumeAP(apCost) || caster.GetAttrValue(AttributeType.CurrentMP) < mpCost)
+        // 冷却+资源校验（先校验，再扣AP，避免退款失败）
+        if (currentCoolDown > 0)
         {
-            if (!caster.ConsumeAP(apCost)) caster.ConsumeAP(-apCost); // 返还AP
+            Debug.Log($"技能 {skillName} 处于冷却中");
+            return false;
+        }
+        if (caster.GetAttrValue(AttributeType.CurrentMP) < mpCost)
+        {
+            Debug.Log($"技能 {skillName} MP不足：需要{mpCost}，当前{caster.GetAttrValue(AttributeType.CurrentMP)}");
+            return false;
+        }
+        // apCost>0时才校验+扣减，0消耗技能直接跳过
+        if (apCost > 0 && !caster.ConsumeAP(apCost))
+        {
+            Debug.Log($"技能 {skillName} AP不足：需要{apCost}");
             return false;
         }
 
@@ -122,9 +139,18 @@ public class SkillManager : MonoBehaviour
     // 释放技能
     public bool CastCharacterSkill(BaseCharacterAttr caster, int skillID, BaseCharacterAttr target)
     {
-        if (!characterSkills.ContainsKey(caster)) return false;
+        if (!characterSkills.ContainsKey(caster))
+        {
+            Debug.LogError($"[SkillManager] 角色 {caster?.name} 没有注册任何技能！请检查PlayerAttr的defaultSkills列表");
+            return false;
+        }
         SkillBase skill = characterSkills[caster].Find(s => s.skillID == skillID);
-        return skill?.CastSkill(caster, target) ?? false;
+        if (skill == null)
+        {
+            Debug.LogError($"[SkillManager] 角色 {caster.name} 未找到skillID={skillID}的技能！已注册：{string.Join(", ", characterSkills[caster].Select(s => $"{s.skillName}(ID:{s.skillID})"))}");
+            return false;
+        }
+        return skill.CastSkill(caster, target);
     }
 
     // 刷新所有冷却

@@ -93,20 +93,18 @@ public class SkillButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
     }
 
     /// <summary>
-    /// 鼠标点击：释放技能
+    /// 鼠标点击：进入目标选择模式，再点击敌人完成技能释放
     /// </summary>
     public void OnPointerClick(PointerEventData eventData)
     {
         if (skill == null) return;
 
-        // 只有在战斗状态且是玩家回合时才能释放技能
         if (GameStateMgr.Instance == null || !GameStateMgr.Instance.IsBattleState())
         {
             Debug.Log("非战斗状态，无法释放技能！");
             return;
         }
 
-        // 找到玩家
         PlayerAttr player = FindObjectOfType<PlayerAttr>();
         if (player == null || !player.isMyTurn || player.isDead)
         {
@@ -114,26 +112,15 @@ public class SkillButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
             return;
         }
 
-        // 找到目标（简化：取第一个敌人）
-        BaseCharacterAttr target = FindObjectOfType<EnemyAttr>();
-        if (target == null || target.isDead)
+        if (SkillTargetSelector.Instance != null)
         {
-            Debug.Log("没有可用的目标！");
-            return;
-        }
-
-        // 调用SkillManager释放技能
-        bool success = SkillManager.Instance?.CastCharacterSkill(player, skill.skillID, target) ?? false;
-
-        if (success)
-        {
-            Debug.Log($"玩家释放了技能：{skill.skillName}");
-            // 释放成功后隐藏范围
+            SkillTooltip.HideTooltip();
             UIManager.Instance?.rangeVisualizer.HideAllRange();
+            SkillTargetSelector.Instance.EnterTargetingMode(skill, player);
         }
         else
         {
-            Debug.Log($"技能释放失败：{skill.skillName}（冷却中/AP不足/MP不足）");
+            Debug.LogError("场景中缺少SkillTargetSelector组件，请将其挂载到常驻GameObject上！");
         }
     }
 

@@ -87,6 +87,22 @@ public class PlayerMovement : MonoBehaviour
             // 停止当前所有移动行为
             StopPlayerMove();
 
+            // ========== 技能目标选择模式：优先检测点击敌人 ==========
+            if (SkillTargetSelector.IsTargeting)
+            {
+                Ray targetRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(targetRay, out RaycastHit targetHit, Mathf.Infinity))
+                {
+                    EnemyAttr enemy = targetHit.collider.GetComponent<EnemyAttr>();
+                    if (enemy != null && !enemy.isDead)
+                    {
+                        SkillTargetSelector.Instance.OnTargetSelected(enemy);
+                        return;
+                    }
+                }
+                SkillTargetSelector.Instance.CancelTargeting();
+            }
+
             // 射线检测地形，判断是否点击到可移动的地面
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out RaycastHit hitInfo, Mathf.Infinity, terrainLayer))

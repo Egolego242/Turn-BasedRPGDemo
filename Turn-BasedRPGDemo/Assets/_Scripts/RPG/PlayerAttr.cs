@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
+using System.Collections.Generic;
 
 /// <summary>
 /// 玩家属性子类（无编译错误，继承基类所有功能）
@@ -29,6 +30,10 @@ public class PlayerAttr : BaseCharacterAttr
     [Tooltip("技能消耗行动点")]
     public int skillAttackCost = 3; // ✅ 新增：技能消耗
 
+    [Header("===== 默认技能 =====")]
+    [Tooltip("拖入玩家掌握的所有技能SO，Awake时自动注册到SkillManager")]
+    public List<SkillBase> defaultSkills = new List<SkillBase>();
+
     [HideInInspector] public Animator animator;
 
     private void Awake()
@@ -42,6 +47,21 @@ public class PlayerAttr : BaseCharacterAttr
         // 初始化属性（调用基类方法）
         InitAttribute(initMaxHP, initMaxMP, initMaxAP, initStrength, initIntelligence, initArmor);
         currentCamp = CampType.Player;
+    }
+
+    private void Start()
+    {
+        // 在Start中注册技能，确保SkillManager.Instance已在Awake中初始化
+        if (SkillManager.Instance == null)
+        {
+            Debug.LogError("SkillManager.Instance 为空！请确保场景中有SkillManager组件");
+            return;
+        }
+        foreach (var skill in defaultSkills)
+        {
+            SkillManager.Instance.AddSkillToCharacter(this, skill);
+            Debug.Log($"玩家注册技能：{skill.skillName}");
+        }
     }
 
     // 经验+升级逻辑

@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SkillBase
   skillName: "\u666E\u901A\u653B\u51FB"
   skillID: 0
-  apCost: 0
+  apCost: 2
   mpCost: 0
   coolDownRound: 0
-  effectValue: 0
+  effectValue: 15
   skillType: 0
-  targetType: 0
+  targetType: 1
   animTriggerName: 
   skillEffectPrefab: {fileID: 0}
   effectSpawnPoint: {fileID: 0}

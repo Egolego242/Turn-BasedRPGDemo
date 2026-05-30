@@ -19,21 +19,65 @@ public class SkillTooltip : MonoBehaviour
     {
         Instance = this;
         panel.SetActive(false);
+
+        // 阻止提示面板拦截鼠标射线，避免 OnPointerEnter/Exit 来回触发导致闪烁
+        CanvasGroup cg = panel.GetComponent<CanvasGroup>();
+        if (cg == null) cg = panel.AddComponent<CanvasGroup>();
+        cg.blocksRaycasts = false;
     }
 
     // 显示技能提示
     public static void ShowTooltip(SkillBase skill)
     {
         if (Instance == null || skill == null) return;
+        if (Instance.panel == null) return;
 
-        Instance.skillNameText.text = skill.skillName;
-        Instance.skillDescText.text = $"发射一枚{skill.skillName}，造成{skill.effectValue}点伤害";
-        Instance.skillDamageText.text = $"{skill.effectValue - 1}-{skill.effectValue + 1}伤害";
-        Instance.skillCostText.text = $"消耗 {skill.apCost} 行动点 / {skill.mpCost} 魔法值";
-        Instance.skillRangeText.text = $"{skill.skillRange}m 范围";
-        // Instance.skillRequireText.text = $"需要 {skill.skillSchool} 学派 {skill.requireLevel} 级"; // 如果没有这些字段可以注释掉
+        if (Instance.skillNameText != null)
+            Instance.skillNameText.text = skill.skillName;
 
-        // 跟随鼠标位置
+        if (Instance.skillDescText != null)
+        {
+            // 优先使用自定义描述，为空则自动生成
+            if (!string.IsNullOrEmpty(skill.description))
+                Instance.skillDescText.text = skill.description;
+            else
+                Instance.skillDescText.text = skill.skillType switch
+                {
+                    SkillType.Attack => $"对敌人造成 {skill.effectValue:F0} 点伤害",
+                    SkillType.Heal => $"恢复目标 {skill.effectValue:F0} 点生命值",
+                    SkillType.Buff => $"提升目标 {skill.effectValue:F0} 点力量",
+                    _ => skill.skillName
+                };
+        }
+
+        if (Instance.skillDamageText != null)
+        {
+            Instance.skillDamageText.text = skill.skillType == SkillType.Attack
+                ? $"伤害：{skill.effectValue - 1} ~ {skill.effectValue + 1}"
+                : $"效果值：{skill.effectValue:F0}";
+        }
+
+        if (Instance.skillCostText != null)
+        {
+            string cost = "";
+            if (skill.apCost > 0) cost += $"AP {skill.apCost}";
+            if (skill.mpCost > 0) cost += (cost.Length > 0 ? " / " : "") + $"MP {skill.mpCost:F0}";
+            if (cost.Length == 0) cost = "无消耗";
+            Instance.skillCostText.text = $"消耗：{cost}";
+        }
+
+        if (Instance.skillRangeText != null)
+        {
+            string targetLabel = skill.targetType switch
+            {
+                TargetType.Enemy => "敌人",
+                TargetType.Ally => "友方",
+                TargetType.Self => "自身",
+                _ => "目标"
+            };
+            Instance.skillRangeText.text = $"射程：{skill.skillRange}m | 目标：{targetLabel}";
+        }
+
         Instance.panel.SetActive(true);
         Instance.UpdateTooltipPosition();
     }
