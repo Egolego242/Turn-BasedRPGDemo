@@ -7,6 +7,11 @@ using System.Collections.Generic;
 public class DropSystem : MonoBehaviour
 {
     public static DropSystem Instance;
+
+    [Header("=== 开关 ===")]
+    [Tooltip("取消勾选可关闭敌人死亡掉落显示（旋转金币）")]
+    public bool enableDropDisplay = true;
+
     private Dictionary<GameObject, DropResult> spawnedDrops = new Dictionary<GameObject, DropResult>();
 
     private void Awake()
@@ -22,6 +27,7 @@ public class DropSystem : MonoBehaviour
     // 生成掉落物（EnemyAttr调用匹配）
     public void SpawnDrop(Vector3 dropPos, DropTable table)
     {
+        if (!enableDropDisplay) return;
         if (table == null) return;
 
         // 生成掉落结果

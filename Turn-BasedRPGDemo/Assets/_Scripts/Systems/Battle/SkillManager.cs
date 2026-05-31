@@ -30,7 +30,7 @@ public class SkillBase : ScriptableObject
     [Tooltip("技能释放射程（米）")]
     public float skillRange = 5f; // ✅ 新增：技能射程
 
-    [HideInInspector] public int currentCoolDown;
+    [System.NonSerialized] public int currentCoolDown;
 
     // 释放技能
     public virtual bool CastSkill(BaseCharacterAttr caster, BaseCharacterAttr target)
@@ -89,16 +89,20 @@ public class SkillBase : ScriptableObject
     // 触发动画+特效
     protected virtual void TriggerAnimAndEffect(BaseCharacterAttr caster)
     {
-        // 动画
+        // 动画：填了自定义trigger则用它，否则播默认"Skill"
         if (caster is PlayerAttr player)
         {
-            player.PlaySkillAnim();
-            if (!string.IsNullOrEmpty(animTriggerName)) player.animator.SetTrigger(animTriggerName);
+            if (!string.IsNullOrEmpty(animTriggerName))
+                player.animator?.SetTrigger(animTriggerName);
+            else
+                player.PlaySkillAnim();
         }
         else if (caster is EnemyAttr enemy)
         {
-            enemy.PlaySkillAnim();
-            if (!string.IsNullOrEmpty(animTriggerName)) enemy.animator.SetTrigger(animTriggerName);
+            if (!string.IsNullOrEmpty(animTriggerName))
+                enemy.animator?.SetTrigger(animTriggerName);
+            else
+                enemy.PlaySkillAnim();
         }
 
         // 特效

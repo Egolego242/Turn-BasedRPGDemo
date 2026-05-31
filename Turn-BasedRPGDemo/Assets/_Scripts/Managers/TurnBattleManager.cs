@@ -319,6 +319,9 @@ public class TurnBattleManager : MonoBehaviour
 
         foreach (var combatant in allCombatants)
         {
+            // 敌人体可能在结算前被Destroy，跳过已销毁对象
+            if (combatant == null || combatant.gameObject == null) continue;
+
             combatant.isInBattle = false;
             combatant.isMyTurn = false;
 

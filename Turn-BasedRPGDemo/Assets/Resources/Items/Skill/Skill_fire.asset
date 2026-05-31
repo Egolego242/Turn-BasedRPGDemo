@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 0}
-  m_Name: Skill_Attack
+  m_Name: Skill_fire
   m_EditorClassIdentifier: Assembly-CSharp::SkillBase
-  skillName: "\u666E\u901A\u653B\u51FB"
-  skillID: 0
-  description: 
-  apCost: 2
+  skillName: "\u706B\u7403\u672F"
+  skillID: 1
+  description: "\u77ED\u6682\u65BD\u6CD5\u540E\u5411\u654C\u4EBA\u53D1\u5C04\u4E00\u679A\u706B\u7403"
+  apCost: 3
   mpCost: 0
-  coolDownRound: 0
-  effectValue: 15
+  coolDownRound: 1
+  effectValue: 70
   skillType: 0
   targetType: 1
-  animTriggerName: Attack
+  animTriggerName: Skill
   skillEffectPrefab: {fileID: 0}
   effectSpawnPoint: {fileID: 0}
-  skillRange: 5
+  skillRange: 10
