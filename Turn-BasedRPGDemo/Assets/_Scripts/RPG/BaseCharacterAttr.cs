@@ -14,6 +14,8 @@ public class BaseCharacterAttr : MonoBehaviour
 
     // 回合制核心字段
     [Header("===== 回合制核心(基类) =====")]
+    [Tooltip("显示名称，为空时使用GameObject名称")]
+    public string displayName;
     public float initiative = 5f; // 先攻值（越高行动越靠前）
     public Sprite headIconSprite;
     [HideInInspector] public bool hasActInRound = false; // 本回合是否已行动（防止重复行动）
