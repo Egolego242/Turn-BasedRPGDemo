@@ -1,6 +1,10 @@
 using UnityEngine;
 using BehaviorDesigner.Runtime;
 
+/// <summary>
+/// 敌人行为树自动初始化（旧版兼容）：自动查找BehaviorTree组件，赋值selfObject，初始化isInCombat/isMyTurn等变量并强制刷新
+/// 注意：新版EnemyAttr已内置行为树同步逻辑，此脚本为备用方案
+/// </summary>
 public class EnemyBehaviorTreeAutoInit : MonoBehaviour
 {
     private BehaviorTree behaviorTree;

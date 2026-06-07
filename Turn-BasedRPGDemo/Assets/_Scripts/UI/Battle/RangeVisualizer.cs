@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// 范围可视化：用LineRenderer绘制移动范围(绿色圆)和技能射程(红色圆)，战斗中以世界空间文字提示移动消耗
+/// </summary>
 public class RangeVisualizer : MonoBehaviour
 {
     [Header("配置")]

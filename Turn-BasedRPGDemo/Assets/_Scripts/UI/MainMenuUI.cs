@@ -3,6 +3,9 @@ using UnityEngine.UI;
 using TMPro; 
 using System;
 
+/// <summary>
+/// 主菜单界面：ESC唤出菜单面板，管理存档/读档功能，控制3个SaveSlotUI存档位的显示与交互
+/// </summary>
 public class MainMenuUI : MonoBehaviour
 {
     // ========== 1. UI引用（在Unity编辑器里拖进去） ==========
@@ -33,6 +36,9 @@ public class MainMenuUI : MonoBehaviour
 
     // ========== 3. 存档位UI结构体 ==========
     [System.Serializable]
+    /// <summary>
+    /// 单个存档槽UI：显示存档时间/等级信息或"空"状态，点击触发存档或读档
+    /// </summary>
     public class SaveSlotUI
     {
         public GameObject root;

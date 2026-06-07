@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UI;
 
+/// <summary>
+/// 回合顺序条：顶部头像排列条，战斗开始时初始化，每回合按先攻值排序刷新，当前行动角色高亮置前，死亡角色隐藏
+/// </summary>
 public class TurnOrderBar : MonoBehaviour
 {
     [Header("配置")]

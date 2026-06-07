@@ -4,6 +4,9 @@ using UnityEngine.EventSystems;
 using TMPro;
 using System.Collections.Generic;
 
+/// <summary>
+/// 背包界面：动态生成物品槽按钮，支持点击使用物品、悬停查看详情，配合TooltipUI和Inventory工作
+/// </summary>
 public class InventoryUI : MonoBehaviour
 {
     public GameObject itemSlotPrefab;

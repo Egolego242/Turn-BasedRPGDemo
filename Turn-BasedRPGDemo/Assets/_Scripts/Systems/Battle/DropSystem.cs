@@ -75,7 +75,9 @@ public class DropSystem : MonoBehaviour
     }
 }
 
-// 掉落拾取组件
+/// <summary>
+/// 掉落拾取组件：支持鼠标点击或玩家靠近触发收集，将金币/物品转入Inventory
+/// </summary>
 public class DropPickup : MonoBehaviour
 {
     public DropResult dropResult;
@@ -103,14 +105,18 @@ public class DropPickup : MonoBehaviour
     }
 }
 
-// 掉落物旋转
+/// <summary>
+/// 掉落物旋转：让掉落物绕Y轴自转，增加视觉辨识度
+/// </summary>
 public class DropRotate : MonoBehaviour
 {
     public float speed = 60f;
     private void Update() => transform.Rotate(0, speed * Time.deltaTime, 0);
 }
 
-// 掉落配置表（仅定义一次，无重复）
+/// <summary>
+/// 掉落配置表(ScriptableObject)：定义金币掉落范围和物品掉落列表及概率，GenerateRandomDrop随机生成一次掉落结果
+/// </summary>
 [CreateAssetMenu(fileName = "DropTable", menuName = "战斗系统/掉落表")]
 public class DropTable : ScriptableObject
 {
@@ -137,7 +143,9 @@ public class DropTable : ScriptableObject
     }
 }
 
-// 掉落项
+/// <summary>
+/// 单个掉落项：绑定物品SO和掉落概率(0~1)，配合DropTable使用
+/// </summary>
 [System.Serializable]
 public class DropItem
 {
@@ -145,7 +153,9 @@ public class DropItem
     [Range(0f, 1f)] public float dropRate = 0.5f;
 }
 
-// 掉落结果
+/// <summary>
+/// 掉落结果数据容器：存储一次随机生成的金币数量和物品列表
+/// </summary>
 public class DropResult
 {
     public int dropGold;

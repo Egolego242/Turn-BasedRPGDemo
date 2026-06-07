@@ -1,5 +1,8 @@
 using UnityEngine;
 
+/// <summary>
+/// NPC点击处理器：检测鼠标点击/悬停NPC，转发给DialogManager处理对话流程，可选更换悬停光标
+/// </summary>
 public class NPCClickHandler : MonoBehaviour
 {
     [Header("悬停设置")]

@@ -2,6 +2,9 @@
 using UnityEngine.UI;
 using TMPro;
 
+/// <summary>
+/// 物品提示框：鼠标悬停物品槽时显示物品名称、描述及属性加成（消耗品恢复值/装备属性），智能定位防止溢出屏幕
+/// </summary>
 public class TooltipUI : MonoBehaviour
 {
     public int offsetX = 10;  // 向右偏移，精准贴合图标右下角

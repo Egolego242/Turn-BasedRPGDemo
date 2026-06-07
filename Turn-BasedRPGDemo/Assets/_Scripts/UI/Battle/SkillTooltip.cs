@@ -3,6 +3,9 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
 
+/// <summary>
+/// 技能提示框：鼠标悬停技能按钮时跟随鼠标显示技能详情（名称/描述/伤害/消耗/范围/目标类型），不拦截射线防闪烁
+/// </summary>
 public class SkillTooltip : MonoBehaviour
 {
     [Header("面板引用")]

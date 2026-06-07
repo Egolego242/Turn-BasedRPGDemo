@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 
+/// <summary>
+/// UI管理中枢：订阅TurnBattleManager战斗事件和GameStateMgr状态事件，统一调度所有子UI（回合条/行动点/技能提示/范围圈/结算面板等）的显隐与刷新
+/// </summary>
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance;

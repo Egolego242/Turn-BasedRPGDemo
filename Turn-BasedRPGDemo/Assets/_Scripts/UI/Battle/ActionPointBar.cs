@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// 行动点显示条：以绿色(可用)/红色(已用)圆点直观展示当前角色的AP剩余量
+/// </summary>
 public class ActionPointBar : MonoBehaviour
 {
     [Header("配置")]

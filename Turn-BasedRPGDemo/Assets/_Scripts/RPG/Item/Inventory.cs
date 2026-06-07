@@ -1,7 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// 你的背包系统，只写在这里，无重复
+/// <summary>
+/// 背包组件：管理玩家金币、物品列表和装备列表，提供AddItem/RemoveItem/UseItem及装备同部位自动替换
+/// </summary>
 public class Inventory : MonoBehaviour
 {
     [Header("金币")]

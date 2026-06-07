@@ -3,6 +3,9 @@ using System.IO;
 using System.Collections.Generic;
 using System;
 
+/// <summary>
+/// 存档管理器：XOR加密JSON存档，支持3个手动槽位+战前自动存档(QuickSave)，BuildSaveData构建全场景快照，ApplySaveData恢复全部角色状态（含行为树重置）
+/// </summary>
 public class SaveManager : MonoBehaviour
 {
     private static SaveManager _instance;

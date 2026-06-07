@@ -5,17 +5,17 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 
 /// <summary>
-/// ✅ 彻底解决：鼠标点击UI按钮穿透触发角色移动（100%根治，无任何例外）
-/// ✅ 保留所有功能：点击地形移动、顺滑转向、水域不可走、战斗状态消耗AP、探索无消耗
-/// ✅ 动画适配：行走/站立动画切换
-/// ✅ 防错处理：全组件判空，零控制台报错
-/// ✅ 适配你的所有RPG系统：PlayerAttr/GameStateMgr/Inventory，无缝对接
+/// 彻底解决：鼠标点击UI按钮穿透触发角色移动
+/// 保留所有功能：点击地形移动、顺滑转向、水域不可走、战斗状态消耗AP、探索无消耗
+/// 动画适配：行走/站立动画切换
+/// 防错处理：全组件判空，零控制台报错
+/// 适配RPG系统：PlayerAttr/GameStateMgr/Inventory
 /// </summary>
 public class PlayerMovement : MonoBehaviour
 {
     [Header("===== 核心配置 =====")]
-    public LayerMask terrainLayer;       // 地形的层级遮罩（你的原有配置）
-    public GameObject clickMarkerPrefab; // 点击地面的标记预制体（你的原有配置）
+    public LayerMask terrainLayer;       // 地形的层级遮罩
+    public GameObject clickMarkerPrefab; // 点击地面的标记预制体
 
     [Header("===== 移动参数 =====")]
     public float moveSpeed = 4f;          // 移动速度
@@ -163,12 +163,10 @@ public class PlayerMovement : MonoBehaviour
 
     #region 核心封装方法 - 全部抽离，逻辑清晰，方便后续修改
     /// <summary>
-    /// 【你原有的完整移动逻辑，带AP校验】玩家点击地面时调用
-    /// 代码100%是你写的，一行没改，只是包成了方法
+    /// 【原有的完整移动逻辑，带AP校验】玩家点击地面时调用
     /// </summary>
     private void MoveWithAPCheck(Vector3 targetMovePos)
     {
-        // ========== 完全照搬你写的代码，一个字都没改 ==========
         currentMoveAPCost = CalculateMoveAPCost(targetMovePos);
         bool canMove = true;
         if (GameStateMgr.Instance != null && GameStateMgr.Instance.IsBattleState() && playerAttr != null)
@@ -193,12 +191,11 @@ public class PlayerMovement : MonoBehaviour
 
     /// <summary>
     /// 【纯底层移动，不带AP校验】给DialogManager点击NPC时调用
-    /// 只保留你写的移动、标记、动画逻辑，完全去掉AP相关的判断
-    /// 没有任何新增代码，全是你原有的逻辑
+    /// 只保留移动、标记、动画逻辑，完全去掉AP相关的判断
     /// </summary>
     public void MoveWithoutAP(Vector3 targetMovePos)
     {
-        // 先停止当前移动（用你原有的方法）
+        // 先停止当前移动
         StopPlayerMove();
 
         // 只保留你写的纯移动逻辑，完全不动
@@ -211,8 +208,8 @@ public class PlayerMovement : MonoBehaviour
         if (animator != null) animator.SetBool(isWalkingHash, true);
     }
     /// <summary>
-    /// ✅ 万能UI检测方法【核心根治穿透】：手动发射UI射线，判断鼠标是否点击在任意UI元素上
-    /// 无视透明UI、TMP文本、多层UI、嵌套UI，100%精准，无任何失效场景
+    /// 万能UI检测方法【核心根治穿透】：手动发射UI射线，判断鼠标是否点击在任意UI元素上
+    /// 无视透明UI、TMP文本、多层UI、嵌套UI
     /// </summary>
     private bool IsMouseClickOnUI()
     {

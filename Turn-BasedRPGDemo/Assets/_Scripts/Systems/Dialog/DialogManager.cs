@@ -1,6 +1,10 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+/// <summary>
+/// 对话管理器：处理NPC交互全流程 — 点击检测→距离判断→移动到NPC→打开对话面板→AI回复
+/// 战斗中自动屏蔽交互，支持NavMeshAgent状态实时监测
+/// </summary>
 public class DialogManager : MonoBehaviour
 {
     public static DialogManager Instance { get; private set; }
