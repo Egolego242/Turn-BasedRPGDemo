@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// 掉落系统（无重复定义，DropTable仅定义一次）
@@ -83,9 +84,11 @@ public class DropPickup : MonoBehaviour
     public DropResult dropResult;
     public GameObject dropObj;
 
-    // 点击拾取
+    // 点击拾取（UI穿透防护：点击UI时不拾取掉落物）
     private void OnMouseDown()
     {
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player != null)
         {

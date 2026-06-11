@@ -1,10 +1,10 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
 /// 装备配置文件 - 继承ItemBase基类（武器、护甲、头盔、饰品等）
 /// 穿戴后：永久加成角色属性 | 卸下后：自动还原属性
-/// ✔ 引用你原有 ItemType 枚举 + 角色的 AttributeType 枚举，无重复定义
+/// 引用原有 ItemType 枚举 + 角色的 AttributeType 枚举，无重复定义
 /// </summary>
 [CreateAssetMenu(fileName = "NewEquip", menuName = "RPG/EquipItem")]
 public class EquipItem : ItemBase

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -150,7 +150,7 @@ public class PlayerMovement : MonoBehaviour
             //    }
             //}
 
-            // 角色顺滑转向移动方向（你的原有核心逻辑）
+            // 角色顺滑转向移动方向
             Vector3 moveDir = navAgent.desiredVelocity;
             moveDir.y = 0;
             if (moveDir.magnitude > 0.1f)
@@ -208,22 +208,29 @@ public class PlayerMovement : MonoBehaviour
         if (animator != null) animator.SetBool(isWalkingHash, true);
     }
     /// <summary>
-    /// 万能UI检测方法【核心根治穿透】：手动发射UI射线，判断鼠标是否点击在任意UI元素上
-    /// 无视透明UI、TMP文本、多层UI、嵌套UI
+    /// 万能UI检测方法【核心根治穿透】：三重检测，确保任何Canvas/UI组件都不会被穿透
+    /// 1. EventSystem标准检测（覆盖所有GraphicRaycaster）
+    /// 2. 遍历所有Canvas的GraphicRaycaster手动射线（多Canvas兼容）
     /// </summary>
     private bool IsMouseClickOnUI()
     {
         if (EventSystem.current == null) return false;
 
-        PointerEventData pointerEventData = new PointerEventData(EventSystem.current);
-        pointerEventData.position = Input.mousePosition;
+        // 第一层：Unity标准全量检测（覆盖所有已注册Raycaster的Canvas）
+        if (EventSystem.current.IsPointerOverGameObject())
+            return true;
 
-        GraphicRaycaster uiRaycaster = FindObjectOfType<GraphicRaycaster>();
-        List<RaycastResult> uiRaycastResults = new List<RaycastResult>();
+        // 第二层：手动遍历所有GraphicRaycaster（多Canvas场景兼容）
+        GraphicRaycaster[] allRaycasters = FindObjectsOfType<GraphicRaycaster>();
+        PointerEventData pointerData = new PointerEventData(EventSystem.current);
+        pointerData.position = Input.mousePosition;
+        List<RaycastResult> results = new List<RaycastResult>();
 
-        uiRaycaster.Raycast(pointerEventData, uiRaycastResults);
-        // 检测到任意UI → 返回true，拦截移动
-        return uiRaycastResults.Count > 0;
+        foreach (var raycaster in allRaycasters)
+        {
+            raycaster.Raycast(pointerData, results);
+        }
+        return results.Count > 0;
     }
 
     /// <summary>

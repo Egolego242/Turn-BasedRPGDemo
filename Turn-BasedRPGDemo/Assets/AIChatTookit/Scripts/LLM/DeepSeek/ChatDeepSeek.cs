@@ -17,22 +17,22 @@ public class ChatDeepSeek : LLM
 	/// </summary>
 	[SerializeField] private string api_key;
 	/// <summary>
-	/// AIÉè¶¨
+	/// AIï¿½è¶¨
 	/// </summary>
 	public string m_SystemSetting = string.Empty;
 	/// <summary>
-	/// Ä£ĞÍÃû³Æ
+	/// Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	/// </summary>
 	public string m_ModelName = "deepseek-chat";
 
 	private void Start()
 	{
-		//ÔËĞĞÊ±£¬Ìí¼ÓAIÉè¶¨
+		//ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½AIï¿½è¶¨
 		m_DataList.Add(new SendData("system", m_SystemSetting));
 	}
 
 	/// <summary>
-	/// ·¢ËÍÏûÏ¢
+	/// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 	/// </summary>
 	/// <returns></returns>
 	public override void PostMsg(string _msg, Action<string> _callback)
@@ -41,7 +41,7 @@ public class ChatDeepSeek : LLM
 	}
 
 	/// <summary>
-	/// µ÷ÓÃ½Ó¿Ú
+	/// ï¿½ï¿½ï¿½Ã½Ó¿ï¿½
 	/// </summary>
 	/// <param name="_postWord"></param>
 	/// <param name="_callback"></param>
@@ -75,23 +75,25 @@ public class ChatDeepSeek : LLM
 				{
 
 					string _backMsg = _textback.choices[0].message.content;
-					//Ìí¼Ó¼ÇÂ¼
+					//ï¿½ï¿½ï¿½Ó¼ï¿½Â¼
 					m_DataList.Add(new SendData("assistant", _backMsg));
 					_callback(_backMsg);
 				}
 			}
 			else
 			{
+				// ç½‘ç»œå¤±è´¥/APIå¼‚å¸¸æ—¶ï¼Œè¿”å›ç”¨æˆ·å‹å¥½çš„æç¤ºæ–‡æœ¬
 				string _msgBack = request.downloadHandler.text;
-				Debug.LogError(_msgBack);
+				Debug.LogError($"AIè¯·æ±‚å¤±è´¥ (HTTP {request.responseCode}): {_msgBack}");
+				_callback("[ç½‘ç»œè¿æ¥å¤±è´¥ï¼Œè¯·æ£€æŸ¥ç½‘ç»œåé‡è¯•]");
 			}
 
 			stopwatch.Stop();
-			Debug.Log("DeepSeekºÄÊ±£º" + stopwatch.Elapsed.TotalSeconds);
+			Debug.Log("DeepSeekï¿½ï¿½Ê±ï¿½ï¿½" + stopwatch.Elapsed.TotalSeconds);
 		}
 	}
 
-	#region Êı¾İ°ü
+	#region ï¿½ï¿½ï¿½İ°ï¿½
 
 	[Serializable]
 	public class PostData

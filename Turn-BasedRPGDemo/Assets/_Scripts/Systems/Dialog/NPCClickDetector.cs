@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// NPC点击处理器：检测鼠标点击/悬停NPC，转发给DialogManager处理对话流程，可选更换悬停光标
@@ -12,9 +13,11 @@ public class NPCClickHandler : MonoBehaviour
     [Tooltip("光标热点")]
     public Vector2 cursorHotspot = Vector2.zero;
 
-    // 鼠标按下（这里只是转发给DialogManager，核心逻辑在DialogManager里）
+    // 鼠标按下（UI穿透防护：点击UI时不触发NPC对话）
     private void OnMouseDown()
     {
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
+
         NPCDialog npc = GetComponent<NPCDialog>();
         if (npc != null)
         {

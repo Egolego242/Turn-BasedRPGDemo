@@ -8,67 +8,80 @@ using UnityEngine;
 public class LLM:MonoBehaviour
 {
     /// <summary>
-    /// api╣ьж╥
+    /// apiО©╫О©╫ж╥
     /// </summary>
     [SerializeField] protected string url;
-    // ║╬пч╦д1║©х╔╣Тмов╖╣дnpcDialogё╛╦дЁи║╟╣╠г╟уЩтз╤т╩╟╣дNPC║╠
+    // О©╫О©╫О©╫ч╦О©╫1О©╫О©╫х╔О©╫О©╫О©╫О©╫в╖О©╫О©╫npcDialogО©╫О©╫О©╫дЁи║О©╫О©╫О©╫г╟О©╫О©╫О©╫з╤т╩О©╫О©╫О©╫NPCО©╫О©╫
     protected NPCDialog currentTalkingNPC;
     /// <summary>
-    /// лАй╬╢йё╛сКоШо╒р╩фП╥╒км
+    /// О©╫О©╫й╬О©╫йёО©╫О©╫О©╫О©╫О©╫о╒р╩О©╫О©╫О©╫О©╫
     /// </summary>
-    [Header("╥╒км╣длАй╬╢йиХ╤╗")]
+    [Header("О©╫О©╫О©╫м╣О©╫О©╫О©╫й╬О©╫О©╫О©╫Х╤╗")]
     [SerializeField] protected string m_Prompt = string.Empty;
     /// <summary>
-    /// сОят
+    /// О©╫О©╫О©╫О©╫
     /// </summary
-    [Header("иХжц╩ь╦╢╣дсОят")]
-    [SerializeField] protected string lan="жпнд";
+    [Header("О©╫О©╫О©╫ц╩ь╦О©╫О©╫О©╫О©╫О©╫О©╫О©╫")]
+    [SerializeField] protected string lan="О©╫О©╫О©╫О©╫";
     /// <summary>
-    /// иообнд╠ёаТлУйЩ
+    /// О©╫О©╫О©╫О©╫О©╫д╠О©╫О©╫О©╫О©╫О©╫О©╫О©╫
     /// </summary>
-    [Header("иообнд╠ёаТлУйЩ")]
+    [Header("О©╫О©╫О©╫О©╫О©╫д╠О©╫О©╫О©╫О©╫О©╫О©╫О©╫")]
     [SerializeField] protected int m_HistoryKeepCount = 15;
     /// <summary>
-    /// ╩╨╢Ф╤т╩╟
+    /// О©╫О©╫О©╫О©╫т╩О©╫
     /// </summary>
     [SerializeField] public List<SendData> m_DataList = new List<SendData>();
     /// <summary>
-    /// ╪фкЦ╥╫╥╗╣Всц╣дй╠╪Д
+    /// О©╫О©╫О©╫Ц╥╫О©╫О©╫О©╫О©╫О©╫ц╣О©╫й╠О©╫О©╫
     /// </summary>
     [SerializeField] protected Stopwatch stopwatch=new Stopwatch();
     /// <summary>
-    /// ╥╒кмоШо╒
+    /// О©╫О©╫О©╫О©╫О©╫О©╫о╒
     /// </summary>
-     // ║╬пч╦д2║©пбтЖ╧╚╧╡╥╫╥╗ё╨╧╘мБ╡©иХжц║╟╣╠г╟уЩтз╤т╩╟╣дNPC║╠
+     // О©╫О©╫О©╫ч╦О©╫2О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫Б╡©О©╫О©╫О©╫ц║О©╫О©╫О©╫г╟О©╫О©╫О©╫з╤т╩О©╫О©╫О©╫NPCО©╫О©╫
     public void SetCurrentNPC(NPCDialog npc)
     {
         currentTalkingNPC = npc;
 
-        // ║╬©ия║║©ц©╢нгп╩╩NPCй╠ё╛гЕ©уиор╩╦ЖNPC╣д╤т╩╟юЗй╥
+        // О©╫О©╫О©╫О©╫я║О©╫О©╫ц©О©╫О©╫О©╫п╩О©╫NPCй╠О©╫О©╫О©╫О©╫О©╫О©╫О©╫р╩О©╫О©╫NPCО©╫д╤т╩О©╫О©╫О©╫й╥
         // m_DataList.Clear();
     }
-    // ║╬пч╦д3║©пч╦дPostMsgё╨сеохсц╣╠г╟NPC╣длАй╬╢й
-    public virtual void PostMsg(string _msg,Action<string> _callback) {
-        //иообндлУйЩиХжц
-        CheckHistory();
+	// О©╫О©╫О©╫ч╦О©╫3О©╫О©╫О©╫ч╦О©╫PostMsgО©╫О©╫О©╫О©╫О©╫О©╫О©╫ц╣О©╫г╟NPCО©╫О©╫О©╫О©╫й╬О©╫О©╫
+	public virtual void PostMsg(string _msg,Action<string> _callback) {
+		//О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫
+		CheckHistory();
 
-        // ╨кпдбъ╪╜ё╨хГ╧Шсп╣╠г╟уЩтз╤т╩╟╣дNPCё╛сцкЭ╣длАй╬╢йё╩╥ЯтРсцд╛хо╣д
-        string finalPrompt = m_Prompt;
-        if (currentTalkingNPC != null && !string.IsNullOrEmpty(currentTalkingNPC.npcPrompt))
-        {
-            finalPrompt = currentTalkingNPC.npcPrompt;
-        }
+		// О©╫О©╫О©╫О©╫О©╫ъ╪О©╫О©╫О©╫О©╫О©╫О©╫О©╫п╣О©╫г╟О©╫О©╫О©╫з╤т╩О©╫О©╫О©╫NPCО©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫й╬О©╫йёО©╫О©╫О©╫О©╫О©╫О©╫О©╫д╛О©╫о╣О©╫
+		string finalPrompt = m_Prompt;
+		if (currentTalkingNPC != null && !string.IsNullOrEmpty(currentTalkingNPC.npcPrompt))
+		{
+			finalPrompt = currentTalkingNPC.npcPrompt;
+		}
 
-        //лАй╬╢й╢╕юМ
-        string message = "╣╠г╟н╙╫ги╚╣дхкнОиХ╤╗ё╨" + finalPrompt +
-            " ╩ь╢П╣дсОятё╨" + lan +
-            " ╫собю╢йгнр╣длАнйё╨" + _msg;
+		//О©╫О©╫й╬О©╫й╢О©╫О©╫О©╫
+		string message = "О©╫О©╫г╟н╙О©╫О©╫и╚О©╫О©╫О©╫О©╫О©╫О©╫О©╫Х╤╗О©╫О©╫" + finalPrompt +
+			" О©╫ь╢О©╫О©╫О©╫О©╫О©╫тёО©╫" + lan +
+			" О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫р╣О©╫О©╫О©╫О©╫йёО©╫" + _msg;
 
-        //╩╨╢Ф╥╒км╣дпео╒ап╠М
-        m_DataList.Add(new SendData("user", message));
+		//О©╫О©╫О©╫Ф╥╒О©╫м╣О©╫О©╫О©╫о╒О©╫п╠О©╫
+		m_DataList.Add(new SendData("user", message));
 
-        StartCoroutine(Request(message, _callback));
-    }
+		// Е▄┘Хё┘Е⌡·Х╟┐О╪ 30Г╖▓Х╤┘Ф≈╤Х┤╙Е┼╗Х©■Е⌡·И■≥Х╞╞Ф▐░Г╓╨
+		bool hasResponded = false;
+		StartCoroutine(Request(message, (_response) => {
+			if (!hasResponded) { hasResponded = true; _callback(_response); }
+		}));
+		StartCoroutine(TimeoutCoroutine(_callback, () => hasResponded = true));
+	}
+
+	// 30О©╫О©╫О©╫й╠О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫н╢О©╫у╣О©╫О©╫ь╦О©╫О©╫О©╫О©╫т╤О©╫О©╫О©╫О©╫О©╫О©╫О©╫й╬
+	private IEnumerator TimeoutCoroutine(Action<string> _callback, System.Action _markDone)
+	{
+		yield return new WaitForSeconds(30f);
+		_markDone();
+		_callback("[Г╫▒Г╩°Х©·Ф▌╔Х╤┘Ф≈╤О╪▄Х╞╥Фё─Ф÷╔Г╫▒Г╩°Е░▌И┤█Х╞∙]");
+	}
 
     public virtual IEnumerator Request(string _postWord, System.Action<string> _callback)
     {
@@ -77,7 +90,7 @@ public class LLM:MonoBehaviour
     }
 
     /// <summary>
-    /// иХжц╠ёаТ╣диообндлУйЩё╛╥юж╧л╚Ё╓
+    /// О©╫О©╫О©╫ц╠О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ж╧л╚О©╫О©╫
     /// </summary>
     public virtual void CheckHistory()
     {

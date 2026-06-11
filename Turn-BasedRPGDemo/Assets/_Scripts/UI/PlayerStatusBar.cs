@@ -47,6 +47,6 @@ public class PlayerStatusBar : MonoBehaviour
         }
 
         if (_inventory != null && goldText != null)
-            goldText.text = $"<sprite=0> {_inventory.currentGold}";
+            goldText.text = $"金币 {_inventory.currentGold}";
     }
 }

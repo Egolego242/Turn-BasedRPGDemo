@@ -4,7 +4,7 @@ using System.Linq;
 using System;
 
 /// <summary>
-/// 回合战斗核心管理器（原TurnBattleManager重构版）
+/// 回合战斗核心管理器
 /// 负责回合流程、行动点管理、全局回合轮换、战斗胜负判定
 /// </summary>
 public class TurnBattleManager : MonoBehaviour
